@@ -391,7 +391,7 @@ const views={
 function parseMemberQR(raw){try{const x=JSON.parse(raw);return x&&x.type==="acro-member"&&x.id?x:null}catch(e){return null}}
 function loadMemberQRReader(cb){if(window.jsQR){cb&&cb();return}const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";s.onload=()=>cb&&cb();s.onerror=()=>notify("Lecteur QR indisponible : vérifie Internet.");document.head.appendChild(s)}
 function loadMemberQRGenerator(cb){if(window.QRCode){cb&&cb();return}if(window.__acroQrLoading){const wait=()=>{if(window.QRCode){cb&&cb();return}if(!window.__acroQrLoading){notify("Générateur QR indisponible : vérifie Internet.");return}setTimeout(wait,150)};wait();return}window.__acroQrLoading=true;const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";s.onload=()=>{window.__acroQrLoading=false;if(window.QRCode)cb&&cb();else notify("Le générateur QR s’est chargé sans être disponible.")};s.onerror=()=>{window.__acroQrLoading=false;notify("Générateur QR indisponible : vérifie Internet.")};document.head.appendChild(s)}
-const SUPABASE_URL="https://qaxqnfwjfllxulewdxvs.supabase.co";
+const SUPABASE_URL="https://gaxgnfwifllxulewdxvs.supabase.co";
 const SUPABASE_KEY_STORAGE="acro_supabase_publishable_key_v1";
 const CLUB_STATE_ID="acro-plongee";
 let supabaseClient=null, remoteSaveTimer=null, remoteReady=false;
