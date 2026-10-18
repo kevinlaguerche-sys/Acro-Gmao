@@ -445,7 +445,7 @@ function notify(msg){const t=document.getElementById("toast");t.textContent=msg;
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
 function allowed(view){if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
-function login(code){
+function loginLocalLegacy(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
  current={...u};showApp();return true
