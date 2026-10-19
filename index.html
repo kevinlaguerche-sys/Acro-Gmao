@@ -390,7 +390,28 @@ const views={
 };
 function parseMemberQR(raw){try{const x=JSON.parse(raw);return x&&x.type==="acro-member"&&x.id?x:null}catch(e){return null}}
 function loadMemberQRReader(cb){if(window.jsQR){cb&&cb();return}const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";s.onload=()=>cb&&cb();s.onerror=()=>notify("Lecteur QR indisponible : vérifie Internet.");document.head.appendChild(s)}
-function loadMemberQRGenerator(cb){if(window.QRCode){cb&&cb();return}if(window.__acroQrLoading){const wait=()=>{if(window.QRCode){cb&&cb();return}if(!window.__acroQrLoading){notify("Générateur QR indisponible : vérifie Internet.");return}setTimeout(wait,150)};wait();return}window.__acroQrLoading=true;const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";s.onload=()=>{window.__acroQrLoading=false;if(window.QRCode)cb&&cb();else notify("Le générateur QR s’est chargé sans être disponible.")};s.onerror=()=>{window.__acroQrLoading=false;notify("Générateur QR indisponible : vérifie Internet.")};document.head.appendChild(s)}
+function loadMemberQRGenerator(cb){
+ if(window.QRCode){cb&&cb();return}
+ if(window.__acroQrLoading){
+  const wait=()=>{if(window.QRCode){cb&&cb();return}if(!window.__acroQrLoading){notify("Générateur QR indisponible. Vérifie la connexion Internet.");return}setTimeout(wait,200)};
+  wait();return
+ }
+ window.__acroQrLoading=true;
+ const sources=[
+  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+  "https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js",
+  "https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"
+ ];
+ const trySource=(index)=>{
+  if(window.QRCode){window.__acroQrLoading=false;cb&&cb();return}
+  if(index>=sources.length){window.__acroQrLoading=false;notify("Impossible de charger le générateur QR. Vérifie Internet ou essaie un autre réseau.");return}
+  const s=document.createElement("script");s.src=sources[index];s.async=true;
+  s.onload=()=>{if(window.QRCode){window.__acroQrLoading=false;cb&&cb()}else trySource(index+1)};
+  s.onerror=()=>trySource(index+1);
+  document.head.appendChild(s);
+ };
+ trySource(0);
+}
 const SUPABASE_URL="https://qaxqnfwjfllxulewdxvs.supabase.co";
 const SUPABASE_KEY_STORAGE="acro_supabase_publishable_key_v1";
 const CLUB_STATE_ID="acro-plongee";
@@ -1131,8 +1152,38 @@ function wireMasterMaterial(){
  const equipmentTypeFilter=document.getElementById("equipmentTypeFilter");equipmentTypeFilter?.addEventListener("change",()=>{const chosen=equipmentTypeFilter.value;document.querySelectorAll("#masterEquipmentTable tbody tr[data-equipment-type]").forEach(row=>{row.style.display=chosen==="all"||row.dataset.equipmentType===chosen?"":"none"})});
  ["stab","detendeur","bloc","inflation"].forEach(k=>document.getElementById("price_"+k)?.addEventListener("input",e=>{document.getElementById("priceValue_"+k).textContent=Number(e.target.value).toFixed(2).replace(".",",")}));
  document.getElementById("pricesForm").addEventListener("submit",e=>{e.preventDefault();if(!canMasterMateriel())return;state.prices={stab:Number(document.getElementById("price_stab").value),detendeur:Number(document.getElementById("price_detendeur").value),bloc:Number(document.getElementById("price_bloc").value),inflation:Number(document.getElementById("price_inflation").value)};saveState();notify("Tarifs enregistrés")});
- document.querySelectorAll("[data-credit-wallet]").forEach(b=>b.addEventListener("click",()=>{if(!canMasterMateriel())return;const id=b.dataset.creditWallet,d=(state.divers||[]).find(x=>x.id===id),amount=Number(document.getElementById("credit_"+id)?.value);if(!d||!Number.isFinite(amount)||amount<=0||amount>100){notify("Saisis un montant entre 0,01 et 100 Bitacros.");return}d.balance=Math.round(((Number(d.balance)||0)+amount)*100)/100;state.walletTransactions||=[];state.walletTransactions.unshift({id:"wallet-"+Date.now(),diverId:id,diverName:(d.firstName+" "+d.lastName).trim(),type:"credit",amount,balanceAfter:d.balance,date:todayISO(),by:current?.name||"Master",note:"Crédit Master"});saveState();render("masterMateriel");notify("Carte créditée de "+amount.toFixed(2)+" Bitacros")}));
- document.querySelectorAll("[data-show-member-qr]").forEach(b=>b.addEventListener("click",()=>{const d=(state.divers||[]).find(x=>x.id===b.dataset.showMemberQr);if(!d)return;const box=document.getElementById("memberQRDisplay");box.innerHTML=`<div class="section"><h3>Carte ACRO — ${esc(d.firstName+" "+d.lastName)}</h3><div id="memberQRCanvas" style="background:white;padding:12px;width:max-content"></div><p>${esc(d.currentLevel||"Niveau non renseigné")} · Solde actuel ${(Number(d.balance)||0).toFixed(2).replace(".",",")} €</p><button class="btn soft" onclick="window.print()">Imprimer la carte</button></div>`;const payload=JSON.stringify({type:"acro-member",id:d.id,lastName:d.lastName,firstName:d.firstName,level:d.currentLevel});loadMemberQRGenerator(()=>{const el=document.getElementById("memberQRCanvas");if(el&&window.QRCode)new QRCode(el,{text:payload,width:200,height:200})})}));
+ document.querySelectorAll("[data-credit-wallet]").forEach(b=>b.addEventListener("click",()=>{
+  if(!isMaster()){notify("Seul le compte Master peut créditer les Bitacros.");return}
+  const id=b.dataset.creditWallet;
+  const input=document.getElementById("credit_"+id);
+  const d=(state.divers||[]).find(x=>String(x.id)===String(id));
+  const raw=String(input?.value??"").trim().replace(",",".");
+  const amount=Number(raw);
+  if(!d){notify("Plongeur introuvable. Actualise la page et réessaie.");return}
+  if(!raw||!Number.isFinite(amount)||amount<=0||amount>100){notify("Saisis un montant entre 0,01 et 100 Bitacros.");input?.focus();return}
+  d.balance=Math.round(((Number(d.balance)||0)+amount)*100)/100;
+  state.walletTransactions=Array.isArray(state.walletTransactions)?state.walletTransactions:[];
+  state.walletTransactions.unshift({id:"wallet-"+Date.now(),diverId:id,diverName:(d.firstName+" "+d.lastName).trim(),type:"credit",amount,balanceAfter:d.balance,date:todayISO(),by:current?.name||"Master",note:"Crédit Master"});
+  saveState();
+  render("masterMateriel");
+  notify("Crédit effectué : "+amount.toFixed(2)+" Bitacros. Nouveau solde : "+d.balance.toFixed(2)+".");
+}));
+ document.querySelectorAll("[data-show-member-qr]").forEach(b=>b.addEventListener("click",()=>{
+  const d=(state.divers||[]).find(x=>String(x.id)===String(b.dataset.showMemberQr));
+  if(!d){notify("Fiche plongeur introuvable. Actualise la page et réessaie.");return}
+  const box=document.getElementById("memberQRDisplay");
+  if(!box){notify("Zone de la carte introuvable. Actualise la page et réessaie.");return}
+  box.innerHTML=`<div class="section" style="border:2px solid #40b8ad"><h3>Carte ACRO — ${esc((d.firstName||"")+" "+(d.lastName||""))}</h3><div id="memberQRCanvas" style="background:white;padding:12px;width:224px;min-height:224px;display:flex;align-items:center;justify-content:center"><span>Génération du QR code…</span></div><p>${esc(d.currentLevel||"Niveau non renseigné")} · Solde actuel ${(Number(d.balance)||0).toFixed(2).replace(".",",")} Bitacros</p><p id="memberQRStatus" class="muted">Chargement du générateur QR…</p><button class="btn soft" type="button" id="printMemberQR">Imprimer la carte</button></div>`;
+  box.scrollIntoView({behavior:"smooth",block:"center"});
+  document.getElementById("printMemberQR")?.addEventListener("click",()=>window.print());
+  const payload=JSON.stringify({type:"acro-member",id:d.id,lastName:d.lastName,firstName:d.firstName,level:d.currentLevel});
+  loadMemberQRGenerator(()=>{
+   const el=document.getElementById("memberQRCanvas"),status=document.getElementById("memberQRStatus");
+   if(!el||!document.body.contains(el))return;
+   try{el.innerHTML="";new QRCode(el,{text:payload,width:200,height:200});if(status)status.textContent="QR code généré. Tu peux imprimer la carte."}
+   catch(err){el.textContent="Erreur lors de la génération.";if(status)status.textContent="Le QR code n’a pas pu être généré. Réessaie.";console.error(err)}
+  });
+}));
  document.querySelectorAll("[data-equipment-qr]").forEach(b=>b.addEventListener("click",()=>{const e=(state.equipment||[]).find(x=>x.id===b.dataset.equipmentQr);if(!e)return;const target=document.getElementById("equipmentQRDisplay");if(!target){notify("Zone d’affichage du QR introuvable. Actualise la page et réessaie.");return}target.innerHTML=`<div class="section" style="border:2px solid var(--primary,#0d9488)"><h3>QR équipement — ${esc(equipmentTypeLabel(e.type))} ${esc(e.number)}</h3><div id="equipmentQRPrint" style="background:#fff;padding:12px;width:max-content;min-width:224px;min-height:224px;display:flex;align-items:center;justify-content:center"><span>Génération du QR code…</span></div><p>${esc(e.label||"")}</p><p id="equipmentQRStatus" class="muted">Préparation du QR code…</p><button class="btn soft" type="button" id="printEquipmentQR">Imprimer le QR</button></div>`;target.scrollIntoView({behavior:"smooth",block:"center"});const payload=JSON.stringify({type:"acro-equipment",id:e.id,category:e.type,number:e.number,serial:e.serial||"",label:e.label||""});const status=document.getElementById("equipmentQRStatus");const canvas=document.getElementById("equipmentQRPrint");const printBtn=document.getElementById("printEquipmentQR");printBtn?.addEventListener("click",()=>window.print());loadMemberQRGenerator(()=>{const el=document.getElementById("equipmentQRPrint");if(!el||!document.body.contains(el))return;if(!window.QRCode){el.innerHTML="Impossible de charger le générateur QR.";if(status)status.textContent="Vérifie la connexion Internet puis réessaie.";return}try{el.innerHTML="";new QRCode(el,{text:payload,width:200,height:200});if(status)status.textContent="QR code généré. Tu peux l’imprimer."}catch(err){el.textContent="Erreur de génération du QR code.";if(status)status.textContent="Réessaie après avoir vérifié la connexion Internet.";console.error(err)}})}));
  const equipmentTypeSelect=document.getElementById("equipmentType"),pressureWrap=document.getElementById("servicePressureWrap"),ownerWrap=document.getElementById("blockOwnerWrap"),ownerSelect=document.getElementById("equipmentBlockOwner");const updatePressureField=()=>{const isBlock=equipmentTypeSelect.value==="bloc";pressureWrap?.classList.toggle("hidden",!isBlock);ownerWrap?.classList.toggle("hidden",!isBlock);if(ownerSelect)ownerSelect.required=isBlock};equipmentTypeSelect.addEventListener("change",updatePressureField);updatePressureField();
  document.getElementById("equipmentForm").addEventListener("submit",e=>{e.preventDefault();if(!canMasterMateriel())return;const type=document.getElementById("equipmentType").value,number=document.getElementById("equipmentNumber").value.trim(),label=document.getElementById("equipmentLabel").value.trim(),ownerId=type==="bloc"?document.getElementById("equipmentBlockOwner").value:"",owner=type==="bloc"?masterPeople().find(p=>p.id===ownerId):null;if(type==="bloc"&&(!ownerId||!owner)){document.getElementById("equipmentMessage").textContent="Sélectionne obligatoirement le propriétaire du bloc dans la liste des plongeurs.";return}if(state.equipment.some(x=>x.number.toLowerCase()===number.toLowerCase())){document.getElementById("equipmentMessage").textContent="Ce numéro d’inventaire existe déjà.";return}state.equipment.push({id:"eq-"+Date.now(),type,number,label,servicePressure:type==="bloc"?Number(document.getElementById("equipmentServicePressure").value):null,ownerId:type==="bloc"?owner.id:null,ownerName:type==="bloc"?owner.name:"",active:true,createdAt:todayISO()});saveState();render("masterMateriel");notify("Équipement ajouté à la base")});
@@ -1187,7 +1238,15 @@ function wireDivers(){
   document.getElementById("saveDiverBtn").textContent="Enregistrer les modifications";
   form.scrollIntoView({behavior:"smooth",block:"start"});
  }));
- document.querySelectorAll("[data-diver-qr]").forEach(b=>b.addEventListener("click",()=>{const d=(state.divers||[]).find(x=>x.id===b.dataset.diverQr);if(!d)return;const box=document.createElement("div");box.className="section";box.innerHTML=`<h3>Carte ACRO — ${esc(d.firstName+" "+d.lastName)}</h3><div id="diverQRCanvas" style="background:white;padding:12px;width:max-content"></div><p>${esc(d.currentLevel||"Niveau non renseigné")} · Solde ${(Number(d.balance)||0).toFixed(2).replace(".",",")} €</p><button class="btn soft" onclick="window.print()">Imprimer</button>`;document.querySelector(".main-content")?.prepend(box);const payload=JSON.stringify({type:"acro-member",id:d.id,lastName:d.lastName,firstName:d.firstName,level:d.currentLevel});loadMemberQRGenerator(()=>{const el=box.querySelector("#diverQRCanvas");if(el&&window.QRCode)new QRCode(el,{text:payload,width:200,height:200})})}));
+ document.querySelectorAll("[data-diver-qr]").forEach(b=>b.addEventListener("click",()=>{
+  const d=(state.divers||[]).find(x=>String(x.id)===String(b.dataset.diverQr));if(!d){notify("Fiche plongeur introuvable.");return}
+  let box=document.getElementById("diverQRCardDisplay");
+  if(!box){box=document.createElement("div");box.id="diverQRCardDisplay";box.className="section";document.getElementById("mainContent")?.prepend(box)}
+  box.innerHTML=`<h3>Carte ACRO — ${esc((d.firstName||"")+" "+(d.lastName||""))}</h3><div id="diverQRCanvas" style="background:white;padding:12px;width:224px;min-height:224px;display:flex;align-items:center;justify-content:center"><span>Génération du QR code…</span></div><p>${esc(d.currentLevel||"Niveau non renseigné")} · Solde ${(Number(d.balance)||0).toFixed(2).replace(".",",")} Bitacros</p><p id="diverQRStatus" class="muted">Chargement du générateur QR…</p><button class="btn soft" type="button" id="printDiverQR">Imprimer</button>`;
+  box.scrollIntoView({behavior:"smooth",block:"center"});document.getElementById("printDiverQR")?.addEventListener("click",()=>window.print());
+  const payload=JSON.stringify({type:"acro-member",id:d.id,lastName:d.lastName,firstName:d.firstName,level:d.currentLevel});
+  loadMemberQRGenerator(()=>{const el=document.getElementById("diverQRCanvas"),status=document.getElementById("diverQRStatus");if(!el||!document.body.contains(el))return;try{el.innerHTML="";new QRCode(el,{text:payload,width:200,height:200});if(status)status.textContent="QR code généré."}catch(err){el.textContent="Erreur de génération.";if(status)status.textContent="Réessaie après avoir vérifié la connexion Internet.";console.error(err)}});
+}));
  document.querySelectorAll("[data-delete-diver]").forEach(b=>b.addEventListener("click",()=>{
   if(!isMaster())return;const d=(state.divers||[]).find(x=>x.id===b.dataset.deleteDiver);if(!d)return;
   if(!confirm("Supprimer la fiche de "+d.firstName+" "+d.lastName+" ?"))return;
