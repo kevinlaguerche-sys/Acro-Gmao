@@ -1412,5 +1412,24 @@ function handleEquipmentRemoveConfirm(){
  </div>
 </div>
 
+
+<script id="acro-remove-terminer-scan-materiel">
+(function(){
+  function removeScanFinishButton(){
+    var continuer=document.getElementById('continueEquipmentQR');
+    if(!continuer || !continuer.parentElement) return;
+    Array.from(continuer.parentElement.querySelectorAll('button')).forEach(function(btn){
+      if(btn===continuer) return;
+      var label=(btn.innerText || btn.textContent || '').replace(/[✓✔]/g,'').trim().toLocaleLowerCase('fr');
+      if(label==='terminer' || label==='terminé' || label==='terminer le scan' || label==='terminer le prêt'){ btn.remove(); }
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',removeScanFinishButton); else removeScanFinishButton();
+  var observer=new MutationObserver(removeScanFinishButton);
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+  setInterval(removeScanFinishButton,700);
+})();
+</script>
+
 </body>
 </html>
