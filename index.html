@@ -271,12 +271,12 @@
     <div class="bubbles">◌　◦　🤿　◦　◌</div>
   </div>
   <div class="panel">
-    <div class="eyebrow">Connexion membre</div><h2>Accéder à l'espace club</h2>
-    <p class="muted">Saisis le nom et le prénom enregistrés par le Master, puis le mot de passe qui t’a été donné.</p>
+    <div class="eyebrow">Connexion Supabase</div><h2>Accéder à l'espace club</h2>
+    <p class="muted">Connecte-toi avec l’adresse e-mail et le mot de passe du compte créé dans Supabase.</p>
     <a class="btn soft full mft-link" href="https://mft.ffessm.fr/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">📘</span> Consulter le MFT — FFESSM ↗</a>
-    <form id="loginForm"><div class="field"><label for="loginLastName">Nom</label><input id="loginLastName" type="text" autocomplete="family-name" placeholder="Nom" required maxlength="80"></div><div class="field"><label for="loginFirstName">Prénom</label><input id="loginFirstName" type="text" autocomplete="given-name" placeholder="Prénom" required maxlength="80"></div><div class="field"><label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe donné par le Master" required maxlength="128"></div><button class="btn primary full" type="submit">Se connecter →</button><div id="loginMessage" class="message"></div></form>
+    <form id="loginForm"><div class="field"><label for="loginEmail">Adresse e-mail</label><input id="loginEmail" type="email" autocomplete="username" placeholder="ton@email.fr" required></div><div class="field"><label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe Supabase" required></div><button class="btn primary full" type="submit">Se connecter →</button><div id="loginMessage" class="message"></div></form>
     <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Configuration initiale (clé publique)</summary><p class="hint">La clé publique Supabase peut être utilisée dans le navigateur. Ne saisis jamais de clé « secret » ici.</p><div class="field"><label for="supabasePublishableKey">Clé Publishable (sb_publishable_…)</label><input id="supabasePublishableKey" type="password" autocomplete="off" placeholder="Coller la clé publique copiée"></div><button id="saveSupabaseConfig" class="btn soft full" type="button">Enregistrer la configuration</button><div id="configMessage" class="message"></div></details>
-    <p class="hint">Les membres se connectent avec leur nom, leur prénom et le mot de passe remis par le Master. La création sécurisée des comptes nécessite la fonction serveur Supabase fournie dans le ZIP. Ne saisis jamais de clé secrète dans cette page.</p>
+    <p class="hint">Cette version utilise l’authentification Supabase et enregistre l’état du club côté serveur. Les anciens codes locaux ne sont pas envoyés au serveur. Les comptes des membres devront être créés et attribués côté Supabase avant leur connexion.</p>
   </div>
 </section>
 <div id="appView" class="app hidden">
@@ -305,7 +305,7 @@
     <form id="userForm">
       <input type="hidden" id="editUserId">
       <div class="field"><label for="newDiver">Plongeur (fiche existante)</label><select id="newDiver" required><option value="">Choisir un plongeur…</option></select><small class="muted">La liste reprend les fiches de « Gestion des plongeurs ». Si la personne n’existe pas encore, crée d’abord sa fiche.</small></div>
-      <div class="field"><label for="newCode">Code personnel de connexion</label><input id="newCode" required autocomplete="off" placeholder="Créer un code unique"></div>
+      <div class="field"><label for="newCode">Code personnel de connexion</label><input id="newCode" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="8 caractères minimum" aria-describedby="newCodeHelp" title="Le code doit contenir entre 8 et 128 caractères"><small class="muted" id="newCodeHelp">8 caractères minimum et 128 maximum. Un code de 4 chiffres sera refusé.</small></div>
       <div class="field"><label for="newRole">Profil du compte</label><select id="newRole"><option value="diver">Plongeur</option><option value="member">Membre du club</option><option value="encadrant">Encadrant</option></select><small class="muted">Choisis ici le profil habituel de la personne.</small></div>
       <div class="field" style="border:1px solid var(--line,#dbe4ee);border-radius:12px;padding:12px;background:var(--soft,#f8fafc)"><label for="newMasterRole">Attribution du rôle Master (facultatif)</label><select id="newMasterRole"><option value="">Aucun rôle Master</option><option value="master">👑 Master — accès complet</option></select><small class="muted">Laisse ce champ vide pour un compte normal. Sélectionne « Master — accès complet » pour donner à cette personne les mêmes droits que le Master principal.</small></div>
       <div id="permissionOptions"><label style="font-size:13px;font-weight:700">Écrans autorisés</label><div class="access-grid" style="margin-top:10px">
@@ -391,7 +391,7 @@ const views={
 function parseMemberQR(raw){try{const x=JSON.parse(raw);return x&&x.type==="acro-member"&&x.id?x:null}catch(e){return null}}
 function loadMemberQRReader(cb){if(window.jsQR){cb&&cb();return}const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";s.onload=()=>cb&&cb();s.onerror=()=>notify("Lecteur QR indisponible : vérifie Internet.");document.head.appendChild(s)}
 function loadMemberQRGenerator(cb){if(window.QRCode){cb&&cb();return}if(window.__acroQrLoading){const wait=()=>{if(window.QRCode){cb&&cb();return}if(!window.__acroQrLoading){notify("Générateur QR indisponible : vérifie Internet.");return}setTimeout(wait,150)};wait();return}window.__acroQrLoading=true;const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";s.onload=()=>{window.__acroQrLoading=false;if(window.QRCode)cb&&cb();else notify("Le générateur QR s’est chargé sans être disponible.")};s.onerror=()=>{window.__acroQrLoading=false;notify("Générateur QR indisponible : vérifie Internet.")};document.head.appendChild(s)}
-const SUPABASE_URL="https://qaxqnfwjfllxulewdxvs.supabase.co";
+const SUPABASE_URL="https://qaxqnfwjfjlxulewdxvs.supabase.co";
 const SUPABASE_KEY_STORAGE="acro_supabase_publishable_key_v1";
 const CLUB_STATE_ID="acro-plongee";
 let supabaseClient=null, remoteSaveTimer=null, remoteReady=false;
@@ -403,19 +403,15 @@ function remotePayload(){const copy=JSON.parse(JSON.stringify(state));delete cop
 function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}if(remoteReady&&supabaseClient&&isMaster()){clearTimeout(remoteSaveTimer);remoteSaveTimer=setTimeout(async()=>{try{const {error}=await supabaseClient.from("acro_app_state").upsert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id,updated_at:new Date().toISOString()},{onConflict:"club_id"});if(error)throw error;notify("Sauvegarde serveur effectuée")}catch(e){console.error(e);notify("Erreur de sauvegarde serveur : "+(e.message||"vérifie les politiques Supabase"))}},700)}}
 function initSupabase(){const key=(localStorage.getItem(SUPABASE_KEY_STORAGE)||"").trim();if(!key)return null;if(!window.supabase?.createClient)return null;supabaseClient=window.supabase.createClient(SUPABASE_URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return supabaseClient}
 async function loadRemoteState(){const localUsers=state.users||[];const {data,error}=await supabaseClient.from("acro_app_state").select("state").eq("club_id",CLUB_STATE_ID).maybeSingle();if(error)throw error;if(data?.state){state=normalizeState({...data.state,users:localUsers});}else{state=normalizeState({...defaultState(),users:localUsers});if(isMaster()){const {error:insertError}=await supabaseClient.from("acro_app_state").insert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id});if(insertError)throw insertError;}}localStorage.setItem(STORE_KEY,JSON.stringify(state));remoteReady=true}
-async function loginByName(lastName,firstName,password){
- const client=initSupabase();
- if(!client){document.getElementById("loginMessage").textContent="Configuration manquante : ajoute la clé publique dans Configuration initiale.";return false}
- const {data,error}=await client.functions.invoke("member-access",{body:{action:"login",lastName:lastName.trim(),firstName:firstName.trim(),password}});
- if(error||!data?.session){document.getElementById("loginMessage").textContent="Connexion impossible : "+(data?.error||(error?.message||"Vérifie le nom, le prénom et le mot de passe."));return false}
- const {data:sessionData,error:sessionError}=await client.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});
- if(sessionError||!sessionData?.user){document.getElementById("loginMessage").textContent="Session impossible à ouvrir. Réessaie.";return false}
- const {data:profile,error:profileError}=await client.from("acro_profiles").select("user_id,display_name,role,is_active").eq("user_id",sessionData.user.id).maybeSingle();
- if(profileError||!profile||profile.is_active===false){await client.auth.signOut();document.getElementById("loginMessage").textContent="Profil club introuvable ou désactivé. Demande au Master de vérifier le compte.";return false}
- const perms=profile.role==="master"?["dashboard","materiel","formation","planning","plongee","masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"]:profile.role==="encadrant"?["dashboard","materiel","formation","planning","plongee"]:["dashboard","planning"];
- current={id:sessionData.user.id,email:sessionData.user.email||"",name:profile.display_name||(`${firstName} ${lastName}`.trim()),role:profile.role,permissions:perms,active:true};
- try{await loadRemoteState()}catch(e){console.error(e);await client.auth.signOut();current=null;remoteReady=false;document.getElementById("loginMessage").textContent="Authentifié, mais lecture des données du club impossible : "+(e.message||"vérifie les politiques Supabase");return false}
- showApp();return true;
+async function login(email,password){
+ const client=initSupabase();if(!client){document.getElementById("loginMessage").textContent="Configuration manquante : ajoute la clé publique dans Configuration initiale.";return false}
+ const {data,error}=await client.auth.signInWithPassword({email,password});if(error){document.getElementById("loginMessage").textContent="Connexion impossible : "+error.message;return false}
+ const {data:profile,error:profileError}=await client.from("acro_profiles").select("user_id,display_name,role,is_active").eq("user_id",data.user.id).maybeSingle();
+ if(profileError||!profile||profile.is_active===false){await client.auth.signOut();document.getElementById("loginMessage").textContent="Profil club introuvable ou désactivé. Demande au Master de vérifier acro_profiles.";return false}
+ current={id:data.user.id,email:data.user.email,name:profile.display_name||data.user.email,role:profile.role,permissions:profile.role==="master"?["dashboard","materiel","formation","planning","plongee","masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"]:profile.role==="encadrant"?["dashboard","materiel","formation","planning","plongee"]:["dashboard","planning"],active:true};
+ try{await loadRemoteState()}catch(e){console.error(e);await client.auth.signOut();current=null;remoteReady=false;document.getElementById("loginMessage").textContent="Connecté à Supabase, mais lecture des données impossible : "+(e.message||"vérifie les tables et les politiques RLS");return false}
+ if(profile.role!=="master"){await client.auth.signOut();current=null;remoteReady=false;document.getElementById("loginMessage").textContent="La connexion membre sera activée après la mise en place des droits individuels. Pour le premier test, utilise le compte Master.";return false}
+ showApp();return true
 }
 function canMasterMateriel(){return isMaster()}
 function isMasterSection(view){return ["masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"].includes(view)}
@@ -449,7 +445,7 @@ function notify(msg){const t=document.getElementById("toast");t.textContent=msg;
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
 function allowed(view){if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
-function loginLocal(code){
+function login(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
  current={...u};showApp();return true
@@ -461,7 +457,7 @@ function showApp(){
  document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("hidden",!allowed(b.dataset.view)));
  render("dashboard");
 }
-async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
+async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginEmail").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
 function stopInflationScannerIfOpen(){try{if(typeof stopQR==="function")stopQR()}catch(e){}}
 function render(view){
  if(!allowed(view)){notify("Cet écran ne fait pas partie de tes accès.");view="dashboard";if(!allowed(view)){logout();return}}
@@ -1235,7 +1231,7 @@ function closeUserDialog(){document.getElementById("userDialog").close()}
 function toggleUser(id){if(!isMaster())return;const u=state.users.find(x=>x.id===id);if(!u)return;u.active=u.active===false;saveState();render("acces");notify(u.active?"Compte activé":"Compte désactivé")}
 function deleteUser(id){if(!isMaster())return;const u=state.users.find(x=>x.id===id);if(!u)return;if(!confirm("Supprimer le compte de "+u.name+" ?"))return;state.users=state.users.filter(x=>x.id!==id);saveState();render("acces");notify("Compte supprimé")}
 document.getElementById("saveSupabaseConfig").addEventListener("click",()=>{const key=document.getElementById("supabasePublishableKey").value.trim();const msg=document.getElementById("configMessage");if(!key.startsWith("sb_publishable_")){msg.textContent="La clé doit commencer par sb_publishable_. Ne mets jamais une clé Secret ici.";return}localStorage.setItem(SUPABASE_KEY_STORAGE,key);supabaseClient=null;msg.textContent="Clé publique enregistrée sur cet appareil. Tu peux te connecter.";document.getElementById("supabasePublishableKey").value=""});
-document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;btn.textContent="Connexion…";document.getElementById("loginMessage").textContent="";try{await loginByName(document.getElementById("loginLastName").value,document.getElementById("loginFirstName").value,document.getElementById("loginPassword").value)}catch(err){console.error(err);document.getElementById("loginMessage").textContent="Erreur inattendue : "+(err.message||err)}finally{btn.disabled=false;btn.textContent="Se connecter →"}});
+document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;btn.textContent="Connexion…";document.getElementById("loginMessage").textContent="";try{await login(document.getElementById("loginEmail").value.trim(),document.getElementById("loginPassword").value)}catch(err){console.error(err);document.getElementById("loginMessage").textContent="Erreur inattendue : "+(err.message||err)}finally{btn.disabled=false;btn.textContent="Se connecter →"}});
 document.getElementById("logoutBtn").addEventListener("click",logout);
 document.getElementById("menuToggle").addEventListener("click",()=>{const app=document.getElementById("appView");const closed=app.classList.toggle("menu-closed");document.getElementById("menuToggle").setAttribute("aria-expanded",String(!closed));document.getElementById("menuToggle").textContent="☰";});
 
@@ -1262,7 +1258,7 @@ document.getElementById("mainContent").addEventListener("click",e=>{
  }
 });
 document.getElementById("closeDialog").addEventListener("click",closeUserDialog);document.getElementById("cancelDialog").addEventListener("click",closeUserDialog);
-document.getElementById("userForm").addEventListener("submit",async e=>{
+document.getElementById("userForm").addEventListener("submit",e=>{
  e.preventDefault();if(!isMaster())return;
  const id=document.getElementById("editUserId").value,diverId=document.getElementById("newDiver").value,code=document.getElementById("newCode").value.trim(),profileRole=document.getElementById("newRole").value,masterRole=document.getElementById("newMasterRole").value,role=masterRole==="master"?"master":profileRole;
  const permissions=role==="master"?Object.keys(views):[...document.querySelectorAll('input[name="permission"]:checked')].map(c=>c.value);
@@ -1273,21 +1269,10 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
  if(!diverId||!diver){document.getElementById("userMessage").textContent="Sélectionne un plongeur dans la liste. Si nécessaire, crée d’abord sa fiche.";return}
  const name=((diver.firstName||"")+" "+(diver.lastName||"")).trim();
  if(!name||!code){document.getElementById("userMessage").textContent="Sélectionne un plongeur avec un nom et un prénom, puis renseigne son code de connexion.";return}
+ if(code.length<8||code.length>128){document.getElementById("userMessage").textContent="Création impossible : le code de connexion doit contenir entre 8 et 128 caractères.";document.getElementById("newCode").focus();return}
  
  if(duplicate){document.getElementById("userMessage").textContent="Ce code est déjà attribué à un autre compte.";return}
  if(alreadyLinked){document.getElementById("userMessage").textContent="Ce plongeur possède déjà un compte d’accès. Modifie son compte existant.";return}
- if(existing){document.getElementById("userMessage").textContent="La modification des comptes déjà créés côté serveur n’est pas incluse dans cette première version. Cette action sert à créer les nouveaux accès.";return}
- const submitButton=e.currentTarget.querySelector('button[type="submit"]');submitButton.disabled=true;submitButton.textContent="Création sécurisée…";
- try{
-   const client=initSupabase();if(!client)throw new Error("Configure d’abord la clé publique Supabase sur cet appareil.");
-   const serverRole=role==="master"?"master":role==="encadrant"?"encadrant":"plongeur";
-   const {data:created,error:createError}=await client.functions.invoke("member-access",{body:{action:"create",firstName:diver.firstName||"",lastName:diver.lastName||"",password:code,role:serverRole}});
-   if(createError||!created?.ok)throw new Error(created?.error||(createError?.message||"La création serveur a échoué."));
-   const u={id:id||("user-"+Date.now()),authUserId:created.user_id,diverId,name,role,baseRole:role==="master"?profileRole:undefined,permissions,active:true};
-   state.users.push(u);saveState();closeUserDialog();render("acces");notify("Compte serveur créé pour "+name);
- }catch(err){console.error(err);document.getElementById("userMessage").textContent=err.message||"Erreur lors de la création du compte."}
- finally{submitButton.disabled=false;submitButton.textContent="Enregistrer le compte"}
- return;
  const u={id:id||("user-"+Date.now()),diverId,name,code,role,baseRole:role==="master"?profileRole:undefined,permissions,active:existing?existing.active!==false:true};
  if(existing)state.users=state.users.map(x=>x.id===id?u:x);else state.users.push(u);
  saveState();closeUserDialog();render("acces");notify(role==="master"?(existing?"Compte Master modifié":"Nouveau Master désigné"):(existing?"Accès modifiés":"Accès attribués"))
