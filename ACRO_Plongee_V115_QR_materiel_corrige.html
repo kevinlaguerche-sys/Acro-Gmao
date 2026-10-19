@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#061b32">
-<title>ACRO Plongée — Gestion du club V109 Supabase</title>
+<title>ACRO Plongée — Gestion du club V115 QR matériel corrigé</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -889,15 +889,27 @@ function wireMaterial(){
  // ou d'un état Supabase rafraîchi. On essaie d'abord l'ID, puis les références.
  const norm=v=>String(v??"").trim().toLocaleLowerCase("fr").replace(/\s+/g," ");
  const typeAliases={"gilet":"stab","gilet stabilisateur":"stab","stab":"stab","détendeur":"detendeur","detendeur":"detendeur","regulator":"detendeur","bloc":"bloc","bloc de plongée":"bloc","bloc de plongee":"bloc"};
- const rawType=data.category||data.type||data.equipmentType||data.equipment_type||"";
+ // Le champ `type` du QR peut désigner le format (`acro-equipment`) et non la catégorie.
+ // La catégorie réelle est prioritaire ; un ancien QR sans catégorie ne doit pas
+ // être filtré sur le texte `acro-equipment`.
+ const rawType=data.category||data.equipmentType||data.equipment_type||data.categoryType||
+  ((norm(data.type)==="acro-equipment"||norm(data.type)==="equipment")?"":data.type)||"";
  const qrType=typeAliases[norm(rawType)]||norm(rawType);
  const findEquipmentFromQR=()=>{
   const list=Array.isArray(state.equipment)?state.equipment:[];
   const sameType=x=>{const t=typeAliases[norm(x.type)]||norm(x.type);return !qrType||t===qrType};
   let found=list.find(x=>String(x.id??"").trim()===String(data.id??"").trim());
-  if(!found)found=list.find(x=>norm(x.number)===norm(data.number||data.reference||data.serialNumber)&&sameType(x));
+  const qrNumber=data.number??data.reference??data.serialNumber??data.equipmentNumber??data.equipment_number;
+  if(!found&&qrNumber!==undefined&&qrNumber!==null&&String(qrNumber).trim())found=list.find(x=>norm(x.number)===norm(qrNumber)&&sameType(x));
   if(!found&&data.serial)found=list.find(x=>norm(x.serial)===norm(data.serial)&&sameType(x));
   if(!found&&data.label)found=list.find(x=>norm(x.label)===norm(data.label)&&sameType(x));
+  // Secours pour les anciens QR qui n'indiquent pas la catégorie ou dont le libellé
+  // de catégorie a changé : le numéro doit rester unique dans l'inventaire.
+  if(!found&&qrNumber!==undefined&&qrNumber!==null&&String(qrNumber).trim()){
+   const matches=list.filter(x=>norm(x.number)===norm(qrNumber));
+   if(matches.length===1)found=matches[0];
+  }
+  if(!found&&data.id)found=list.find(x=>norm(x.id)===norm(data.id));
   return found;
  };
  let e=findEquipmentFromQR();
@@ -905,7 +917,7 @@ function wireMaterial(){
  if(!e&&supabaseClient){
   try{await loadRemoteState();e=findEquipmentFromQR()}catch(refreshError){console.warn("Actualisation Supabase avant résolution QR impossible",refreshError)}
  }
- if(!e){status.textContent="QR lu, mais matériel absent de l'inventaire chargé ("+(Array.isArray(state.equipment)?state.equipment.length:0)+" équipement(s)). Référence : "+String(data.number||data.label||data.id||code.data).slice(0,100)+". Vérifie que le matériel est enregistré dans Master matériel et synchronisé sur Supabase.";stopEqScanner();return}
+ if(!e){status.textContent="QR lu, mais aucun équipement correspondant trouvé dans l'inventaire ("+(Array.isArray(state.equipment)?state.equipment.length:0)+" équipement(s)). Référence lue : "+String(data.number||data.equipmentNumber||data.label||data.id||code.data).slice(0,100)+". Aucun équipement n'a été ajouté. Vérifie le numéro dans Master matériel et la synchronisation Supabase.";stopEqScanner();return}
  const alreadyOut=(state.loans||[]).some(l=>String(l.equipmentId)===String(e.id)&&!l.returnedAt);
  if(e.active===false||alreadyOut){status.textContent="QR lu : "+equipmentTypeLabel(e.type)+" n° "+(e.number||e.label||e.id)+". Équipement non disponible (désactivé ou déjà prêté).";stopEqScanner();return}
  if(e.type==="detendeur"&&e.needsDisinfection){status.textContent="QR lu : détendeur "+(e.number||e.label||e.id)+", mais désinfection obligatoire avant le prêt.";stopEqScanner();return}
