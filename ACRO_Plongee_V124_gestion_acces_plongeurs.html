@@ -330,7 +330,7 @@
     <form id="userForm">
       <input type="hidden" id="editUserId">
       <div class="field"><label for="newDiver">Plongeur (fiche existante)</label><select id="newDiver" required><option value="">Choisir un plongeur…</option></select><small class="muted">La liste reprend les fiches de « Gestion des plongeurs ». Si la personne n’existe pas encore, crée d’abord sa fiche.</small></div>
-      <div class="field"><label for="newCode">Code personnel de connexion</label><input id="newCode" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="8 caractères minimum" aria-describedby="newCodeHelp" title="Le code doit contenir entre 8 et 128 caractères"><small class="muted" id="newCodeHelp">8 caractères minimum et 128 maximum. Un code de 4 chiffres sera refusé.</small></div>
+      <div class="field"><label for="newCode">Code personnel de connexion</label><input id="newCode" minlength="8" maxlength="128" autocomplete="new-password" placeholder="8 caractères minimum" aria-describedby="newCodeHelp" title="Le code doit contenir entre 8 et 128 caractères"><small class="muted" id="newCodeHelp">Création : code obligatoire (8 à 128 caractères). Modification : laisse vide pour conserver le code actuel.</small></div>
       <div class="field"><label for="newRole">Profil du compte</label><select id="newRole"><option value="diver">Plongeur</option><option value="member">Membre du club</option><option value="encadrant">Encadrant</option></select><small class="muted">Choisis ici le profil habituel de la personne.</small></div>
       <div class="field" style="border:1px solid var(--line,#dbe4ee);border-radius:12px;padding:12px;background:var(--soft,#f8fafc)"><label for="newMasterRole">Attribution du rôle Master (facultatif)</label><select id="newMasterRole"><option value="">Aucun rôle Master</option><option value="master">👑 Master — accès complet</option></select><small class="muted">Laisse ce champ vide pour un compte normal. Sélectionne « Master — accès complet » pour donner à cette personne les mêmes droits que le Master principal.</small></div>
       <div id="permissionOptions"><label style="font-size:13px;font-weight:700">Écrans autorisés</label><div class="access-grid" style="margin-top:10px">
@@ -1469,12 +1469,16 @@ function openUserDialog(id="", preselectedDiverId=""){
  const divers=(state.divers||[]).filter(d=>d&&d.id&&String(d.firstName||"").trim()&&String(d.lastName||"").trim()).slice().sort((a,b)=>(a.lastName||"").localeCompare(b.lastName||"","fr")||(a.firstName||"").localeCompare(b.firstName||"","fr"));
  select.innerHTML='<option value="">Choisir un plongeur…</option>'+divers.map(d=>`<option value="${esc(d.id)}">${esc((d.firstName+" "+d.lastName).trim())} — ${esc(d.currentLevel||"niveau non renseigné")}</option>`).join("");
  document.getElementById("dialogTitle").textContent=u?"Modifier les accès d’un plongeur":"Attribuer des accès à un plongeur";
+ document.getElementById("newCode").required=!u;
+ document.getElementById("newCode").placeholder=u?"Vide = conserver le code actuel":"8 caractères minimum";
  if(u){
   let linked=divers.find(d=>d.id===u.diverId);
   // For older accounts, try to match a diver by their full name.
   if(!linked)linked=divers.find(d=>((d.firstName+" "+d.lastName).trim().toLowerCase()===String(u.name||"").trim().toLowerCase()));
   select.value=linked?.id||"";
-  document.getElementById("newCode").value=u.code||"";
+  // Ne jamais réafficher un mot de passe existant : il n'est pas récupérable depuis Supabase Auth.
+  // Laisser le champ vide permet de conserver le mot de passe actuel.
+  document.getElementById("newCode").value="";
   document.getElementById("newRole").value=u.role==="master"?(u.baseRole||"member"):(u.role||"diver");
   document.getElementById("newMasterRole").value=u.role==="master"?"master":"";
  }else{
@@ -1530,26 +1534,32 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
  const alreadyLinked=state.users.find(u=>u.diverId===diverId&&u.id!==id);
  if(!diverId||!diver){document.getElementById("userMessage").textContent="Sélectionne un plongeur dans la liste. Si nécessaire, crée d’abord sa fiche.";return}
  const name=((diver.firstName||"")+" "+(diver.lastName||"")).trim();
- if(!name||!code){document.getElementById("userMessage").textContent="Sélectionne un plongeur avec un nom et un prénom, puis renseigne son code de connexion.";return}
- if(code.length<8||code.length>128){document.getElementById("userMessage").textContent="Création impossible : le code de connexion doit contenir entre 8 et 128 caractères.";document.getElementById("newCode").focus();return}
- 
+ if(!name||(!existing&&!code)){document.getElementById("userMessage").textContent="Sélectionne un plongeur avec un nom et un prénom, puis renseigne son code de connexion.";return}
+ if(code&&(code.length<8||code.length>128)){document.getElementById("userMessage").textContent="Le code de connexion doit contenir entre 8 et 128 caractères.";document.getElementById("newCode").focus();return}
  if(duplicate){document.getElementById("userMessage").textContent="Ce code est déjà attribué à un autre compte.";return}
  if(alreadyLinked){document.getElementById("userMessage").textContent="Ce plongeur possède déjà un compte d’accès. Modifie son compte existant.";return}
- if(existing){document.getElementById("userMessage").textContent="La modification des comptes déjà créés côté serveur n’est pas incluse dans cette première version. Cette action sert à créer les nouveaux accès.";return}
- const submitButton=e.currentTarget.querySelector('button[type="submit"]');submitButton.disabled=true;submitButton.textContent="Création sécurisée…";
+ const submitButton=e.currentTarget.querySelector('button[type="submit"]');submitButton.disabled=true;submitButton.textContent=existing?"Modification sécurisée…":"Création sécurisée…";
  try{
    const client=initSupabase();if(!client)throw new Error("Configure d’abord la clé publique Supabase sur cet appareil.");
    const serverRole=role==="master"?"master":role==="encadrant"?"encadrant":"plongeur";
-   const {data:created,error:createError}=await client.functions.invoke("member-access",{body:{action:"create",firstName:diver.firstName||"",lastName:diver.lastName||"",password:code,role:serverRole}});
-   if(createError||!created?.ok)throw new Error(created?.error||(createError?.message||"La création serveur a échoué."));
-   const u={id:id||("user-"+Date.now()),authUserId:created.user_id,diverId,name,role,baseRole:role==="master"?profileRole:undefined,permissions,active:true};
-   state.users.push(u);saveState();closeUserDialog();render("acces");notify("Compte serveur créé pour "+name);
- }catch(err){console.error(err);document.getElementById("userMessage").textContent=err.message||"Erreur lors de la création du compte."}
+   const action=existing?"update":"create";
+   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole};
+   if(code)body.password=code;
+   if(existing){
+     if(!existing.authUserId){
+       throw new Error("Identifiant Supabase manquant pour ce compte. Ce compte ancien doit être rapproché de son profil serveur avant de pouvoir le modifier.");
+     }
+     body.user_id=existing.authUserId;
+     body.active=existing.active!==false;
+   }
+   const {data:result,error:requestError}=await client.functions.invoke("member-access",{body});
+   if(requestError||!result?.ok)throw new Error(result?.error||(requestError?.message||(existing?"La modification serveur a échoué.":"La création serveur a échoué.")));
+   const u={...(existing||{}),id:existing?existing.id:("user-"+Date.now()),authUserId:result.user_id||existing?.authUserId,diverId,name,role,baseRole:role==="master"?profileRole:undefined,permissions,active:existing?existing.active!==false:true};
+   if(code)u.code=code;
+   if(existing)state.users=state.users.map(x=>x.id===id?u:x);else state.users.push(u);
+   saveState();closeUserDialog();render("acces");notify(existing?"Compte serveur modifié pour "+name:"Compte serveur créé pour "+name);
+ }catch(err){console.error(err);document.getElementById("userMessage").textContent=err.message||"Erreur lors de l’enregistrement du compte."}
  finally{submitButton.disabled=false;submitButton.textContent="Enregistrer le compte"}
- return;
- const u={id:id||("user-"+Date.now()),diverId,name,code,role,baseRole:role==="master"?profileRole:undefined,permissions,active:existing?existing.active!==false:true};
- if(existing)state.users=state.users.map(x=>x.id===id?u:x);else state.users.push(u);
- saveState();closeUserDialog();render("acces");notify(role==="master"?(existing?"Compte Master modifié":"Nouveau Master désigné"):(existing?"Accès modifiés":"Accès attribués"))
 });
 
 let pendingEquipmentRemovalId=null;
