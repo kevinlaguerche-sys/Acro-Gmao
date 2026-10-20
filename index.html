@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#061b32">
-<title>ACRO Plongée — V123 scan matériel club et matériel personnel</title>
+<title>ACRO Plongée — V124 prêt des blocs ACRO et inventaire disponible</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -941,13 +941,26 @@ function openPlanningDialog(date){
 // Les blocs affectés à un plongeur (ownerId/ownerName) sont personnels et exclus.
 function isAcroClubLoanEquipment(eq){
  if(!eq || eq.active===false) return false;
- if(eq.type==="bloc" && (String(eq.ownerId||"").trim() || String(eq.ownerName||"").trim())) return false;
+ // Un bloc est prêté s'il est explicitement rattaché au club ACRO ; les blocs
+ // attribués à un plongeur restent exclus.
+ if(eq.type==="bloc"){
+  const owner=String(eq.ownerName||eq.owner||"").trim().toLocaleLowerCase('fr');
+  const ownerId=String(eq.ownerId||"").trim();
+  const clubOwner=/\bacro\b|club\s*acro|acro\s*plong[ée]e/.test(owner);
+  if(clubOwner) return true;
+  if(ownerId || owner) return false;
+ }
  return true;
+}
+function availableClubEquipment(type){
+ const out=new Set((state.loans||[]).filter(l=>!l.returnedAt).map(l=>String(l.equipmentId)));
+ return (state.equipment||[]).filter(e=>e.type===type&&isAcroClubLoanEquipment(e)&&!out.has(String(e.id))&&!(e.type==='detendeur'&&e.needsDisinfection));
 }
 
 function materialHTML(){
  const open=state.loans.filter(l=>!l.returnedAt);
  const counts={stab:open.filter(l=>l.type==="stab").length,detendeur:open.filter(l=>l.type==="detendeur").length,bloc:open.filter(l=>l.type==="bloc").length};
+ const availableCounts={stab:availableClubEquipment("stab").length,detendeur:availableClubEquipment("detendeur").length,bloc:availableClubEquipment("bloc").length};
  const people=masterPeople();
  return `<div class="subnav material-subnav"><button class="active" data-mtab="sorties"><span class="material-tab-icon">📦</span><span class="material-tab-label">Sortie<br>de matériel</span></button><button data-mtab="gonflage"><span class="material-tab-icon">💨</span><span class="material-tab-label">Gonflage</span></button>${canMasterMateriel()?'<button data-mtab="master"><span class="material-tab-icon">🛡️</span><span class="material-tab-label">Master matériel</span></button>':""}</div>
  <div id="materialPanel">
@@ -956,6 +969,11 @@ function materialHTML(){
  <button class="material-stat" data-count-type="detendeur"><span class="module-icon equipment-icon equipment-icon-detendeur">${equipmentIconSvg("detendeur")}</span><div class="material-stat-label-count"><span class="stat-label">Détendeur</span><strong>${counts.detendeur}</strong></div><small class="material-stat-hint">Cliquer pour voir les numéros et emprunteurs →</small></button>
  <button class="material-stat" data-count-type="bloc"><span class="module-icon equipment-icon equipment-icon-bloc">${equipmentIconSvg("bloc")}</span><div class="material-stat-label-count"><span class="stat-label">Bloc</span><strong>${counts.bloc}</strong></div><small class="material-stat-hint">Cliquer pour voir les numéros et emprunteurs →</small></button>
  </div>
+ <div class="section club-inventory-section"><div class="section-head"><div><h2>📋 Inventaire disponible — matériel du club ACRO</h2><p class="muted">Uniquement les équipements appartenant au club et actuellement disponibles au prêt.</p></div><span class="badge green">Inventaire en direct</span></div><div class="material-stats inventory-available-stats">
+ <button class="material-stat" data-inventory-type="stab"><span class="module-icon equipment-icon equipment-icon-stab">${equipmentIconSvg("stab")}</span><div class="material-stat-label-count"><span class="stat-label">Stabs disponibles</span><strong>${availableCounts.stab}</strong></div><small class="material-stat-hint">Afficher la liste des stabs →</small></button>
+ <button class="material-stat" data-inventory-type="bloc"><span class="module-icon equipment-icon equipment-icon-bloc">${equipmentIconSvg("bloc")}</span><div class="material-stat-label-count"><span class="stat-label">Blocs disponibles</span><strong>${availableCounts.bloc}</strong></div><small class="material-stat-hint">Afficher la liste des blocs →</small></button>
+ <button class="material-stat" data-inventory-type="detendeur"><span class="module-icon equipment-icon equipment-icon-detendeur">${equipmentIconSvg("detendeur")}</span><div class="material-stat-label-count"><span class="stat-label">Détendeurs disponibles</span><strong>${availableCounts.detendeur}</strong></div><small class="material-stat-hint">Afficher la liste des détendeurs →</small></button>
+ </div><div id="clubInventoryList"></div></div>
  <div class="section loan-registration-navy-outline"><div class="section-head"><h2>Enregistrer un prêt de matériel</h2><span class="badge">Mode scanner</span></div>
  <form id="loanForm">
  <div class="inline-form">
@@ -983,6 +1001,13 @@ function renderLoanHistory(){
  host.innerHTML=rows.length?`<div class="table-wrap"><table><thead><tr><th>Matériel</th><th>Emprunteur</th><th>Donné par</th><th>Date de sortie</th><th>Statut</th><th>Date retour</th></tr></thead><tbody>${rows.map(l=>`<tr><td>${esc(equipmentTypeLabel(l.type))} n° ${esc(l.equipmentNumber)}</td><td>${esc(l.borrowerName||"—")}</td><td>${esc(l.givenBy||"—")}</td><td>${dateFR(l.borrowDate)}</td><td><span class="badge ${l.returnedAt?"green":"orange"}">${l.returnedAt?"Retourné":"Sorti"}</span></td><td>${l.returnedAt?dateFR(l.returnedAt):"—"}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">Aucune sortie ne correspond à ces filtres.</div>`;
 }
 function wireMaterial(){
+ document.querySelectorAll("[data-inventory-type]").forEach(btn=>btn.addEventListener("click",()=>{
+  const type=btn.dataset.inventoryType,items=availableClubEquipment(type),host=document.getElementById("clubInventoryList");
+  if(!host)return;
+  host.innerHTML=`<div class="section" style="margin-top:14px"><div class="section-head"><h2>${equipmentTypeLabel(type)} disponibles (${items.length})</h2><button type="button" class="btn soft small" id="closeClubInventoryList">Fermer la liste</button></div>${items.length?`<div class="table-wrap"><table><thead><tr><th>Numéro</th><th>Description</th><th>Propriété</th><th>Disponibilité</th></tr></thead><tbody>${items.slice().sort((a,b)=>String(a.number).localeCompare(String(b.number),"fr",{numeric:true})).map(eq=>`<tr><td><strong>${esc(eq.number||"—")}</strong></td><td>${esc(eq.label||"—")}</td><td><span class="badge green">Club ACRO Plongée</span></td><td><span class="badge green">Disponible</span></td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">Aucun équipement disponible dans cette catégorie pour le club ACRO.</div>'}</div>`;
+  document.getElementById("closeClubInventoryList")?.addEventListener("click",()=>{host.innerHTML=""});
+  host.scrollIntoView({behavior:"smooth",block:"nearest"});
+ }));
  const historyPerson=document.getElementById("loanHistoryPerson"),historyType=document.getElementById("loanHistoryType");
  if(historyPerson)historyPerson.addEventListener("change",renderLoanHistory);
  if(historyType)historyType.addEventListener("change",renderLoanHistory);
