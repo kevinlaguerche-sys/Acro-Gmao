@@ -1,0 +1,7 @@
+ACRO Plongée V124 — diagnostic de l'erreur Edge Function
+
+Fichier principal : index.html
+
+Cette version améliore l'affichage des erreurs pendant la création/modification d'un compte : elle tente d'afficher le détail HTTP renvoyé par la fonction Supabase « member-access » au lieu du seul message générique « Edge Function returned a non-2xx status code ».
+
+Important : cette modification améliore le diagnostic côté navigateur. Si la fonction serveur échoue réellement, la correction définitive peut nécessiter le code de la fonction Edge « member-access » et ses journaux Supabase.

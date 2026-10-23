@@ -442,6 +442,54 @@ function remotePayload(){const copy=JSON.parse(JSON.stringify(state));delete cop
 function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}if(remoteReady&&supabaseClient&&isMaster()){clearTimeout(remoteSaveTimer);remoteSaveTimer=setTimeout(async()=>{try{const {error}=await supabaseClient.from("acro_app_state").upsert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id,updated_at:new Date().toISOString()},{onConflict:"club_id"});if(error)throw error;notify("Sauvegarde serveur effectuée")}catch(e){console.error(e);notify("Erreur de sauvegarde serveur : "+(e.message||"vérifie les politiques Supabase"))}},700)}}
 function initSupabase(){const key=(localStorage.getItem(SUPABASE_KEY_STORAGE)||"").trim();if(!key)return null;if(!window.supabase?.createClient)return null;supabaseClient=window.supabase.createClient(SUPABASE_URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return supabaseClient}
 async function loadRemoteState(){const localUsers=state.users||[];const {data,error}=await supabaseClient.from("acro_app_state").select("state").eq("club_id",CLUB_STATE_ID).maybeSingle();if(error)throw error;if(data?.state){state=normalizeState({...data.state,users:localUsers});}else{state=normalizeState({...defaultState(),users:localUsers});if(isMaster()){const {error:insertError}=await supabaseClient.from("acro_app_state").insert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id});if(insertError)throw insertError;}}localStorage.setItem(STORE_KEY,JSON.stringify(state));remoteReady=true}
+// Réconcilie la liste locale des accès avec les profils Supabase existants.
+// Non destructif : conserve les comptes locaux et leurs permissions, ajoute seulement les profils absents.
+async function syncServerAccessProfiles(){
+ if(!supabaseClient||!isMaster())return {added:0,linked:0};
+ const {data:profiles,error}=await supabaseClient
+  .from("acro_profiles")
+  .select("user_id,display_name,role,is_active");
+ if(error)throw error;
+ if(!Array.isArray(profiles))return {added:0,linked:0};
+ state.users ||= [];
+ const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toLocaleLowerCase("fr");
+ const diverForName=name=>(state.divers||[]).find(d=>norm(`${d.firstName||""} ${d.lastName||""}`)===norm(name));
+ let added=0,linked=0;
+ for(const p of profiles){
+  if(!p?.user_id)continue;
+  const name=String(p.display_name||"").trim();
+  const role=p.role==="master"?"master":p.role==="encadrant"?"encadrant":"diver";
+  let u=state.users.find(x=>x.authUserId===p.user_id);
+  if(!u && name)u=state.users.find(x=>norm(x.name)===norm(name));
+  const diver=diverForName(name);
+  const defaultPermissions=role==="master"?Object.keys(views):role==="encadrant"
+   ?["dashboard","materiel","formation","planning","plongee"]
+   :["dashboard","planning"];
+  if(u){
+   if(!u.authUserId){u.authUserId=p.user_id;linked++;}
+   if(!u.name&&name)u.name=name;
+   if(!u.diverId&&diver)u.diverId=diver.id;
+   // Le rôle et l'état serveur font autorité; les permissions locales déjà définies sont préservées.
+   u.role=role;
+   u.active=p.is_active!==false;
+   if(!Array.isArray(u.permissions)||!u.permissions.length)u.permissions=defaultPermissions;
+  }else{
+   state.users.push({
+    id:"server-"+p.user_id,
+    authUserId:p.user_id,
+    diverId:diver?.id||"",
+    name:name||"Compte sans nom",
+    role,
+    permissions:defaultPermissions,
+    active:p.is_active!==false,
+    serverSynced:true
+   });
+   added++;
+  }
+ }
+ try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
+ return {added,linked};
+}
 async function loginByName(lastName,firstName,password){
  const client=initSupabase();
  if(!client){document.getElementById("loginMessage").textContent="Configuration manquante : ajoute la clé publique dans Configuration initiale.";return false}
@@ -453,7 +501,7 @@ async function loginByName(lastName,firstName,password){
  if(profileError||!profile||profile.is_active===false){await client.auth.signOut();document.getElementById("loginMessage").textContent="Profil club introuvable ou désactivé. Demande au Master de vérifier le compte.";return false}
  const perms=profile.role==="master"?["dashboard","materiel","formation","planning","plongee","masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"]:profile.role==="encadrant"?["dashboard","materiel","formation","planning","plongee"]:["dashboard","planning"];
  current={id:sessionData.user.id,email:sessionData.user.email||"",name:profile.display_name||(`${firstName} ${lastName}`.trim()),role:profile.role,permissions:perms,active:true};
- try{await loadRemoteState()}catch(e){console.error(e);await client.auth.signOut();current=null;remoteReady=false;document.getElementById("loginMessage").textContent="Authentifié, mais lecture des données du club impossible : "+(e.message||"vérifie les politiques Supabase");return false}
+ try{await loadRemoteState();if(isMaster()){try{await syncServerAccessProfiles()}catch(syncError){console.error("Synchronisation des profils d’accès impossible",syncError);}}}catch(e){console.error(e);await client.auth.signOut();current=null;remoteReady=false;document.getElementById("loginMessage").textContent="Authentifié, mais lecture des données du club impossible : "+(e.message||"vérifie les politiques Supabase");return false}
  showApp();return true;
 }
 function canMasterMateriel(){return isMaster()}
@@ -531,7 +579,7 @@ function render(view){
  if(["materiel","masterMateriel"].includes(view)){document.getElementById("titleBackToMaterial")?.addEventListener("click",()=>render("materiel"));} 
  if(view==="materiel") wireMaterial();
  if(view==="masterMateriel"&&isMaster()){document.getElementById("newEquipmentBtn")?.addEventListener("click",()=>{const f=document.getElementById("equipmentForm");if(f){delete f.dataset.editEquipment;f.reset();const submit=f.querySelector('button[type="submit"]');if(submit)submit.textContent="Enregistrer";const title=document.querySelector("#equipmentFormWrap .equipment-edit-title");if(title)title.textContent="Créer un équipement";}document.getElementById("equipmentFormWrap").classList.remove("hidden");document.getElementById("equipmentType")?.focus()});wireMasterMaterial();}
- if(view==="acces"&&isMaster()){wireEventLocations();document.getElementById("createUserBtn")?.addEventListener("click",()=>openUserDialog());document.querySelectorAll("[data-edit-user]").forEach(b=>b.addEventListener("click",()=>openUserDialog(b.dataset.editUser)));document.querySelectorAll("[data-toggle-user]").forEach(b=>b.addEventListener("click",()=>toggleUser(b.dataset.toggleUser)));document.querySelectorAll("[data-delete-user]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deleteUser)))}
+ if(view==="acces"&&isMaster()){wireEventLocations();document.getElementById("createUserBtn")?.addEventListener("click",()=>openUserDialog());document.getElementById("refreshServerAccess")?.addEventListener("click",async e=>{const btn=e.currentTarget;btn.disabled=true;btn.textContent="Synchronisation…";try{const result=await syncServerAccessProfiles();render("acces");notify(`Synchronisation terminée : ${result.added} compte(s) ajouté(s), ${result.linked} profil(s) rapproché(s).`)}catch(err){console.error(err);notify("Synchronisation impossible : "+(err.message||"vérifie les politiques Supabase"))}finally{const b=document.getElementById("refreshServerAccess");if(b){b.disabled=false;b.textContent="↻ Synchroniser les comptes serveur"}}});document.querySelectorAll("[data-edit-user]").forEach(b=>b.addEventListener("click",()=>openUserDialog(b.dataset.editUser)));document.querySelectorAll("[data-toggle-user]").forEach(b=>b.addEventListener("click",()=>toggleUser(b.dataset.toggleUser)));document.querySelectorAll("[data-delete-user]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deleteUser)))}
 
  if(view==="plongeurs"&&isMaster()) wireDivers();
  if(view==="sauvegarde"&&isMaster()) wireBackup();
@@ -1456,7 +1504,7 @@ function accessHTML(){
  const accountFor=d=>state.users.find(u=>u.diverId===d.id||String(u.name||"").trim().toLocaleLowerCase("fr")===((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr")));
  const linkedUsers=state.users.filter(u=>divers.some(d=>d.id===u.diverId||String(u.name||"").trim().toLocaleLowerCase("fr")===((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr"))));
  return `${eventLocationsHTML()}
- <div class="section"><div class="section-head"><div><h2>Accès des plongeurs</h2><p class="muted">Cette liste reprend uniquement les fiches créées dans « Gestion des plongeurs ». Tu peux créer, modifier ou retirer un accès de la liste.</p></div><span class="badge">${divers.length} plongeur(s)</span></div>
+ <div class="section"><div class="section-head"><div><h2>Accès des plongeurs</h2><p class="muted">Les accès sont rapprochés des profils Supabase existants. La synchronisation ajoute les profils manquants sans supprimer les comptes ni les fiches plongeurs.</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="badge">${divers.length} plongeur(s)</span><button class="btn soft small" id="refreshServerAccess">↻ Synchroniser les comptes serveur</button></div></div>
  ${divers.length?`<div class="table-wrap"><table><thead><tr><th>Plongeur</th><th>Niveau</th><th>Compte d’accès</th><th>Actions</th></tr></thead><tbody>${divers.map(d=>{const u=accountFor(d);return `<tr><td><strong>${esc((d.firstName||"")+" "+(d.lastName||""))}</strong></td><td>${esc(d.currentLevel||"—")}</td><td>${u?`<span class="badge ${u.active===false?"gray":""}">${u.active===false?"Désactivé":"Compte créé"}</span>`:'<span class="badge orange">Pas encore de compte</span>'}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap">${u?`<button class="btn soft small" data-edit-user="${esc(u.id)}">Modifier</button><button class="btn danger small" data-delete-user="${esc(u.id)}">Effacer de la liste</button>`:`<button class="btn primary small" data-create-user-for="${esc(d.id)}">＋ Créer l’accès</button>`}</div></td></tr>`}).join("")}</tbody></table></div>`:'<div class="empty">Aucune fiche plongeur trouvée. Crée d’abord les plongeurs dans « Gestion des plongeurs ».</div>'}</div>
  <div class="section"><div class="section-head"><div><h2>Comptes existants des plongeurs</h2><p class="muted">Seuls les comptes associés à une fiche de « Gestion des plongeurs » sont affichés ici.</p></div><span class="badge">${linkedUsers.length} compte(s)</span></div>
  ${linkedUsers.length?`<div class="table-wrap"><table><thead><tr><th>Plongeur</th><th>Profil</th><th>Écrans autorisés</th><th>État</th><th>Actions</th></tr></thead><tbody>${linkedUsers.map(u=>{const d=divers.find(x=>x.id===u.diverId)||divers.find(x=>String(u.name||"").trim().toLocaleLowerCase("fr")===((String(x.firstName||"")+" "+String(x.lastName||"")).trim().toLocaleLowerCase("fr")));return `<tr><td><strong>${esc(d?((d.firstName||"")+" "+(d.lastName||"")).trim():u.name||"Plongeur")}</strong></td><td>${u.role==="master"?"👑 Master":u.role==="encadrant"?"Encadrant":u.role==="diver"?"Plongeur":"Membre du club"}</td><td>${u.role==="master"?"Accès complet à toutes les rubriques et fonctions":((u.permissions||[]).map(p=>(isMasterSection(p)?(views[p]?.title||p)+" (consultation)":views[p]?.title||p)).join(", ")||"Aucun")}</td><td><span class="badge ${u.active===false?"gray":""}">${u.active===false?"Désactivé":"Actif"}</span></td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn soft small" data-edit-user="${esc(u.id)}">Modifier</button><button class="btn soft small" data-toggle-user="${esc(u.id)}">${u.active===false?"Activer":"Désactiver"}</button><button class="btn danger small" data-delete-user="${esc(u.id)}">Effacer de la liste</button></div></td></tr>`}).join("")}</tbody></table></div>`:'<div class="empty">Aucun compte associé aux fiches plongeurs existantes.</div>'}</div>
@@ -1553,7 +1601,23 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
      body.active=existing.active!==false;
    }
    const {data:result,error:requestError}=await client.functions.invoke("member-access",{body});
-   if(requestError||!result?.ok)throw new Error(result?.error||(requestError?.message||(existing?"La modification serveur a échoué.":"La création serveur a échoué.")));
+   if(requestError){
+     // Supabase encapsule souvent le détail HTTP de la fonction dans error.context.
+     // Lire une copie de la réponse permet d'afficher le vrai motif au lieu du seul « non-2xx ».
+     let detail="";
+     try{
+       const ctx=requestError.context;
+       if(ctx && typeof ctx.clone==="function"){
+         const responseCopy=ctx.clone();
+         let payload=null;
+         try{payload=await responseCopy.json()}catch(_){try{payload={message:await ctx.clone().text()}}catch(__){}}
+         if(payload)detail=String(payload.error||payload.message||payload.msg||payload.details||"").trim();
+         if(!detail && ctx.status)detail="HTTP "+ctx.status+(ctx.statusText?" "+ctx.statusText:"");
+       }
+     }catch(diagnosticError){console.warn("Détail de réponse Supabase indisponible",diagnosticError)}
+     throw new Error((detail?detail+" — ":"")+"Fonction Supabase member-access en erreur. Vérifie les journaux de la fonction Edge dans Supabase. Détail technique : "+(requestError.message||"statut HTTP non-2xx"));
+   }
+   if(!result?.ok)throw new Error(result?.error||(existing?"La modification serveur a échoué.":"La création serveur a échoué."));
    const u={...(existing||{}),id:existing?existing.id:("user-"+Date.now()),authUserId:result.user_id||existing?.authUserId,diverId,name,role,baseRole:role==="master"?profileRole:undefined,permissions,active:existing?existing.active!==false:true};
    if(code)u.code=code;
    if(existing)state.users=state.users.map(x=>x.id===id?u:x);else state.users.push(u);
