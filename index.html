@@ -292,7 +292,26 @@
  .section .inline-form>.btn,.section .inline-form button{width:100%;min-width:0;white-space:normal;line-height:1.25;overflow-wrap:anywhere}
 }
 
-.inventory-collapse-toggle{white-space:nowrap;font-weight:800;display:inline-flex;align-items:center;gap:8px}.inventory-collapse-toggle span{font-size:1.25em;line-height:1}.club-inventory-section #clubInventoryCollapsibleContent{padding-top:8px}.force-bitacro-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;background:#fef3c7;color:#78350f;border:2px solid #f59e0b;border-radius:10px;padding:10px 15px;font-weight:900;cursor:pointer}.force-bitacro-btn:focus{outline:3px solid #fdba74;outline-offset:2px}</style>
+.inventory-collapse-toggle{white-space:nowrap;font-weight:800;display:inline-flex;align-items:center;gap:8px}.inventory-collapse-toggle span{font-size:1.25em;line-height:1}.club-inventory-section #clubInventoryCollapsibleContent{padding-top:8px}.force-bitacro-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;background:#fef3c7;color:#78350f;border:2px solid #f59e0b;border-radius:10px;padding:10px 15px;font-weight:900;cursor:pointer}.force-bitacro-btn:focus{outline:3px solid #fdba74;outline-offset:2px}
+/* ACRO Plongée — statuts et cartes d'événements */
+.dive-status{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;font-weight:900;font-size:14px;line-height:1;border:2px solid;box-sizing:border-box;vertical-align:middle}
+.dive-status.pending{background:#eef2f6;color:#7b8794;border-color:#cbd5df}
+.dive-status.yes{background:#16a34a;color:#fff;border-color:#15803d}
+.dive-status.no{background:#dc2626;color:#fff;border-color:#b91c1c}
+.dive-event-open{display:flex;align-items:center;gap:13px;width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(135deg,#fff 0%,#f7fbfd 100%);color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 3px 12px #0b29400a;transition:border-color .15s,box-shadow .15s,transform .15s}
+.dive-event-open:hover{background:#f1fbfb;border-color:#0b9c9b;box-shadow:0 6px 18px #0b294014;transform:translateY(-1px)}
+.dive-event-open-main{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
+.dive-event-open-main strong{font-size:14px;font-weight:800}
+.dive-event-open-main small{color:var(--muted);font-size:12px;line-height:1.45;white-space:normal}
+.dive-event-counts{font-size:12px;color:var(--muted);white-space:nowrap}
+.calendar-event-chip{display:flex;align-items:center;gap:5px;min-width:0}
+.calendar-event-chip .dive-status{width:17px;height:17px;min-width:17px;font-size:10px;border-width:1.5px;flex-shrink:0}
+.calendar-event-chip .dive-event-chip-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.calendar-day.has-dive-events{border-color:#9fc7d2;background:#f8fcfd}
+.calendar-day .calendar-events{width:100%}
+.calendar-day .calendar-event-chip{max-width:100%}
+@media(max-width:700px){.dive-event-open{padding:12px;gap:9px}.dive-event-counts{font-size:10px}.calendar-day{min-height:90px;padding:5px}.calendar-event-chip{font-size:9px}}
+</style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -820,16 +839,6 @@ function extractAllQRCodes(){
  if(!popup){notify("Le navigateur a bloqué la fenêtre. Autorise les fenêtres contextuelles pour ce site puis réessaie.");return}
  const cards=items.map((x,i)=>`<article class="qr-card"><img alt="QR code ${esc(x.kind)}" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data=${encodeURIComponent(JSON.stringify(x.payload))}"><div class="kind">${esc(x.kind)}</div><h2>${esc(x.title)}</h2><p>${esc(x.subtitle)}</p><small>${i+1} / ${items.length}</small></article>`).join("");
  const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Extraction complète QR — ACRO Plongée</title><style>body{font-family:Arial,sans-serif;color:#10283c;margin:0;padding:18px}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}h1{font-size:22px;margin:0 0 5px}p{margin:4px 0;color:#526778}.actions{display:flex;gap:8px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:10px 14px;background:#087e87;color:white;font-weight:bold;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.qr-card{border:1px solid #cddce4;border-radius:10px;padding:10px;text-align:center;break-inside:avoid;min-width:0}.qr-card img{display:block;width:150px;height:150px;max-width:100%;object-fit:contain;margin:0 auto 5px}.kind{font-size:10px;text-transform:uppercase;font-weight:bold;color:#087e87;letter-spacing:.08em}.qr-card h2{font-size:13px;margin:5px 0;overflow-wrap:anywhere}.qr-card p{font-size:10px;min-height:12px;overflow-wrap:anywhere}.qr-card small{font-size:9px;color:#718696}@media(max-width:750px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header{align-items:flex-start;flex-direction:column}}@page{size:A4;margin:8mm}@media print{body{padding:0}header .actions{display:none}.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.qr-card{padding:6px}.qr-card img{width:125px;height:125px}}
-/* Statut de réponse dans le module Plongée */
-.dive-status{display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;min-width:23px;border-radius:7px;font-weight:900;font-size:15px;line-height:1;border:1px solid}
-.dive-status.pending{background:#eef1f4;color:#7b8794;border-color:#cbd3dc}
-.dive-status.yes{background:#dcfce7;color:#15803d;border-color:#22c55e}
-.dive-status.no{background:#fee2e2;color:#b91c1c;border-color:#ef4444}
-.dive-event-open{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border:0;border-radius:12px;background:transparent;color:inherit;text-align:left;cursor:pointer}
-.dive-event-open:hover{background:var(--soft)}
-.dive-event-open-main{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
-.dive-event-open-main small{color:var(--muted);font-size:12px;white-space:normal}
-.dive-event-counts{font-size:12px;color:var(--muted);white-space:nowrap}
 </style></head><body><header><div><h1>ACRO Plongée — Extraction QR complète</h1><p>${equipment.length} équipement(s) · ${divers.filter(d=>d.id).length} plongeur(s) · ${items.length} QR code(s)</p><p>Imprime cette planche ou choisis « Enregistrer au format PDF » dans la fenêtre d’impression.</p></div><div class="actions"><button onclick="window.print()">Imprimer / Enregistrer en PDF</button><button onclick="window.close()">Fermer</button></div></header><main class="grid">${cards}</main><script>window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(resolve=>{i.onload=resolve;i.onerror=resolve}))).then(()=>{const failed=imgs.filter(i=>!i.naturalWidth).length;if(failed)alert(failed+' QR code(s) n’ont pas pu être chargés. Vérifie Internet puis relance l’extraction.');});});<\/script></body></html>`;
  popup.document.open();popup.document.write(html);popup.document.close();
  notify("Extraction lancée : "+items.length+" QR code(s) dans une nouvelle fenêtre.");
@@ -865,8 +874,8 @@ function diveForecastHTML(){
  for(let i=0;i<total;i++){
   const d=new Date(start);d.setDate(start.getDate()+i);
   const iso=isoLocal(d),dayEvents=byDate[iso]||[],outside=d.getMonth()!==month;
-  cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} événement(s)">
-   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>`<span class="calendar-event-chip ${(EVENT_TYPES[ev.type]||EVENT_TYPES.event).className||""}">${diveStatusIcon(diveResponseFor(ev,current?.id||""))} ${esc(diveEventLabel(ev))}</span>`).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
+  cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""} ${dayEvents.length?"has-dive-events":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} événement(s)">
+   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>`<span class="calendar-event-chip ${(EVENT_TYPES[ev.type]||EVENT_TYPES.event).className||""}">${diveStatusIcon(diveResponseFor(ev,current?.id||""))}<span class="dive-event-chip-label">${esc(diveEventLabel(ev))}</span></span>`).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
   </button>`);
  }
  const cards=allEvents.map(ev=>{
