@@ -495,13 +495,16 @@ function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMo
 function dateFR(s){if(!s)return "—";const p=s.split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
 
 function equipmentIconSvg(type){
- const images={
-  stab:'https://store.cressi.com/cdn/shop/products/Bcds_Scorpion_4__WEB.jpg?v=1669386877&width=320',
-  detendeur:'https://store.cressi.com/cdn/shop/files/z0zatvwysmd8vthgcidr.jpg?v=1746543552&width=320',
-  bloc:'https://store.cressi.com/cdn/shop/products/Tanks_Cilinder_5l__WEB.jpg?v=1669895261&width=240'
+ const originals={
+  stab:"https://store.cressi.com/cdn/shop/products/Bcds_Scorpion_4__WEB.jpg?v=1669386877&width=320",
+  detendeur:"https://store.cressi.com/cdn/shop/files/MC11-SC_-_Zen_Pro__silver___DIN__HZ792151_01__WEB.jpg?v=1746545498&width=320",
+  bloc:"https://store.cressi.com/cdn/shop/products/Tanks_Cilinder_5l__WEB.jpg?v=1669895261&width=320"
  };
- const labels={stab:'Gilet stabilisateur de plongée',detendeur:'Détendeur de plongée',bloc:'Bloc de plongée sous-marine'};
- return `<img class="equipment-photo-icon" src="${images[type]||images.bloc}" alt="${labels[type]||'Matériel de plongée'}" loading="lazy" referrerpolicy="no-referrer">`;
+ const labels={stab:"Gilet stabilisateur de plongée",detendeur:"Détendeur de plongée",bloc:"Bloc de plongée sous-marine"};
+ const source=originals[type]||originals.bloc;
+ // Proxy d'image pour éviter le blocage d'affichage direct du CDN Cressi dans le navigateur du site.
+ const src="https://images.weserv.nl/?url="+encodeURIComponent(source);
+ return `<img class="equipment-photo-icon" src="${src}" alt="${labels[type]||labels.bloc}" loading="lazy" decoding="async">`;
 }
 
 function equipmentTypeLabel(t){return ({stab:"Gilet stabilisateur",detendeur:"Détendeur",bloc:"Bloc de plongée"})[t]||t}
