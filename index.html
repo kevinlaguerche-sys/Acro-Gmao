@@ -909,6 +909,7 @@ function wirePlanning(){
  document.getElementById("planningEventTitle").addEventListener("input",e=>{e.target.dataset.custom="1"});
  form.onsubmit=e=>{
   e.preventDefault();
+  if(form.dataset.submitting==="1")return;
   const id=document.getElementById("planningEventId").value;
   const type=document.getElementById("planningEventType").value;
   if(!canCreatePlanningType(type)){document.getElementById("planningEventMessage").textContent="Tu n’as pas l’autorisation de créer ce type d’événement.";return}
@@ -917,6 +918,8 @@ function wirePlanning(){
   const title=(EVENT_TYPES[type]||EVENT_TYPES.event).label;
   const previous=id?(state.events||[]).find(ev=>ev.id===id):null;const record={id:id||"event-"+Date.now(),date:document.getElementById("planningEventDate").value,type,title,location:location||"",time:"",responsible,createdBy:previous?.createdBy||current.name,createdAt:previous?.createdAt||new Date().toISOString(),diveParticipants:previous?.diveParticipants||[]};
   if(!record.date||!responsible){document.getElementById("planningEventMessage").textContent="Vérifie la date et le responsable.";return}
+  form.dataset.submitting="1";
+  const submitButton=form.querySelector('button[type="submit"]');if(submitButton)submitButton.disabled=true;
   state.events ||= [];
   if(id)state.events=state.events.map(ev=>ev.id===id?record:ev);else state.events.push(record);
   saveState();document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":"Événement créé");
