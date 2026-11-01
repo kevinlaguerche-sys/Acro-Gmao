@@ -1543,7 +1543,7 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
    const client=initSupabase();if(!client)throw new Error("Configure d’abord la clé publique Supabase sur cet appareil.");
    const serverRole=role==="master"?"master":role==="encadrant"?"encadrant":"plongeur";
    const action=existing?"update":"create";
-   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole};
+   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole,diver_id:diverId};
    if(code)body.password=code;
    if(existing){
      if(!existing.authUserId){
