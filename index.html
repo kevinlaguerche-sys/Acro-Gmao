@@ -496,12 +496,13 @@ function dateFR(s){if(!s)return "—";const p=s.split("-");return p.length===3?p
 
 function equipmentIconSvg(type){
  const images={
-  stab:'https://store.cressi.com/cdn/shop/products/Bcds_Scorpion_4__WEB.jpg?v=1669386877&width=320',
-  detendeur:'https://store.cressi.com/cdn/shop/files/z0zatvwysmd8vthgcidr.jpg?v=1746543552&width=320',
-  bloc:'https://store.cressi.com/cdn/shop/products/Tanks_Cilinder_5l__WEB.jpg?v=1669895261&width=240'
+  bloc:"images/materiel/808030404.jpg",
+  stab:"images/materiel/pro-hd-noire-petrol.jpg",
+  detendeur:"images/materiel/visuel_partner_n4_legend_3_acd.jpg"
  };
- const labels={stab:'Gilet stabilisateur de plongée',detendeur:'Détendeur de plongée',bloc:'Bloc de plongée sous-marine'};
- return `<img class="equipment-photo-icon" src="${images[type]||images.bloc}" alt="${labels[type]||'Matériel de plongée'}" loading="lazy" referrerpolicy="no-referrer">`;
+ const labels={bloc:"Bloc de plongée",stab:"Gilet stabilisateur de plongée",detendeur:"Détendeur de plongée"};
+ const src=images[type]||images.bloc;
+ return `<img class="equipment-photo-icon" src="${src}" alt="${labels[type]||labels.bloc}" loading="lazy" decoding="async">`;
 }
 function equipmentTypeLabel(t){return ({stab:"Gilet stabilisateur",detendeur:"Détendeur",bloc:"Bloc de plongée"})[t]||t}
 function availableEquipment(type){const out=new Set(state.loans.filter(l=>!l.returnedAt).map(l=>l.equipmentId));return state.equipment.filter(e=>e.type===type&&e.active!==false&&!out.has(e.id))}
