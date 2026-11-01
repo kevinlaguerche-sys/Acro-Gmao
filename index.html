@@ -843,6 +843,7 @@ function isDiveForecastEvent(ev){
  return isDiveTitle && ["event",""].includes(type);
 }
 function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)&&isDiveForecastEvent(ev)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function diveAllEvents(){return (state.events||[]).filter(isDiveForecastEvent).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
 function diveResponseFor(ev,userId){
  const responses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
  const saved=responses.find(x=>x.userId===userId);
@@ -854,7 +855,7 @@ function diveForecastHTML(){
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
  const first=new Date(year,month,1),offset=(first.getDay()+6)%7,start=new Date(year,month,1-offset);
  const total=Math.ceil((offset+new Date(year,month+1,0).getDate())/7)*7;
- const today=todayISO(),events=diveMonthEvents();
+ const today=todayISO(),events=diveMonthEvents(),allDiveEvents=diveAllEvents();
  const byDate={};events.forEach(ev=>(byDate[ev.date]||=[]).push(ev));
  const weekdays=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"],cells=[];
  for(let i=0;i<total;i++){
@@ -864,7 +865,7 @@ function diveForecastHTML(){
    <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.dive_exploration;return `<span class="calendar-event-chip director">${typ.icon} ${esc(ev.title||typ.label)}</span>`}).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
   </button>`);
  }
- const cards=events.map(ev=>{
+ const cards=allDiveEvents.map(ev=>{
   const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.dive_exploration;
   const choice=diveResponseFor(ev,current?.id||"");
   const participants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
@@ -887,8 +888,9 @@ function diveForecastHTML(){
   <div class="calendar-grid">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells.join("")}</div>
   <p class="planning-hint" style="margin-top:12px">Seules les plongées en exploration, en enseignement et en fosse sont affichées ici. Le Planning général reste inchangé.</p>
  </div>
- <div class="section"><div class="section-head"><div><h2>Plongées prévues</h2><p class="muted">Indique ta réponse pour chaque sortie.</p></div><span class="badge">${events.length} plongée(s)</span></div>
- ${cards||'<div class="empty">Aucune plongée prévue pour ce mois. Consulte le Planning général pour les prochaines sorties.</div>'}</div>`;
+ <div class="section"><div class="section-head"><div><h2>Plongées prévues</h2><p class="muted">Indique ta réponse pour chaque sortie.</p></div><span class="badge">${allDiveEvents.length} plongée(s)</span></div>
+ <p class="muted">Toutes les plongées enregistrées dans le Planning sont listées ici, quelle que soit leur date. Le calendrier ci-dessus reste affiché par mois.</p>
+ ${cards||'<div class="empty">Aucune plongée enregistrée dans le Planning. Vérifie que le type choisi est « Directeur de plongée » ou « Directeur de plongée en fosse ».</div>'}</div>`;
 }
 function wireDiveForecast(){
  document.getElementById("divePrev")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("plongee")});
