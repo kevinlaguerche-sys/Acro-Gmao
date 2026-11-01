@@ -832,86 +832,106 @@ function trainingDiverList(){const allowedLowerLevels=["NIVEAU 1","NIVEAU 2","PE
 function formationCommentPanel(d,list,kind){const comments=(state.trainingComments||[]).filter(c=>c.diverId===d?.id).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""));const prefix=kind==="initiator"?"initiator":"training";const title=kind==="initiator"?"Formation initiateur":"Plongeur en formation";return `<div class="section"><div class="section-head"><h2>${kind==="initiator"?"🎓":"🤿"} ${title}</h2><span class="badge">${list.length} en formation</span></div><div class="field"><label for="${prefix}DiverSelect">Plongeur</label><select id="${prefix}DiverSelect" ${list.length?"":"disabled"}><option value="">— Sélectionner un plongeur —</option>${list.map(x=>`<option value="${esc(x.id)}" ${x.id===d?.id?"selected":""}>${esc((x.firstName||"")+" "+(x.lastName||"")).trim()}</option>`).join("")}</select></div>${!list.length?`<div class="empty">${kind==="initiator"?"Aucun plongeur éligible en formation initiateur. Cette formation est réservée aux plongeurs de niveau 2 ou supérieur et son suivi est visible uniquement par les E3 et E4 (Master inclus).":"Aucun plongeur n’est actuellement indiqué en formation. Dans « Gestion des plongeurs », renseigne son champ « Niveau en cours » pour qu’il apparaisse ici."}</div>`:d?`<div class="cards" style="margin-top:12px"><article class="stat"><small>Niveau actuel</small><strong><span class="badge green" style="font-size:14px;padding:7px 11px">${esc(d.currentLevel||"—")}${d.aptitudeLevel?" · "+esc(d.aptitudeLevel):""}</span></strong></article><article class="stat"><small>Formation suivie</small><strong><span class="badge orange" style="font-size:14px;padding:7px 11px">${esc(d.inProgress||"—")}</span></strong></article><article class="stat"><small>Commentaires enregistrés</small><strong>${comments.length}</strong></article></div><div class="section" style="margin-top:14px"><div class="section-head"><h2>＋ Créer un nouveau commentaire</h2><span class="badge">${esc(current?.name||"Utilisateur")}</span></div><form id="${prefix}CommentForm"><input type="hidden" name="diverId" value="${esc(d.id)}"><div class="field"><label>Exercice travaillé</label><textarea name="exercise" required rows="2" placeholder="Décris librement l’exercice travaillé pendant la séance…"></textarea></div><div class="field"><label>Commentaire de séance</label><textarea name="comment" required rows="3" placeholder="Ce qui a été réalisé, points réussis ou difficultés observées…"></textarea></div><div class="field"><label>Conseils / travail à poursuivre</label><textarea name="nextSteps" required rows="3" placeholder="Exercices à retravailler et conseils pour la prochaine séance…"></textarea></div><button class="btn primary" type="submit">＋ Enregistrer le commentaire</button></form></div><div class="section training-history-section"><button type="button" class="loan-history-toggle training-history-toggle" id="${prefix}HistoryToggle" aria-expanded="false"><span><strong>Historique des commentaires</strong> <span class="badge">${comments.length}</span></span><span>⌄</span></button><div id="${prefix}HistoryContent" class="hidden">${comments.length?comments.map(c=>`<article class="history-item"><div class="section-head"><strong>${esc(c.date||c.createdAt||"")}</strong><span class="badge">${esc(c.author||"Utilisateur")}</span></div><p><strong>Exercice travaillé :</strong><br>${esc(c.exercise||"")}</p><p><strong>Commentaire :</strong><br>${esc(c.comment||"")}</p><p><strong>À poursuivre :</strong><br>${esc(c.nextSteps||"")}</p></article>`).join(""):"<p class=\"muted\">Aucun commentaire enregistré.</p>"}</div></div>`:""}</div>`}
 function formationHTML(){const list=trainingDiverList();const selected=document.getElementById("trainingDiverSelect")?.value||"";const d=list.find(x=>x.id===selected)||null;const normal=formationCommentPanel(d,list,"training");if(!isInitiatorTrainingAllowed())return normal;const ilist=initiatorDiverList();const iselected=document.getElementById("initiatorDiverSelect")?.value||"";const id=ilist.find(x=>x.id===iselected)||null;return normal+formationCommentPanel(id,ilist,"initiator")}
 function wireFormation(){["training","initiator"].forEach(prefix=>{const historyToggle=document.getElementById(prefix+"HistoryToggle");historyToggle?.addEventListener("click",()=>{const content=document.getElementById(prefix+"HistoryContent");const expanded=historyToggle.getAttribute("aria-expanded")==="true";historyToggle.setAttribute("aria-expanded",String(!expanded));content?.classList.toggle("hidden",expanded)});const sel=document.getElementById(prefix+"DiverSelect");sel?.addEventListener("change",()=>{const id=sel.value;render("formation");const next=document.getElementById(prefix+"DiverSelect");if(next)next.value=id});document.getElementById(prefix+"CommentForm")?.addEventListener("submit",e=>{e.preventDefault();const f=e.currentTarget;const data=new FormData(f);const diverId=String(data.get("diverId")||"");const allowed=prefix==="initiator"?initiatorDiverList():trainingDiverList();if(!allowed.some(d=>d.id===diverId)){notify("Ce plongeur n’est plus accessible dans ce suivi de formation.");return}state.trainingComments ||= [];state.trainingComments.push({id:"training-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),diverId,exercise:String(data.get("exercise")||""),comment:String(data.get("comment")||"").trim(),nextSteps:String(data.get("nextSteps")||"").trim(),author:current?.name||"Utilisateur",createdAt:new Date().toISOString(),date:todayISO()});saveState();render("formation");const next=document.getElementById(prefix+"DiverSelect");if(next)next.value=diverId;notify("Commentaire de formation enregistré")})})}
-function isDiveForecastEvent(ev){
- if(!ev)return false;
- const type=String(ev.type||"").trim().toLowerCase();
- // Types réellement créés par le formulaire Planning : une sortie avec DP ou une sortie en fosse.
- if(["director_dive","director_fosse","dive_exploration","dive_teaching","dive_fosse"].includes(type))return true;
- // Compatibilité avec les anciens événements génériques clairement identifiés comme plongées.
- const title=String(ev.title||ev.label||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
- const isDiveTitle=/(plongee en exploration|plongee en enseignement|plongee en fosse|sortie plongee|exploration|enseignement|fosse)/.test(title);
- return isDiveTitle && ["event",""].includes(type);
-}
-function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)&&isDiveForecastEvent(ev)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
-function diveAllEvents(){return (state.events||[]).filter(isDiveForecastEvent).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function isDiveForecastEvent(ev){return !!ev}
+function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function diveAllEvents(){return (state.events||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
 function diveResponseFor(ev,userId){
  const responses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
  const saved=responses.find(x=>x.userId===userId);
  if(saved)return saved.choice;
  return (Array.isArray(ev.diveParticipants)?ev.diveParticipants:[]).some(x=>x.userId===userId)?"yes":"";
 }
+function diveStatusIcon(choice){return choice==="yes"?"<span class='dive-status yes' title='Participation confirmée'>✓</span>":choice==="no"?"<span class='dive-status no' title='Ne participe pas'>✕</span>":"<span class='dive-status pending' title='Pas encore de réponse'>?</span>"}
+function diveEventLabel(ev){const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return typ.icon+" "+(ev.title||typ.label)}
 function diveForecastHTML(){
  if(!isDiveEncadrant())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants.</div></div>';
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
  const first=new Date(year,month,1),offset=(first.getDay()+6)%7,start=new Date(year,month,1-offset);
  const total=Math.ceil((offset+new Date(year,month+1,0).getDate())/7)*7;
- const today=todayISO(),events=diveMonthEvents(),allDiveEvents=diveAllEvents();
+ const today=todayISO(),events=diveMonthEvents(),allEvents=diveAllEvents();
  const byDate={};events.forEach(ev=>(byDate[ev.date]||=[]).push(ev));
  const weekdays=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"],cells=[];
  for(let i=0;i<total;i++){
   const d=new Date(start);d.setDate(start.getDate()+i);
   const iso=isoLocal(d),dayEvents=byDate[iso]||[],outside=d.getMonth()!==month;
-  cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} plongée(s)">
-   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.dive_exploration;return `<span class="calendar-event-chip director">${typ.icon} ${esc(ev.title||typ.label)}</span>`}).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
+  cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} événement(s)">
+   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>`<span class="calendar-event-chip ${(EVENT_TYPES[ev.type]||EVENT_TYPES.event).className||""}">${diveStatusIcon(diveResponseFor(ev,current?.id||""))} ${esc(diveEventLabel(ev))}</span>`).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
   </button>`);
  }
- const cards=allDiveEvents.map(ev=>{
-  const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.dive_exploration;
-  const choice=diveResponseFor(ev,current?.id||"");
-  const participants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
-  const yesCount=participants.length;
+ const cards=allEvents.map(ev=>{
+  const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event,choice=diveResponseFor(ev,current?.id||"");
+  const yesCount=(Array.isArray(ev.diveParticipants)?ev.diveParticipants:[]).length;
   const noCount=(Array.isArray(ev.diveResponses)?ev.diveResponses:[]).filter(x=>x.choice==="no").length;
   return `<article class="section dive-forecast-card" style="margin:10px 0;border:1px solid var(--line)">
-   <div class="section-head"><div><h3>${typ.icon} ${esc(ev.title||typ.label)}</h3><div class="planning-hint">${dateFR(ev.date)} · ${typ.label}${ev.location?" · 📍 "+esc(ev.location):""}</div></div></div>
-   <p class="planning-hint">Responsable : <strong>${esc(ev.responsible||"—")}</strong></p>
-   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
-    <button type="button" class="btn ${choice==="yes"?"primary":"soft"}" data-dive-response="yes" data-dive-event="${esc(ev.id)}" aria-pressed="${choice==="yes"}">✓ Je participe</button>
-    <button type="button" class="btn ${choice==="no"?"danger":"soft"}" data-dive-response="no" data-dive-event="${esc(ev.id)}" aria-pressed="${choice==="no"}">✕ Je ne participe pas</button>
-    <span class="badge">${yesCount} oui · ${noCount} non</span>
-   </div>
-   ${isMaster()?'<div class="planning-hint">Réponses enregistrées pour cette plongée.</div>':""}
+   <button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span>${diveStatusIcon(choice)}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${dateFR(ev.date)} · ${typ.label}${ev.location?" · "+esc(ev.location):""} · Responsable : ${esc(ev.responsible||"—")}</small></span><span class="dive-event-counts">${yesCount} oui · ${noCount} non</span><span>›</span></button>
   </article>`;
  }).join("");
  return `<div class="section">
-  <div class="calendar-toolbar"><div><div class="eyebrow">MES INTENTIONS DE PARTICIPATION</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
-  <p class="muted">Cet onglet sert uniquement à indiquer si tu souhaites participer aux plongées prévues dans le Planning. Choisis « Je participe » ou « Je ne participe pas » pour chaque plongée.</p>
+  <div class="calendar-toolbar"><div><div class="eyebrow">RÉPONSES AUX ÉVÉNEMENTS DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
+  <p class="muted">Tous les événements du Planning sont affichés ici : plongées, fosse, directeur de bassin, matériel et gonflage. Appuie sur une date ou un événement pour répondre.</p>
   <div class="calendar-grid">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells.join("")}</div>
-  <p class="planning-hint" style="margin-top:12px">Seules les plongées en exploration, en enseignement et en fosse sont affichées ici. Le Planning général reste inchangé.</p>
+  <div class="planning-hint" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">${diveStatusIcon("")} Sans réponse ${diveStatusIcon("yes")} Oui ${diveStatusIcon("no")} Non</div>
  </div>
- <div class="section"><div class="section-head"><div><h2>Plongées prévues</h2><p class="muted">Indique ta réponse pour chaque sortie.</p></div><span class="badge">${allDiveEvents.length} plongée(s)</span></div>
- <p class="muted">Toutes les plongées enregistrées dans le Planning sont listées ici, quelle que soit leur date. Le calendrier ci-dessus reste affiché par mois.</p>
- ${cards||'<div class="empty">Aucune plongée enregistrée dans le Planning. Vérifie que le type choisi est « Directeur de plongée » ou « Directeur de plongée en fosse ».</div>'}</div>`;
+ <div class="section"><div class="section-head"><div><h2>Tous les événements</h2><p class="muted">Une réponse est définitive pour le membre. Seul le Master peut la retirer.</p></div><span class="badge">${allEvents.length} événement(s)</span></div>
+ ${cards||'<div class="empty">Aucun événement enregistré dans le Planning.</div>'}</div>
+ <dialog id="diveEventDialog" style="border:0;border-radius:18px;padding:0;width:min(560px,calc(100% - 24px));box-shadow:0 25px 90px #061b3260">
+  <div class="dialog-head"><div><div class="eyebrow">ACRO PLONGÉE · RÉPONSE</div><h2 id="diveEventDialogTitle">Événement</h2></div><button type="button" class="btn small soft" id="closeDiveEventDialog">Fermer</button></div>
+  <div class="dialog-body" id="diveEventDialogBody"></div>
+ </dialog>
+ <dialog id="diveDateDialog" style="border:0;border-radius:18px;padding:0;width:min(560px,calc(100% - 24px));box-shadow:0 25px 90px #061b3260">
+  <div class="dialog-head"><div><div class="eyebrow">ACRO PLONGÉE · PLANNING</div><h2 id="diveDateDialogTitle">Événements</h2></div><button type="button" class="btn small soft" id="closeDiveDateDialog">Fermer</button></div>
+  <div class="dialog-body" id="diveDateDialogBody"></div>
+ </dialog>`;
+}
+function openDiveEventDialog(eventId){
+ const ev=(state.events||[]).find(x=>String(x.id)===String(eventId));if(!ev)return;
+ const dialog=document.getElementById("diveEventDialog"),body=document.getElementById("diveEventDialogBody");
+ const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event,choice=diveResponseFor(ev,current?.id||"");
+ const responses=Array.isArray(ev.diveResponses)?ev.diveResponses.slice():[];
+ const participants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
+ document.getElementById("diveEventDialogTitle").textContent=ev.title||typ.label;
+ let html=`<p><strong>${dateFR(ev.date)}</strong> · ${typ.label}</p>${ev.location?`<p>📍 ${esc(ev.location)}</p>`:""}<p>Responsable : <strong>${esc(ev.responsible||"—")}</strong></p><hr>`;
+ if(!choice){
+  html+=`<p>Souhaites-tu participer à cet événement ?</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn primary" data-dive-response="yes" data-dive-event="${esc(ev.id)}">✓ Je participe</button><button type="button" class="btn danger" data-dive-response="no" data-dive-event="${esc(ev.id)}">✕ Je ne participe pas</button></div>`;
+ }else{
+  html+=`<p>Ta réponse : ${diveStatusIcon(choice)} <strong>${choice==="yes"?"Je participe":"Je ne participe pas"}</strong></p><p class="planning-hint">Ta réponse est verrouillée. Pour la modifier ou l'annuler, contacte le Master du club.</p>`;
+ }
+ html+=`<hr><h3>Réponses des membres</h3>`;
+ const entries=[...participants.filter(p=>!responses.some(r=>r.userId===p.userId)).map(p=>({...p,choice:"yes"})),...responses];
+ html+=entries.length?entries.map(r=>`<div class="day-event-item"><span>${diveStatusIcon(r.choice)}</span><strong style="flex:1">${esc(r.name||"Membre")}</strong><span>${r.choice==="yes"?"Participe":"Ne participe pas"}</span>${isMaster()?`<button type="button" class="btn danger small" data-master-remove-response="${esc(ev.id)}" data-response-user="${esc(r.userId)}">Retirer</button>`:""}</div>`).join(""):'<p class="muted">Aucune réponse pour le moment.</p>';
+ body.innerHTML=html;
+ body.querySelectorAll("[data-dive-response]").forEach(btn=>btn.addEventListener("click",()=>saveDiveResponse(btn.dataset.diveEvent,btn.dataset.diveResponse)));
+ body.querySelectorAll("[data-master-remove-response]").forEach(btn=>btn.addEventListener("click",()=>{if(!isMaster())return;const target=(state.events||[]).find(x=>String(x.id)===String(btn.dataset.masterRemoveResponse));if(!target)return;const uid=btn.dataset.responseUser;target.diveResponses=(target.diveResponses||[]).filter(x=>x.userId!==uid);target.diveParticipants=(target.diveParticipants||[]).filter(x=>x.userId!==uid);saveState();openDiveEventDialog(target.id);notify("Réponse retirée par le Master")}));
+ if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
+}
+function saveDiveResponse(eventId,choice){
+ if(!isDiveEncadrant())return;
+ const ev=(state.events||[]).find(x=>String(x.id)===String(eventId));if(!ev||!["yes","no"].includes(choice))return;
+ const userId=current?.id||"",name=current?.name||"Encadrant";if(!userId)return;
+ if(diveResponseFor(ev,userId)){notify("Ta réponse est déjà enregistrée. Seul le Master peut la retirer.");return}
+ ev.diveResponses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
+ ev.diveResponses.push({userId,name,choice,date:todayISO(),updatedAt:new Date().toISOString()});
+ ev.diveParticipants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
+ if(choice==="yes")ev.diveParticipants.push({userId,name,date:todayISO(),createdAt:new Date().toISOString()});
+ saveState();render("plongee");notify(choice==="yes"?"Participation enregistrée et verrouillée.":"Réponse enregistrée et verrouillée.");openDiveEventDialog(eventId);
+}
+function openDiveDateDialog(date){
+ const dialog=document.getElementById("diveDateDialog"),host=document.getElementById("diveDateDialogBody");
+ const dayEvents=(state.events||[]).filter(ev=>ev.date===date).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+ document.getElementById("diveDateDialogTitle").textContent="Événements du "+dateFR(date);
+ host.innerHTML=dayEvents.length?dayEvents.map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return `<button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span>${diveStatusIcon(diveResponseFor(ev,current?.id||""))}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${typ.label}${ev.location?" · "+esc(ev.location):""}</small></span><span>›</span></button>`}).join(""):'<div class="empty">Aucun événement ce jour-là.</div>';
+ host.querySelectorAll("[data-dive-open-event]").forEach(btn=>btn.addEventListener("click",()=>openDiveEventDialog(btn.dataset.diveOpenEvent)));
+ if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
 }
 function wireDiveForecast(){
  document.getElementById("divePrev")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("plongee")});
  document.getElementById("diveNext")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("plongee")});
  document.getElementById("diveToday")?.addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);render("plongee")});
- document.querySelectorAll("[data-dive-response]").forEach(btn=>btn.addEventListener("click",()=>{
-  if(!isDiveEncadrant())return;
-  const ev=(state.events||[]).find(x=>x.id===btn.dataset.diveEvent);
-  if(!ev||!isDiveForecastEvent(ev))return;
-  const userId=current?.id||"",name=current?.name||"Encadrant",choice=btn.dataset.diveResponse;
-  if(!userId||!["yes","no"].includes(choice))return;
-  ev.diveResponses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
-  ev.diveResponses=ev.diveResponses.filter(x=>x.userId!==userId);
-  ev.diveResponses.push({userId,name,choice,date:todayISO(),updatedAt:new Date().toISOString()});
-  ev.diveParticipants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
-  ev.diveParticipants=ev.diveParticipants.filter(x=>x.userId!==userId);
-  if(choice==="yes")ev.diveParticipants.push({userId,name,date:todayISO(),createdAt:new Date().toISOString()});
-  saveState();render("plongee");notify(choice==="yes"?"Participation enregistrée.":"Non-participation enregistrée.");
- }));
-}
-function moduleHTML(k){const notes={formation:"Exemples à intégrer : membres en formation, niveau visé, compétences, séances, encadrants et suivi de progression.",planning:"Exemples à intégrer : calendrier mensuel, séances piscine, sorties, encadrants, inscriptions et places disponibles.",plongee:"Exemples à intégrer : création d'une sortie, site, date, DP, palanquées, participants et feuille de sécurité."};return `<div class="section"><div class="section-head"><h2>Module ${views[k].title}</h2><span class="badge orange">À développer</span></div><p class="muted">${notes[k]}</p><div class="empty">Le contenu fonctionnel de ce module sera ajouté à l'étape suivante.</div></div>`}
+ document.querySelectorAll("[data-dive-calendar-date]").forEach(btn=>btn.addEventListener("click",()=>openDiveDateDialog(btn.dataset.diveCalendarDate)));
+ document.querySelectorAll("[data-dive-open-event]").forEach(btn=>btn.addEventListener("click",()=>openDiveEventDialog(btn.dataset.diveOpenEvent)));
+ document.getElementById("closeDiveEventDialog")?.addEventListener("click",()=>document.getElementById("diveEventDialog").close());
+ document.getElementById("closeDiveDateDialog")?.addEventListener("click",()=>document.getElementById("diveDateDialog").close());
+}function moduleHTML(k){const notes={formation:"Exemples à intégrer : membres en formation, niveau visé, compétences, séances, encadrants et suivi de progression.",planning:"Exemples à intégrer : calendrier mensuel, séances piscine, sorties, encadrants, inscriptions et places disponibles.",plongee:"Exemples à intégrer : création d'une sortie, site, date, DP, palanquées, participants et feuille de sécurité."};return `<div class="section"><div class="section-head"><h2>Module ${views[k].title}</h2><span class="badge orange">À développer</span></div><p class="muted">${notes[k]}</p><div class="empty">Le contenu fonctionnel de ce module sera ajouté à l'étape suivante.</div></div>`}
 
 const EVENT_TYPES={
  event:{label:"Événement",icon:"📅",className:""},
