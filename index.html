@@ -363,13 +363,9 @@
   <input type="hidden" id="planningEventId">
   <div class="field"><label for="planningEventDate">Date</label><input id="planningEventDate" type="date" required></div>
   <div class="field"><label for="planningEventType">Type d’événement</label><select id="planningEventType" required>
-   <option value="event">Créer un événement</option>
    <option value="director_pool">Directeur de bassin</option>
    <option value="director_dive">Directeur de plongée</option>
-   <option value="director_fosse">Directeur de plongée fosse</option>
-   <option value="dive_exploration">Plongée en exploration</option>
-   <option value="dive_teaching">Plongée en enseignement</option>
-   <option value="dive_fosse">Plongée en fosse</option>
+   <option value="director_fosse">Directeur de plongée en fosse</option>
    <option value="material_distribution" id="materialDistributionOption">Distribution de matériel + gonflage</option>
   </select></div>
   <div class="field hidden" id="planningLocationWrap"><label for="planningEventLocation">Lieu</label><select id="planningEventLocation"><option value="">Choisir un lieu…</option></select><div class="planning-hint">Les lieux sont définis par le Master.</div></div>
@@ -885,9 +881,9 @@ function planningHTML(){
 }
 function canCreateMaterialEvents(){return isMaster()||(current?.permissions||[]).includes("materiel")||canMasterMateriel()}
 function currentLinkedDiver(){if(!current||isMaster())return null;return (state.divers||[]).find(d=>d.id===current.diverId)|| (state.divers||[]).find(d=>((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr")===String(current.name||"").trim().toLocaleLowerCase("fr")))||null}
-function planningAllowedTypes(){if(isMaster())return ["director_pool","director_dive","director_fosse","dive_exploration","dive_teaching","dive_fosse","material_distribution"];const d=currentLinkedDiver();const level=String(d?.currentLevel||"").trim().toUpperCase();const enc=String(d?.encadrement||"").trim().toUpperCase();const out=[];if(["E1","E2"].includes(level)||["E1","E2"].includes(enc))out.push("director_pool");if(["E3","E4"].includes(level)||["E3","E4"].includes(enc))out.push("director_pool","director_dive","director_fosse","dive_exploration","dive_teaching","dive_fosse");if(level==="P5"||enc==="P5")out.push("director_dive");if(canCreateMaterialEvents())out.push("material_distribution");return [...new Set(out)]}
+function planningAllowedTypes(){if(isMaster())return ["director_pool","director_dive","director_fosse","material_distribution"];const d=currentLinkedDiver();const level=String(d?.currentLevel||"").trim().toUpperCase();const enc=String(d?.encadrement||"").trim().toUpperCase();const out=[];if(["E1","E2","E3","E4"].includes(level)||["E1","E2","E3","E4"].includes(enc))out.push("director_pool");if(["E3","E4"].includes(level)||["E3","E4"].includes(enc))out.push("director_dive","director_fosse");if(level==="P5"||enc==="P5")out.push("director_dive");if(canCreateMaterialEvents())out.push("material_distribution");return [...new Set(out)]}
 function canCreatePlanningType(type){return isMaster()||planningAllowedTypes().includes(type)}
-function refreshPlanningTypeOptions(){const select=document.getElementById("planningEventType");if(!select)return;const allowedTypes=planningAllowedTypes();[...select.options].forEach(o=>{if(o.value==="event")o.hidden=true;else o.hidden=!allowedTypes.includes(o.value)});const first=allowedTypes[0];if(!allowedTypes.includes(select.value))select.value=first||"";const submit=document.querySelector("#planningEventForm button[type=submit]");if(submit)submit.disabled=!allowedTypes.length;const msg=document.getElementById("planningEventMessage");if(msg&&!allowedTypes.length)msg.textContent="Ton compte ne dispose d’aucune autorisation pour créer un événement du planning."}
+function refreshPlanningTypeOptions(){const select=document.getElementById("planningEventType");if(!select)return;const allowedTypes=planningAllowedTypes();[...select.options].forEach(o=>{o.hidden=!allowedTypes.includes(o.value)});if(!allowedTypes.includes(select.value))select.value=allowedTypes[0]||"";const submit=document.querySelector("#planningEventForm button[type=submit]");if(submit)submit.disabled=!allowedTypes.length;const msg=document.getElementById("planningEventMessage");if(msg)msg.textContent=allowedTypes.length?"":"Ton compte ne dispose d’aucune autorisation pour créer un événement du planning."}
 function wirePlanning(){
  document.getElementById("planningPrev").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("planning")});
  document.getElementById("planningNext").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("planning")});
@@ -922,7 +918,7 @@ function wirePlanning(){
   const submitButton=form.querySelector('button[type="submit"]');if(submitButton)submitButton.disabled=true;
   state.events ||= [];
   if(id)state.events=state.events.map(ev=>ev.id===id?record:ev);else state.events.push(record);
-  saveState();document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":"Événement créé");
+  saveState();form.dataset.submitting="0";if(submitButton)submitButton.disabled=false;document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":"Événement créé");
  };
 }
 function openPlanningDayDialog(date){
@@ -940,7 +936,7 @@ function openPlanningDayDialog(date){
 function updatePlanningLocations(type){ensureEventLocations();const wrap=document.getElementById("planningLocationWrap"),select=document.getElementById("planningEventLocation");if(!wrap||!select)return;const locationKey=({dive_exploration:"director_dive",dive_teaching:"director_dive",dive_fosse:"director_fosse"})[type]||type;const options=state.eventLocations[locationKey];if(!Array.isArray(options)){wrap.classList.add("hidden");select.innerHTML='<option value="">Aucun lieu requis</option>';select.required=false;return}wrap.classList.remove("hidden");select.required=options.length>0;select.innerHTML='<option value="">'+(options.length?'Choisir un lieu…':'Aucun lieu configuré par le Master')+'</option>'+options.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");}
 function openPlanningDialog(date){
  const dialog=document.getElementById("planningDialog");
- const form=document.getElementById("planningEventForm");form.reset();
+ const form=document.getElementById("planningEventForm");form.reset();form.dataset.submitting="0";
  document.getElementById("planningEventId").value="";
  document.getElementById("planningEventDate").value=date;
  document.getElementById("planningEventTitle").value="";
