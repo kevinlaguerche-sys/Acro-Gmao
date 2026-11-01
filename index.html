@@ -495,10 +495,13 @@ function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMo
 function dateFR(s){if(!s)return "—";const p=s.split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
 
 function equipmentIconSvg(type){
- const common='viewBox="0 0 64 64" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"';
- if(type==="stab")return `<svg ${common}><path d="M17 13h30l5 8-4 28H16l-4-28z" fill="#40b8b0" stroke="#12324a" stroke-width="3" stroke-linejoin="round"/><path d="M20 15v-6h24v6M14 24l-7 8 7 7M50 24l7 8-7 7" fill="none" stroke="#12324a" stroke-width="3" stroke-linecap="round"/><path d="M23 28h18v12H23z" fill="#e8f8f7" stroke="#12324a" stroke-width="2"/><path d="M32 40v10" stroke="#12324a" stroke-width="3" stroke-linecap="round"/></svg>`;
- if(type==="detendeur")return `<svg ${common}><path d="M15 13h18v12H15z" fill="#f2c66d" stroke="#12324a" stroke-width="3"/><path d="M24 25v8c0 7 8 7 8 14v4" fill="none" stroke="#12324a" stroke-width="4" stroke-linecap="round"/><path d="M32 18h12c7 0 7 10 1 13l-8 4" fill="none" stroke="#12324a" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="52" r="6" fill="#40b8b0" stroke="#12324a" stroke-width="3"/><path d="M13 10h22" stroke="#12324a" stroke-width="3" stroke-linecap="round"/></svg>`;
- return `<svg ${common}><rect x="20" y="8" width="24" height="48" rx="8" fill="#78a9cf" stroke="#12324a" stroke-width="3"/><path d="M25 8V4h14v4M26 16h12M26 48h12" fill="none" stroke="#12324a" stroke-width="3" stroke-linecap="round"/><path d="M44 17h7v8h-7" fill="#f2c66d" stroke="#12324a" stroke-width="2"/></svg>`;
+ const images={
+  stab:'https://store.cressi.com/cdn/shop/products/Bcds_Scorpion_4__WEB.jpg?v=1669386877&width=320',
+  detendeur:'https://store.cressi.com/cdn/shop/files/z0zatvwysmd8vthgcidr.jpg?v=1746543552&width=320',
+  bloc:'https://store.cressi.com/cdn/shop/products/Tanks_Cilinder_5l__WEB.jpg?v=1669895261&width=240'
+ };
+ const labels={stab:'Gilet stabilisateur de plongée',detendeur:'Détendeur de plongée',bloc:'Bloc de plongée sous-marine'};
+ return `<img class="equipment-photo-icon" src="${images[type]||images.bloc}" alt="${labels[type]||'Matériel de plongée'}" loading="lazy" referrerpolicy="no-referrer">`;
 }
 
 function equipmentTypeLabel(t){return ({stab:"Gilet stabilisateur",detendeur:"Détendeur",bloc:"Bloc de plongée"})[t]||t}
