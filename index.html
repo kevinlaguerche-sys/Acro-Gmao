@@ -48,7 +48,7 @@
 .material-stat:hover{border-color:#70d2cb;transform:translateY(-1px)}
 .material-stat small{display:block;color:var(--muted);margin-top:10px}
 .module-icon.equipment-icon{padding:4px;box-sizing:border-box;overflow:hidden;flex-shrink:0}
-.module-icon.equipment-icon svg{display:block;width:100%;height:100%}.equipment-photo-icon{display:block;width:100%;height:100%;max-width:70px;max-height:70px;object-fit:contain;object-position:center;border-radius:7px;background:#fff}.equipment-photo-wrap{display:grid;place-items:center;width:100%;height:100%;min-height:48px}.equipment-fallback{width:100%;height:100%;min-height:48px;place-items:center;font-size:38px;line-height:1;background:linear-gradient(145deg,#e8f6f6,#f5f9fc);border-radius:9px}.equipment-fallback:not([hidden]){display:grid}.module-icon.equipment-icon-stab,.module-icon.equipment-icon-bloc{width:72px;height:72px;margin:0 auto 2px}.module-icon.equipment-icon-detendeur{width:82px;height:82px;margin:0 auto 2px}.module-icon.equipment-icon-detendeur .equipment-photo-icon{width:82px;height:82px;max-width:82px;max-height:82px}.module-icon.equipment-icon-bloc .equipment-photo-icon{object-position:center 44%}.material-stat-label-count{display:flex;align-items:baseline;gap:8px;width:100%;min-width:0;margin-top:0!important;color:var(--ink)!important}.material-stat-label-count .stat-label{font-size:15px;font-weight:800;line-height:1.2;flex:1;min-width:0}.material-stat-label-count strong{font-size:30px;line-height:1;margin:0;flex-shrink:0}.material-stat-hint{font-size:11px;line-height:1.25;margin-top:0!important}.price-equipment-icon .equipment-photo-icon{width:30px;height:30px;max-width:30px;max-height:30px;border-radius:4px}
+.module-icon.equipment-icon svg{display:block;width:100%;height:100%}.equipment-photo-icon{display:block;width:100%;height:100%;max-width:70px;max-height:70px;object-fit:contain;object-position:center;border-radius:7px;background:#fff}.module-icon.equipment-icon-stab,.module-icon.equipment-icon-bloc{width:72px;height:72px;margin:0 auto 2px}.module-icon.equipment-icon-detendeur{width:82px;height:82px;margin:0 auto 2px}.module-icon.equipment-icon-detendeur .equipment-photo-icon{width:82px;height:82px;max-width:82px;max-height:82px}.module-icon.equipment-icon-bloc .equipment-photo-icon{object-position:center 44%}.material-stat-label-count{display:flex;align-items:baseline;gap:8px;width:100%;min-width:0;margin-top:0!important;color:var(--ink)!important}.material-stat-label-count .stat-label{font-size:15px;font-weight:800;line-height:1.2;flex:1;min-width:0}.material-stat-label-count strong{font-size:30px;line-height:1;margin:0;flex-shrink:0}.material-stat-hint{font-size:11px;line-height:1.25;margin-top:0!important}.price-equipment-icon .equipment-photo-icon{width:30px;height:30px;max-width:30px;max-height:30px;border-radius:4px}
 .price-equipment-icon{display:inline-flex;width:30px;height:30px;vertical-align:middle;align-items:center;justify-content:center;margin-right:4px}
 .price-equipment-icon svg{width:30px;height:30px;display:block}
 .material-stat strong{display:block;font-size:28px;font-family:Manrope;margin-top:4px}
@@ -495,18 +495,14 @@ function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMo
 function dateFR(s){if(!s)return "—";const p=s.split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
 
 function equipmentIconSvg(type){
- const originals={
-  stab:"https://store.cressi.com/cdn/shop/products/Bcds_Scorpion_4__WEB.jpg?v=1669386877&width=320",
-  detendeur:"https://store.cressi.com/cdn/shop/files/MC11-SC_-_Zen_Pro__silver___DIN__HZ792151_01__WEB.jpg?v=1746545498&width=320",
-  bloc:"https://store.cressi.com/cdn/shop/products/Tanks_Cilinder_5l__WEB.jpg?v=1669895261&width=320"
+ const images={
+  stab:'https://store.cressi.com/cdn/shop/products/Bcds_Scorpion_4__WEB.jpg?v=1669386877&width=320',
+  detendeur:'https://store.cressi.com/cdn/shop/files/z0zatvwysmd8vthgcidr.jpg?v=1746543552&width=320',
+  bloc:'https://store.cressi.com/cdn/shop/products/Tanks_Cilinder_5l__WEB.jpg?v=1669895261&width=240'
  };
- const labels={stab:"Gilet stabilisateur de plongée",detendeur:"Détendeur de plongée",bloc:"Bloc de plongée sous-marine"};
- const glyphs={stab:"🦺",detendeur:"🤿",bloc:"🛢️"};
- const label=labels[type]||labels.bloc,source=originals[type]||originals.bloc;
- // La photo Cressi est utilisée quand le navigateur peut la charger. Sinon, une icône locale prend le relais : aucune image cassée.
- return `<span class="equipment-photo-wrap"><img class="equipment-photo-icon" src="${source}" alt="${label}" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="equipment-fallback" role="img" aria-label="${label}" hidden>${glyphs[type]||glyphs.bloc}</span></span>`;
+ const labels={stab:'Gilet stabilisateur de plongée',detendeur:'Détendeur de plongée',bloc:'Bloc de plongée sous-marine'};
+ return `<img class="equipment-photo-icon" src="${images[type]||images.bloc}" alt="${labels[type]||'Matériel de plongée'}" loading="lazy" referrerpolicy="no-referrer">`;
 }
-
 function equipmentTypeLabel(t){return ({stab:"Gilet stabilisateur",detendeur:"Détendeur",bloc:"Bloc de plongée"})[t]||t}
 function availableEquipment(type){const out=new Set(state.loans.filter(l=>!l.returnedAt).map(l=>l.equipmentId));return state.equipment.filter(e=>e.type===type&&e.active!==false&&!out.has(e.id))}
 function masterPeople(){
