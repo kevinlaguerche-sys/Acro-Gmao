@@ -842,7 +842,7 @@ function isDiveForecastEvent(ev){
  const isDiveTitle=/(plongee|exploration|enseignement|fosse)/.test(title);
  return isDiveTitle && ["event","director_dive","director_fosse","director_pool",""].includes(type);
 }
-function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)&&isDiveForecastEvent(ev)).sort((a,b)=>(a.date||"").localeCompare(b.date||""))}
+function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
 function diveForecastHTML(){
  if(!isDiveEncadrant())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants.</div></div>';
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
