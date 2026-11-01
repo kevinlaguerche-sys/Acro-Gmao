@@ -1543,7 +1543,7 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
    const client=initSupabase();if(!client)throw new Error("Configure d’abord la clé publique Supabase sur cet appareil.");
    const serverRole=role==="master"?"master":role==="encadrant"?"encadrant":"plongeur";
    const action=existing?"update":"create";
-   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole,diver_id:diverId};
+   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole,diver_id:diverId,permissions};
    if(code)body.password=code;
    if(existing){
      if(!existing.authUserId){
@@ -1553,7 +1553,8 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
      body.active=existing.active!==false;
    }
    const {data:result,error:requestError}=await client.functions.invoke("member-access",{body});
-   if(requestError||!result?.ok)throw new Error(result?.error||(requestError?.message||(existing?"La modification serveur a échoué.":"La création serveur a échoué.")));
+   if(requestError){let detail="";try{const response=requestError.context;if(response&&typeof response.json==="function"){const payload=await response.json();detail=payload?.error||payload?.message||"";}}catch{}throw new Error(detail||result?.error||requestError.message||(existing?"La modification serveur a échoué.":"La création serveur a échoué."));}
+   if(!result?.ok)throw new Error(result?.error||(existing?"La modification serveur a échoué.":"La création serveur a échoué."));
    const u={...(existing||{}),id:existing?existing.id:("user-"+Date.now()),authUserId:result.user_id||existing?.authUserId,diverId,name,role,baseRole:role==="master"?profileRole:undefined,permissions,active:existing?existing.active!==false:true};
    if(code)u.code=code;
    if(existing)state.users=state.users.map(x=>x.id===id?u:x);else state.users.push(u);
