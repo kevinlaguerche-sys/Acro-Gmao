@@ -836,11 +836,11 @@ function isDiveForecastEvent(ev){
  if(!ev)return false;
  const type=String(ev.type||"").trim().toLowerCase();
  if(["dive_exploration","dive_teaching","dive_fosse"].includes(type))return true;
- // Compatibilité avec les anciens événements du planning : certains étaient enregistrés
- // sous un type générique ou directeur, avec le vrai type de plongée dans le titre.
+ // Compatibilité avec les anciens événements génériques dont le titre désigne clairement une sortie.
+ // Les événements « directeur de bassin / DP » restent exclus : ils ne constituent pas une inscription à une plongée.
  const title=String(ev.title||ev.label||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
- const isDiveTitle=/(plongee|exploration|enseignement|fosse)/.test(title);
- return isDiveTitle && ["event","director_dive","director_fosse","director_pool",""].includes(type);
+ const isDiveTitle=/(plongee en exploration|plongee en enseignement|plongee en fosse|sortie plongee|exploration|enseignement|fosse)/.test(title);
+ return isDiveTitle && ["event",""].includes(type);
 }
 function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)&&isDiveForecastEvent(ev)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
 function diveResponseFor(ev,userId){
