@@ -907,7 +907,7 @@ function wirePlanning(){
   updatePlanningLocations(type);
  });
  document.getElementById("planningEventTitle").addEventListener("input",e=>{e.target.dataset.custom="1"});
- form.addEventListener("submit",e=>{
+ form.onsubmit=e=>{
   e.preventDefault();
   const id=document.getElementById("planningEventId").value;
   const type=document.getElementById("planningEventType").value;
@@ -920,7 +920,7 @@ function wirePlanning(){
   state.events ||= [];
   if(id)state.events=state.events.map(ev=>ev.id===id?record:ev);else state.events.push(record);
   saveState();document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":"Événement créé");
- });
+ };
 }
 function openPlanningDayDialog(date){
  const dialog=document.getElementById("planningDayDialog");
