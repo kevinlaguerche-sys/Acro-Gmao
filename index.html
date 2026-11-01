@@ -842,52 +842,73 @@ function isDiveForecastEvent(ev){
  const isDiveTitle=/(plongee|exploration|enseignement|fosse)/.test(title);
  return isDiveTitle && ["event","director_dive","director_fosse","director_pool",""].includes(type);
 }
-function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)&&isDiveForecastEvent(ev)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function diveResponseFor(ev,userId){
+ const responses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
+ const saved=responses.find(x=>x.userId===userId);
+ if(saved)return saved.choice;
+ return (Array.isArray(ev.diveParticipants)?ev.diveParticipants:[]).some(x=>x.userId===userId)?"yes":"";
+}
 function diveForecastHTML(){
  if(!isDiveEncadrant())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants.</div></div>';
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
  const first=new Date(year,month,1),offset=(first.getDay()+6)%7,start=new Date(year,month,1-offset);
  const total=Math.ceil((offset+new Date(year,month+1,0).getDate())/7)*7;
  const today=todayISO(),events=diveMonthEvents();
- const byDate={};events.forEach(ev=>(byDate[ev.date]||= []).push(ev));
+ const byDate={};events.forEach(ev=>(byDate[ev.date]||=[]).push(ev));
  const weekdays=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"],cells=[];
  for(let i=0;i<total;i++){
   const d=new Date(start);d.setDate(start.getDate()+i);
   const iso=isoLocal(d),dayEvents=byDate[iso]||[],outside=d.getMonth()!==month;
-  cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} activité(s)">
-   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return `<span class="calendar-event-chip ${typ.className}" title="${esc((ev.title||typ.label)+" — "+(ev.responsible||""))}">${typ.icon} ${esc(ev.title||typ.label)}</span>`}).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
+  cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} plongée(s)">
+   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.dive_exploration;return `<span class="calendar-event-chip director">${typ.icon} ${esc(ev.title||typ.label)}</span>`}).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
   </button>`);
  }
- const activityCards=events.map(ev=>{
-  const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;
-  const isDive=isDiveForecastEvent(ev),participants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
-  const joined=participants.some(x=>x.userId===(current?.id||""));
+ const cards=events.map(ev=>{
+  const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.dive_exploration;
+  const choice=diveResponseFor(ev,current?.id||"");
+  const participants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
+  const yesCount=participants.length;
+  const noCount=(Array.isArray(ev.diveResponses)?ev.diveResponses:[]).filter(x=>x.choice==="no").length;
   return `<article class="section dive-forecast-card" style="margin:10px 0;border:1px solid var(--line)">
-   <div class="section-head"><div><h3>${typ.icon} ${esc(ev.title||typ.label)}</h3><div class="planning-hint">${dateFR(ev.date)} · ${typ.label}${ev.location?" · 📍 "+esc(ev.location):""}</div></div><span class="badge ${typ.className==="material"?"orange":typ.className==="director"?"gray":""}">${isDive?participants.length+" intéressé(s)":esc(typ.label)}</span></div>
-   <p class="planning-hint">${ev.responsible?"Responsable : <strong>"+esc(ev.responsible)+"</strong>":""}${ev.createdBy?" · Créé par : <strong>"+esc(ev.createdBy)+"</strong>":""}</p>
-   ${isDive?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0"><button type="button" class="btn primary" data-join-dive="${esc(ev.id)}" ${joined?"disabled":""}>＋ ${joined?"Tu es déjà inscrit":"Je souhaite participer"}</button></div>${participants.length?`<div class="dive-participants"><strong>Encadrants intéressés</strong><ul style="margin:8px 0 0;padding-left:20px">${participants.map((x,i)=>`<li style="margin:5px 0">${esc(x.name)} <span class="planning-hint">— inscrit le ${dateFR(x.date||"")}</span> ${isMaster()?`<button type="button" class="btn danger small" data-remove-dive-participant="${esc(ev.id)}" data-participant-index="${i}">Supprimer le nom</button>`:""}</li>`).join("")}</ul></div>`:'<p class="muted">Aucun encadrant inscrit pour le moment.</p>'}`:""}
+   <div class="section-head"><div><h3>${typ.icon} ${esc(ev.title||typ.label)}</h3><div class="planning-hint">${dateFR(ev.date)} · ${typ.label}${ev.location?" · 📍 "+esc(ev.location):""}</div></div></div>
+   <p class="planning-hint">Responsable : <strong>${esc(ev.responsible||"—")}</strong></p>
+   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0">
+    <button type="button" class="btn ${choice==="yes"?"primary":"soft"}" data-dive-response="yes" data-dive-event="${esc(ev.id)}" aria-pressed="${choice==="yes"}">✓ Je participe</button>
+    <button type="button" class="btn ${choice==="no"?"danger":"soft"}" data-dive-response="no" data-dive-event="${esc(ev.id)}" aria-pressed="${choice==="no"}">✕ Je ne participe pas</button>
+    <span class="badge">${yesCount} oui · ${noCount} non</span>
+   </div>
+   ${isMaster()?'<div class="planning-hint">Réponses enregistrées pour cette plongée.</div>':""}
   </article>`;
  }).join("");
  return `<div class="section">
-  <div class="calendar-toolbar"><div><div class="eyebrow">CALENDRIER MENSUEL DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
+  <div class="calendar-toolbar"><div><div class="eyebrow">MES INTENTIONS DE PARTICIPATION</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
+  <p class="muted">Cet onglet sert uniquement à indiquer si tu souhaites participer aux plongées prévues dans le Planning. Choisis « Je participe » ou « Je ne participe pas » pour chaque plongée.</p>
   <div class="calendar-grid">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells.join("")}</div>
-  <div class="calendar-legend"><span><i class="legend-dot" style="background:#e7f8f7"></i>Plongée / événement</span><span><i class="legend-dot" style="background:#edf0ff"></i>Directeur de bassin / encadrement</span><span><i class="legend-dot" style="background:#fff3e5"></i>Matériel / gonflage</span></div>
-  <p class="planning-hint" style="margin-top:12px">Clique sur une date pour consulter toutes les activités de la journée.</p>
+  <p class="planning-hint" style="margin-top:12px">Seules les plongées en exploration, en enseignement et en fosse sont affichées ici. Le Planning général reste inchangé.</p>
  </div>
- <div class="section"><div class="section-head"><div><h2>Activités du mois</h2><p class="muted">Plongées, événements, directeurs de bassin et distributions de matériel.</p></div><span class="badge">${events.length} activité(s)</span></div>
- ${activityCards||'<div class="empty">Aucune activité enregistrée pour ce mois.</div>'}</div>`;
+ <div class="section"><div class="section-head"><div><h2>Plongées prévues</h2><p class="muted">Indique ta réponse pour chaque sortie.</p></div><span class="badge">${events.length} plongée(s)</span></div>
+ ${cards||'<div class="empty">Aucune plongée prévue pour ce mois. Consulte le Planning général pour les prochaines sorties.</div>'}</div>`;
 }
 function wireDiveForecast(){
  document.getElementById("divePrev")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("plongee")});
  document.getElementById("diveNext")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("plongee")});
  document.getElementById("diveToday")?.addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);render("plongee")});
- document.querySelectorAll("[data-dive-calendar-date]").forEach(btn=>btn.addEventListener("click",()=>openPlanningDayDialog(btn.dataset.diveCalendarDate)));
- document.getElementById("closePlanningDay")?.addEventListener("click",()=>document.getElementById("planningDayDialog")?.close());
- document.getElementById("closePlanningDayBottom")?.addEventListener("click",()=>document.getElementById("planningDayDialog")?.close());
- document.querySelectorAll("[data-join-dive]").forEach(btn=>btn.addEventListener("click",()=>{if(!isDiveEncadrant()||isMaster()===false&&!currentLinkedDiver())return;const ev=(state.events||[]).find(x=>x.id===btn.dataset.joinDive);if(!ev||!isDiveForecastEvent(ev))return;ev.diveParticipants||=[];const uid=current?.id||"";if(ev.diveParticipants.some(x=>x.userId===uid)){notify("Tu es déjà inscrit à cette plongée.");return}ev.diveParticipants.push({userId:uid,name:current?.name||"Encadrant",date:todayISO(),createdAt:new Date().toISOString()});saveState();render("plongee");notify("Ta présence prévisionnelle est enregistrée.")}));
- document.querySelectorAll("[data-remove-dive-participant]").forEach(btn=>btn.addEventListener("click",()=>{if(!isMaster()){notify("Action réservée au Master connecté.");return}const ev=(state.events||[]).find(x=>x.id===btn.dataset.removeDiveParticipant);if(!ev||!Array.isArray(ev.diveParticipants))return;const i=Number(btn.dataset.participantIndex);if(!confirm("Supprimer cette inscription de la liste ?"))return;ev.diveParticipants.splice(i,1);saveState();render("plongee");notify("Inscription supprimée par le Master.")}));
+ document.querySelectorAll("[data-dive-response]").forEach(btn=>btn.addEventListener("click",()=>{
+  if(!isDiveEncadrant())return;
+  const ev=(state.events||[]).find(x=>x.id===btn.dataset.diveEvent);
+  if(!ev||!isDiveForecastEvent(ev))return;
+  const userId=current?.id||"",name=current?.name||"Encadrant",choice=btn.dataset.diveResponse;
+  if(!userId||!["yes","no"].includes(choice))return;
+  ev.diveResponses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
+  ev.diveResponses=ev.diveResponses.filter(x=>x.userId!==userId);
+  ev.diveResponses.push({userId,name,choice,date:todayISO(),updatedAt:new Date().toISOString()});
+  ev.diveParticipants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
+  ev.diveParticipants=ev.diveParticipants.filter(x=>x.userId!==userId);
+  if(choice==="yes")ev.diveParticipants.push({userId,name,date:todayISO(),createdAt:new Date().toISOString()});
+  saveState();render("plongee");notify(choice==="yes"?"Participation enregistrée.":"Non-participation enregistrée.");
+ }));
 }
-
 function moduleHTML(k){const notes={formation:"Exemples à intégrer : membres en formation, niveau visé, compétences, séances, encadrants et suivi de progression.",planning:"Exemples à intégrer : calendrier mensuel, séances piscine, sorties, encadrants, inscriptions et places disponibles.",plongee:"Exemples à intégrer : création d'une sortie, site, date, DP, palanquées, participants et feuille de sécurité."};return `<div class="section"><div class="section-head"><h2>Module ${views[k].title}</h2><span class="badge orange">À développer</span></div><p class="muted">${notes[k]}</p><div class="empty">Le contenu fonctionnel de ce module sera ajouté à l'étape suivante.</div></div>`}
 
 const EVENT_TYPES={
