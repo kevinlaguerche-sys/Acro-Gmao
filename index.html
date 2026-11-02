@@ -1176,30 +1176,27 @@ Le solde du plongeur pourra devenir négatif.`))return;
 }
 let acroFreePending=null;
 function closeFreeConfirm(){const modal=document.getElementById("acroFreeConfirm");if(modal){modal.hidden=true;modal.setAttribute("aria-hidden","true");}acroFreePending=null;}
-function showFreeConfirmStep(step){
+function showFreeConfirmStep(){
  const modal=document.getElementById("acroFreeConfirm");if(!modal)return;
- const first=step===1;
  modal.innerHTML=`<div class="acro-free-card" role="dialog" aria-modal="true" aria-labelledby="acroFreeTitle">
   <div class="acro-free-wave"><span class="acro-free-diver">🤿</span><span class="acro-free-brand">ACRO<br>PLONGÉE</span><button type="button" class="acro-free-close" data-free-cancel aria-label="Fermer">×</button></div>
   <div class="acro-free-tag" aria-hidden="true">🏷️<b>€</b><i></i></div>
   <div class="acro-free-content">
    <h2 id="acroFreeTitle">Activation de la gratuité</h2>
-   <p class="acro-free-lead">${first?"Vous êtes sur le point d’activer la gratuité pour cette opération.":"Dernière vérification avant l’activation définitive."}</p>
+   <p class="acro-free-lead">Vous êtes sur le point d’activer la gratuité pour cette opération.</p>
    <div class="acro-free-info"><span>ⓘ</span><strong>Aucun Bitacro ne sera débité.</strong></div>
-   <div class="acro-free-steps"><div class="acro-free-step ${first?"current done":"done"}"><span>1</span><b>Confirmation</b></div><div class="acro-free-line"></div><div class="acro-free-step ${first?"":"current"}"><span>2</span><b>Validation finale</b></div></div>
-   <div class="acro-free-question"><span>${first?"🎁":"✅"}</span><strong>${first?"Souhaitez-vous poursuivre la procédure ?":"Confirmez-vous définitivement la gratuité de cette opération ?"}</strong></div>
-   <div class="acro-free-actions"><button type="button" class="acro-free-cancel" data-free-cancel>✕  Annuler</button><button type="button" class="acro-free-confirm" data-free-next>${first?"✓  Continuer (étape 1/2)":"✓  Confirmer la gratuité (étape 2/2)"}</button></div>
+   <div class="acro-free-question"><span>🎁</span><strong>Confirmez-vous l’activation de la gratuité ?</strong></div>
+   <div class="acro-free-actions"><button type="button" class="acro-free-cancel" data-free-cancel>✕  Annuler</button><button type="button" class="acro-free-confirm" data-free-next>✓  Confirmer la gratuité</button></div>
   </div>
  </div>`;
  modal.hidden=false;modal.setAttribute("aria-hidden","false");
  modal.querySelector("[data-free-cancel]")?.addEventListener("click",closeFreeConfirm);
  modal.querySelector("[data-free-next]")?.addEventListener("click",()=>{
-  if(first){showFreeConfirmStep(2);return;}
   const pending=acroFreePending;if(!pending)return;
   const {button,form,caption}=pending;
   button.setAttribute("aria-pressed","true");button.classList.add("active");
   form.dataset.manualFree="true";form.dispatchEvent(new Event("acro-free-mode-change"));
-  button.innerHTML="✓ GRATUIT ACTIVÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";
+  button.innerHTML="✓ GRATUIT ACTIVÉ <span class="free-mode-caption">"+caption+" · aucun débit</span>";
   closeFreeConfirm();
  });
 }
@@ -1209,7 +1206,7 @@ function wireFreeModeToggle(buttonId,formId,caption){
  button.addEventListener("click",()=>{
   const active=button.getAttribute("aria-pressed")!=="true";
   if(!active){button.setAttribute("aria-pressed","false");button.classList.remove("active");form.dataset.manualFree="false";form.dispatchEvent(new Event("acro-free-mode-change"));button.innerHTML="🎁 ACTIVER LA GRATUITÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";return;}
-  acroFreePending={button,form,caption};showFreeConfirmStep(1);
+  acroFreePending={button,form,caption};showFreeConfirmStep();
  });
 }
 function wireMaterial(){
