@@ -948,6 +948,106 @@ function extractAllQRCodes(){
  if(!popup){notify("Le navigateur a bloqué la fenêtre. Autorise les fenêtres contextuelles pour ce site puis réessaie.");return}
  const cards=items.map((x,i)=>`<article class="qr-card"><img alt="QR code ${esc(x.kind)}" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data=${encodeURIComponent(JSON.stringify(x.payload))}"><div class="kind">${esc(x.kind)}</div><h2>${esc(x.title)}</h2><p>${esc(x.subtitle)}</p><small>${i+1} / ${items.length}</small></article>`).join("");
  const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Extraction complète QR — ACRO Plongée</title><style>body{font-family:Arial,sans-serif;color:#10283c;margin:0;padding:18px}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}h1{font-size:22px;margin:0 0 5px}p{margin:4px 0;color:#526778}.actions{display:flex;gap:8px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:10px 14px;background:#087e87;color:white;font-weight:bold;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.qr-card{border:1px solid #cddce4;border-radius:10px;padding:10px;text-align:center;break-inside:avoid;min-width:0}.qr-card img{display:block;width:150px;height:150px;max-width:100%;object-fit:contain;margin:0 auto 5px}.kind{font-size:10px;text-transform:uppercase;font-weight:bold;color:#087e87;letter-spacing:.08em}.qr-card h2{font-size:13px;margin:5px 0;overflow-wrap:anywhere}.qr-card p{font-size:10px;min-height:12px;overflow-wrap:anywhere}.qr-card small{font-size:9px;color:#718696}@media(max-width:750px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header{align-items:flex-start;flex-direction:column}}@page{size:A4;margin:8mm}@media print{body{padding:0}header .actions{display:none}.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.qr-card{padding:6px}.qr-card img{width:125px;height:125px}}
+
+/* ===== ACRO PLONGEE V125 — CHARTE GRAPHIQUE UNIFIEE ===== */
+:root{
+ --navy:#092b45;--navy2:#104c68;--teal:#13a6a0;--teal-light:#e7f7f5;
+ --ink:#173448;--muted:#6c8493;--line:#dce9ed;--bg:#f1f7f8;
+ --green:#168653;--green-dark:#116b43;--white:#fff;
+ --shadow:0 12px 32px rgba(9,43,69,.09);
+ --shadow-strong:0 22px 60px rgba(9,43,69,.18);
+}
+body{background:radial-gradient(ellipse at 8% 0%,#e4f5f4 0,transparent 34%),var(--bg);color:var(--ink)}
+h1,h2,h3,h4{color:var(--navy);letter-spacing:-.025em}
+.topbar{background:linear-gradient(112deg,#08283f 0%,#104b66 68%,#087f83 100%);box-shadow:0 7px 24px rgba(7,39,60,.2);border-bottom:1px solid rgba(255,255,255,.12)}
+.brand-mark{background:linear-gradient(145deg,#a5f1e6,#24c5b5);box-shadow:0 5px 14px #24c5b533}
+.brand small{color:#a9dce0}
+.menu-toggle{background:#ffffff16;border:1px solid #ffffff42}
+.user-pill{background:#ffffff18;border:1px solid #ffffff20}
+.sidebar{background:rgba(255,255,255,.94);border-right:1px solid #dce9ed;box-shadow:5px 0 24px #092b4508}
+.nav-btn{border:1px solid transparent;border-radius:13px;transition:all .18s ease}
+.nav-btn:hover{background:#edf8f7;border-color:#d5efeb;color:#087e83}
+.nav-btn.active{background:linear-gradient(100deg,#e2f7f3,#f0fbfa);color:#087f80;border-color:#c5eae4;box-shadow:inset 4px 0 #13a6a0,0 4px 12px #087e830c}
+.content{max-width:1600px;padding:clamp(16px,2.4vw,34px)}
+.page-head{align-items:center;margin-bottom:24px}
+.page-head h1{font-size:clamp(1.7rem,3vw,2.35rem);color:#092b45}
+.page-head .eyebrow,.eyebrow{color:#0b9693;letter-spacing:.15em}
+.section,.panel,.stat,.module-card,.material-stat,.quick-grid .module-card{
+ border:1px solid #dce9ed;border-radius:19px;background:linear-gradient(155deg,#fff 0%,#fcfefe 100%);
+ box-shadow:var(--shadow);transition:box-shadow .18s,border-color .18s,transform .18s;
+}
+.section{padding:clamp(16px,2vw,24px)}
+.section:hover,.stat:hover{border-color:#c5e6e3}
+.section-head{padding-bottom:12px;border-bottom:1px solid #edf3f4}
+.section-head h2{font-size:1.12rem}
+.stat{padding:19px}
+.stat strong{color:#0b5267}
+.stat .stat-ico,.module-icon{color:#078b8d}
+.module-icon{background:linear-gradient(145deg,#e5f8f5,#d9f0f1);border:1px solid #d3eeea}
+.module-card{padding:19px}
+.module-card:hover{border-color:#82d2ca;box-shadow:0 16px 34px #092b4515;transform:translateY(-2px)}
+.module-card h3{color:#0b5267}
+.btn,button.btn{border:0;border-radius:12px;font-weight:750;box-shadow:0 4px 12px #092b4512;transition:transform .16s,box-shadow .16s,filter .16s}
+.btn:hover,button.btn:hover{transform:translateY(-1px);box-shadow:0 7px 17px #092b4520}
+.btn.primary{background:linear-gradient(115deg,#087f83,#13aaa2);color:#fff}
+.btn:not(.primary):not(.soft):not(.danger){background:linear-gradient(115deg,#092f4b,#14516c);color:#fff}
+.btn.soft{background:linear-gradient(145deg,#e8f8f6,#dff2f0);color:#087d7c;border:1px solid #ccebe6}
+.btn.danger{background:#fff0ee;color:#a43d32;border:1px solid #f4d7d2}
+.btn:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #4bc8bd66;outline-offset:2px}
+.field label{color:#24495d;font-weight:750}
+.field input,.field select,.field textarea,input,select,textarea{
+ border:1px solid #cfdee4;border-radius:11px;background:#fbfefe;color:#173448;
+ transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus,input:focus,select:focus,textarea:focus{border-color:#13a6a0;box-shadow:0 0 0 3px #13a6a01c;outline:0}
+table{border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:13px}
+th{background:linear-gradient(100deg,#edf6f7,#f4f9fa);color:#426174;font-weight:800}
+th,td{border-bottom:1px solid #eaf0f2}
+tbody tr:hover td{background:#f6fbfb}
+td{color:#28495b}
+.badge{background:#e4f6f3;color:#087f7c;border:1px solid #d1eee8}
+.badge.green{background:#e5f7ec;color:#167344;border-color:#ccebd8}
+.badge.orange{background:#fff4e6;color:#9b5c16;border-color:#f7e4c8}
+.badge.gray{background:#f0f4f6;color:#617989;border-color:#e1e9ed}
+.subnav button{border-radius:11px;border-color:#d8e7eb;transition:all .15s}
+.subnav button.active{background:linear-gradient(110deg,#e3f7f4,#effbfa);border-color:#9bd9d1;color:#087f7c;box-shadow:inset 0 -2px #13a6a0}
+.toast{background:linear-gradient(110deg,#092b45,#0d6471);border:1px solid #ffffff22;box-shadow:var(--shadow-strong);border-radius:14px}
+dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1px solid #d9e8ec;border-radius:22px;box-shadow:var(--shadow-strong);padding:0;overflow:hidden}
+dialog::backdrop,#planningDialog::backdrop,#planningDayDialog::backdrop,#n1ProgressDialog::backdrop{background:rgba(5,29,46,.62);backdrop-filter:blur(5px)}
+.dialog-head,.mft-dialog-head,.n1-dialog-head{background:linear-gradient(112deg,#082b45,#105b70 72%,#0b8987);color:#fff;border:0}
+.dialog-head h2,.mft-dialog-head strong,.n1-dialog-head h2{color:#fff}
+.dialog-body,.mft-dialog-body,.n1-dialog-body{background:#fff}
+.dialog-actions .btn{min-width:112px}
+.calendar-day{border:1px solid #dce9ed;border-radius:13px;box-shadow:0 3px 9px #092b4508}
+.calendar-day:hover{border-color:#74cfc6;background:#f3fcfa}
+.calendar-day.today{border:2px solid #168653;background:#e9f8ef}
+.calendar-day.today .calendar-day-number{background:#168653}
+.calendar-event-chip{background:#e2f6f2;color:#087d7b;border-radius:7px}
+.material-stat{background:linear-gradient(145deg,#fff,#f1faf9)}
+.material-stat:hover{border-color:#71cfc5;box-shadow:0 10px 24px #087e8314}
+.export-icon{background:linear-gradient(145deg,#effdfb,#dff5f2);color:#087f7c;border-color:#b8e5de}
+.mft-open-btn{border:1px solid #9bd9d1!important;border-radius:12px!important;background:linear-gradient(110deg,#e5f8f5,#d9f1ee)!important;color:#087e7c!important;font-weight:800!important;box-shadow:0 4px 12px #087e8310}
+.mft-open-btn:hover{filter:brightness(.98);transform:translateY(-1px)}
+/* Confirmation dialogs: même langage visuel que la gratuité */
+.acro-free-modal,.disinfection-modal,.equipment-remove-modal{border:1px solid #d5e8eb;border-radius:23px;overflow:hidden;box-shadow:var(--shadow-strong)}
+.acro-free-head,.disinfection-modal-head,.equipment-remove-head{background:linear-gradient(112deg,#082b45,#105b70 72%,#0b8987);color:#fff}
+.acro-free-confirm,.disinfection-confirm,.equipment-remove-confirm{background:linear-gradient(110deg,#168653,#20a66b);border:0;border-radius:12px;color:#fff;font-weight:800;box-shadow:0 5px 14px #16865330}
+.acro-free-cancel,.disinfection-cancel,.equipment-remove-cancel{border:1px solid #d7e4e8;border-radius:12px;background:#f5f8f9;color:#456172;font-weight:700}
+@media(max-width:850px){
+ .content{padding:15px}
+ .sidebar{background:#fff;box-shadow:12px 0 36px #092b4520}
+ .nav-btn{padding:12px 13px}
+ .section{padding:16px}
+ .page-head{gap:10px}
+}
+@media(max-width:520px){
+ .topbar{background:linear-gradient(112deg,#08283f,#104b66 70%,#087f83)}
+ .content{padding:12px}
+ .section,.stat,.panel,.module-card{border-radius:16px}
+ .section{padding:14px}
+ .page-head h1{font-size:1.55rem}
+ .btn{border-radius:11px}
+}
 </style></head><body><header><div><h1>ACRO Plongée — Extraction QR complète</h1><p>${equipment.length} équipement(s) · ${divers.filter(d=>d.id).length} plongeur(s) · ${items.length} QR code(s)</p><p>Imprime cette planche ou choisis « Enregistrer au format PDF » dans la fenêtre d’impression.</p></div><div class="actions"><button onclick="window.print()">Imprimer / Enregistrer en PDF</button><button onclick="window.close()">Fermer</button></div></header><main class="grid">${cards}</main><script>window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(resolve=>{i.onload=resolve;i.onerror=resolve}))).then(()=>{const failed=imgs.filter(i=>!i.naturalWidth).length;if(failed)alert(failed+' QR code(s) n’ont pas pu être chargés. Vérifie Internet puis relance l’extraction.');});});<\/script></body></html>`;
  popup.document.open();popup.document.write(html);popup.document.close();
  notify("Extraction lancée : "+items.length+" QR code(s) dans une nouvelle fenêtre.");
