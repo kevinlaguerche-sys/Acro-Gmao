@@ -611,6 +611,42 @@ dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1
 }
 
 </style>
+<style>
+
+/* V125 correctif mobile demandé : tableau de bord épuré + événements lisibles */
+#mainContent[data-view="dashboard"] .page-head{margin-bottom:15px}
+#mainContent[data-view="dashboard"] .v125-dashboard-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+#mainContent[data-view="dashboard"] .v125-dashboard-shortcuts .module-card{min-height:100px;padding:15px;border-radius:18px;text-align:left}
+#mainContent[data-view="dashboard"] .v125-dashboard-shortcuts .module-card h3{font-size:15px;margin:0 0 4px}
+#mainContent[data-view="dashboard"] .v125-dashboard-shortcuts .module-card p{font-size:11px;line-height:1.35;margin:0}
+#mainContent[data-view="dashboard"] .v125-dashboard-shortcuts .module-icon{width:48px;height:48px;flex:0 0 48px;border-radius:15px}
+#mainContent[data-view="dashboard"] .v125-dashboard-stats,
+#mainContent[data-view="dashboard"] .v125-next-event,
+#mainContent[data-view="dashboard"] .v125-planning-cta,
+#mainContent[data-view="dashboard"] .v125-section-label{display:none!important}
+/* Calendrier : afficher les libellés d'événements en entier sur mobile */
+#mainContent[data-view="planning"] .calendar-day{height:auto;min-height:112px;overflow:visible}
+#mainContent[data-view="planning"] .calendar-events{width:100%;min-width:0;overflow:visible;gap:4px}
+#mainContent[data-view="planning"] .calendar-event-chip{display:block;width:100%;max-width:100%;box-sizing:border-box;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere;word-break:normal;font-size:10px;line-height:1.25;font-weight:800;padding:5px 5px;border-radius:7px}
+#mainContent[data-view="planning"] .calendar-event-chip small{font-size:9px;line-height:1.2;overflow-wrap:anywhere}
+#mainContent[data-view="planning"] .calendar-day.outside .calendar-event-chip{opacity:.9}
+@media(max-width:700px){
+ #mainContent[data-view="dashboard"] .v125-dashboard-shortcuts{grid-template-columns:1fr;gap:10px}
+ #mainContent[data-view="dashboard"] .v125-dashboard-shortcuts .module-card{min-height:76px;padding:12px}
+ #mainContent[data-view="dashboard"] .v125-dashboard-shortcuts .module-icon{width:43px;height:43px;flex-basis:43px}
+ #mainContent[data-view="planning"] .calendar-grid{gap:4px}
+ #mainContent[data-view="planning"] .calendar-day{min-height:105px;padding:5px 4px;border-radius:11px;gap:4px}
+ #mainContent[data-view="planning"] .calendar-day-number{width:24px;height:24px;font-size:12px}
+ #mainContent[data-view="planning"] .calendar-event-chip{font-size:9px;line-height:1.2;padding:4px 3px;white-space:normal!important}
+ #mainContent[data-view="planning"] .calendar-event-chip small{font-size:8px}
+ #mainContent[data-view="planning"] .calendar-weekday{font-size:10px}
+}
+@media(max-width:390px){
+ #mainContent[data-view="planning"] .calendar-day{min-height:92px;padding:4px 3px}
+ #mainContent[data-view="planning"] .calendar-event-chip{font-size:8px;padding:3px 2px}
+}
+
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -1290,22 +1326,10 @@ dialog::backdrop,#planningDialog::backdrop,#planningDayDialog::backdrop,#n1Progr
 
 function dashboardHTML(){
  const divers=state.divers||[],events=(state.events||[]).filter(e=>e&&e.date),equipment=(state.equipment||[]).filter(e=>e&&e.active!==false);
- const today=todayISO(),upcoming=events.filter(e=>e.date>=today).sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
- const next=upcoming[0],training=divers.filter(d=>String(d.inProgress||"").trim()).length;
- const eventType=next?(EVENT_TYPES[next.type]||EVENT_TYPES.event):null;
- const cards=[
-  {icon:"🤿",value:divers.length,label:"Plongeurs licenciés",tone:"blue"},
-  {icon:"🎓",value:training,label:"En formation",tone:"navy"},
-  {icon:"🗓️",value:upcoming.length,label:"Sorties à venir",tone:"blue"},
-  {icon:"🧰",value:equipment.length,label:"Matériels enregistrés",tone:"green"}
- ];
- return `<div class="v125-dashboard-stats">${cards.map(c=>`<article class="v125-stat-card ${c.tone}"><span class="v125-stat-icon">${c.icon}</span><div><strong>${c.value}</strong><span>${c.label}</span></div></article>`).join("")}</div>
- <section class="v125-next-event"><div class="v125-next-icon">ⓘ</div><div class="v125-next-content"><span class="eyebrow">PROCHAINE SORTIE</span>${next?`<h2>${esc(next.title||eventType?.label||"Événement du club")}</h2><p>🗓️ ${dateFR(next.date)} ${next.time?" · "+esc(next.time):""}</p><p>📍 ${esc(next.location||"Lieu à confirmer")}</p>`:'<h2>Aucune sortie programmée</h2><p>Les prochains événements apparaîtront ici.</p>'}</div>${next?`<span class="v125-event-count">${Array.isArray(next.diveParticipants)?next.diveParticipants.length:0} inscrits</span>`:""}</section>
- <button class="v125-planning-cta" type="button" data-open-view="planning"><span>▦</span> Voir le planning <b>›</b></button>
- <div class="v125-section-label">ACCÈS RAPIDE</div>
- <div class="quick-grid">${["materiel","formation","planning","plongee"].filter(allowed).map(k=>`<button class="module-card" data-open-view="${k}"><span class="module-icon">${views[k].icon}</span><span><h3>${views[k].title}</h3><p>${views[k].subtitle}</p></span><b class="v125-card-arrow">›</b></button>`).join("")||'<p class="empty">Aucun module attribué. Contacte le Master.</p>'}</div>`;
+ return `<div class="v125-dashboard-shortcuts">
+ ${["plongeurs","formation","materiel","planning","plongee","acces"].filter(k=>allowed(k)).map(k=>`<button class="module-card" data-open-view="${k}"><span class="module-icon">${views[k].icon}</span><span><h3>${views[k].title}</h3><p>${views[k].subtitle}</p></span><b class="v125-card-arrow">›</b></button>`).join("")||'<p class="empty">Aucun module attribué. Contacte le Master.</p>'}
+ </div>`;
 }
-
 function isInitiatorTrainingAllowed(){if(isMaster())return true;const linked=currentLinkedDiver();const profile=String(linked?.encadrement||linked?.currentLevel||"").trim().toUpperCase();return ["E3","E4"].includes(profile)}
 function initiatorDiverList(){if(!isInitiatorTrainingAllowed())return [];const eligibleLevels=["NIVEAU 2","NIVEAU 3","NIVEAU 4","P5"];return (state.divers||[]).filter(d=>String(d.inProgress||"").trim().toUpperCase()==="FORMATION INITIATEUR"&&eligibleLevels.includes(String(d.currentLevel||"").trim().toUpperCase())).sort((a,b)=>(String(a.lastName||"")+String(a.firstName||"")).localeCompare(String(b.lastName||"")+String(b.firstName||""),"fr"))}
 function trainingDiverList(){const allowedLowerLevels=["NIVEAU 1","NIVEAU 2","NIVEAU 3","N3","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];let visibleLevels=null;if(!isMaster()){const linked=currentLinkedDiver();const profile=String(linked?.encadrement||linked?.currentLevel||"").trim().toUpperCase();if(["E3","E4"].includes(profile)){visibleLevels=null;}else if(["E1","E2"].includes(profile)){visibleLevels=allowedLowerLevels;}else{return []}}return (state.divers||[]).filter(d=>{const training=String(d.inProgress||"").trim();if(!training||training.toUpperCase()==="FORMATION INITIATEUR")return false;if(visibleLevels===null)return true;return visibleLevels.includes(training.toUpperCase())||visibleLevels.includes(String(d.aptitudeLevel||"").trim().toUpperCase())}).sort((a,b)=>(String(a.lastName||"")+String(a.firstName||"")).localeCompare(String(b.lastName||"")+String(b.firstName||""),"fr"));}
