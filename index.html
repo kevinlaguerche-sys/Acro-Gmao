@@ -415,6 +415,7 @@
       <button class="nav-btn hidden" data-view="plongeurs"><span class="ico">🤿</span>Gestion des plongeurs</button>
       <button class="nav-btn hidden" data-view="sauvegarde"><span class="ico">💾</span>Extraction / Sauvegarde</button>
       <button id="accessNav" class="nav-btn" data-view="acces"><span class="ico">🛡️</span>Gestion des accès</button>
+      <button class="nav-btn hidden" data-view="securite"><span class="ico">🔐</span>Sécurité & connexions</button>
     </div>
   </aside>
   <main class="content" id="mainContent"></main>
@@ -506,6 +507,7 @@ const views={
  acces:{title:"Gestion des accès",subtitle:"Crée les comptes et choisis les écrans visibles pour chaque membre.",icon:"🛡️"},
  plongeurs:{title:"Gestion des plongeurs",subtitle:"Crée les comptes des plongeurs et attribue à chacun les modules auxquels il peut accéder.",icon:"🤿"},
  sauvegarde:{title:"Extraction / Sauvegarde",subtitle:"Exporte les données du club ou importe les fiches plongeurs et le matériel.",icon:"💾"},
+ securite:{title:"Sécurité & connexions",subtitle:"Historique des connexions réussies et des tentatives échouées.",icon:"🔐"},
  analyse:{title:"Analyse encadrants",subtitle:"Indicateurs annuels d’activité des encadrants et de programmation des événements.",icon:"📊"},
  analyseMateriel:{title:"Analyse matériel",subtitle:"Suivi des recettes, des sorties et de la rotation du matériel du club.",icon:"📊"}
 };
@@ -554,7 +556,7 @@ async function loginByName(lastName,firstName,password){
  showApp();return true;
 }
 function canMasterMateriel(){return isMaster()}
-function isMasterSection(view){return ["masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"].includes(view)}
+function isMasterSection(view){return ["masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde","securite"].includes(view)}
 function canConsultMasterSection(view){return isMaster()||((current?.permissions||[]).includes(view)&&isMasterSection(view))}
 function todayISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function dateFR(s){if(!s)return "—";const p=s.split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
@@ -607,6 +609,7 @@ function render(view){
  if(view==="dashboard") body=dashboardHTML();
  if(view==="acces") body=accessHTML();
  if(view==="sauvegarde") body=backupHTML();
+ if(view==="securite") body=securityHTML();
  if(view==="plongeurs") body=diversHTML();
  if(view==="analyse") body=analysisEncadrantsHTML();
  if(view==="analyseMateriel") body=analysisMaterialHTML();
@@ -627,6 +630,7 @@ function render(view){
  if(view==="dashboard"&&isMaster()){document.getElementById("manageLocationsBtn")?.addEventListener("click",()=>{render("acces");const details=document.querySelector(".master-locations-details");if(details){details.open=true;details.scrollIntoView({behavior:"smooth",block:"start"});}});}
  if(["materiel","masterMateriel"].includes(view)){document.getElementById("titleBackToMaterial")?.addEventListener("click",()=>render("materiel"));} 
  if(view==="materiel") wireMaterial();
+ if(view==="securite"&&isMaster()) loadSecurityLogs();
  if(view==="masterMateriel"&&isMaster()){document.getElementById("newEquipmentBtn")?.addEventListener("click",()=>{const f=document.getElementById("equipmentForm");if(f){delete f.dataset.editEquipment;f.reset();const submit=f.querySelector('button[type="submit"]');if(submit)submit.textContent="Enregistrer";const title=document.querySelector("#equipmentFormWrap .equipment-edit-title");if(title)title.textContent="Créer un équipement";}document.getElementById("equipmentFormWrap").classList.remove("hidden");document.getElementById("equipmentType")?.focus()});wireMasterMaterial();}
  if(view==="acces"&&isMaster()){wireEventLocations();document.getElementById("createUserBtn")?.addEventListener("click",()=>openUserDialog());document.querySelectorAll("[data-edit-user]").forEach(b=>b.addEventListener("click",()=>openUserDialog(b.dataset.editUser)));document.querySelectorAll("[data-toggle-user]").forEach(b=>b.addEventListener("click",()=>toggleUser(b.dataset.toggleUser)));document.querySelectorAll("[data-delete-user]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deleteUser)))}
 
@@ -1954,6 +1958,41 @@ function wireDivers(){
   state.divers=state.divers.filter(x=>x.id!==d.id);saveState();render("plongeurs");notify("Fiche plongeur supprimée");
  }));
 }
+
+function securityHTML(){
+ return `<div class="cards">
+  <div class="stat"><span class="stat-ico">🟢</span><small>Connexions réussies (historique chargé)</small><strong id="securitySuccess">—</strong></div>
+  <div class="stat"><span class="stat-ico">⚠️</span><small>Tentatives échouées (historique chargé)</small><strong id="securityFailed">—</strong></div>
+  <div class="stat"><span class="stat-ico">📋</span><small>Événements affichés</small><strong id="securityTotal">—</strong></div>
+ </div>
+ <div class="section">
+  <div class="section-head"><div><h2>Historique des connexions</h2><p class="muted">Les 250 dernières tentatives enregistrées à partir de la mise en service.</p></div><button class="btn soft small" id="refreshSecurity">↻ Actualiser</button></div>
+  <div id="securityMessage" class="muted">Chargement de l’historique…</div>
+  <div class="table-wrap"><table><thead><tr><th>Identifiant saisi</th><th>Date / heure</th><th>Résultat</th><th>Détail</th><th>Adresse IP</th><th>Appareil / navigateur</th></tr></thead><tbody id="securityRows"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody></table></div>
+ </div>
+ <div class="section" style="background:#eaf5ff"><strong>Protection des données</strong><p class="muted">Les mots de passe ne sont jamais enregistrés. L’historique conserve uniquement l’identifiant saisi, le résultat, l’heure, l’adresse IP lorsqu’elle est transmise et le navigateur.</p></div>`;
+}
+async function loadSecurityLogs(){
+ const rows=document.getElementById("securityRows"),message=document.getElementById("securityMessage");
+ if(!rows||!isMaster())return;
+ const button=document.getElementById("refreshSecurity");if(button)button.disabled=true;
+ try{
+  const client=initSupabase();if(!client)throw new Error("Connexion Supabase indisponible.");
+  const {data,error}=await client.functions.invoke("member-access",{body:{action:"list_logs"}});
+  if(error||!data?.ok)throw new Error(data?.error||error?.message||"Lecture impossible.");
+  const logs=Array.isArray(data.logs)?data.logs:[];
+  document.getElementById("securitySuccess").textContent=logs.filter(x=>x.success).length;
+  document.getElementById("securityFailed").textContent=logs.filter(x=>!x.success).length;
+  document.getElementById("securityTotal").textContent=logs.length;
+  rows.innerHTML=logs.length?logs.map(x=>{
+   const date=x.created_at?new Date(x.created_at).toLocaleString("fr-FR"):"—";
+   return `<tr><td><strong>${esc(x.attempted_name||"Identifiant non renseigné")}</strong></td><td>${esc(date)}</td><td><span class="badge ${x.success?"green":"orange"}">${x.success?"Réussie":"Échec"}</span></td><td>${esc(x.reason||"—")}</td><td>${esc(x.ip_address||"Non disponible")}</td><td>${esc(x.user_agent||"Non disponible")}</td></tr>`;
+  }).join(""):'<tr><td colspan="6" class="empty">Aucune tentative enregistrée pour le moment.</td></tr>';
+  message.textContent="Historique actualisé · "+logs.length+" événement(s).";
+ }catch(err){message.textContent="Impossible de charger l’historique : "+(err.message||err);rows.innerHTML='<tr><td colspan="6" class="empty">Vérifie la connexion et les droits Master.</td></tr>';}
+ finally{if(button)button.disabled=false;}
+}
+
 function accessHTML(){
  const divers=(state.divers||[]).filter(d=>d&&d.id&&String(d.firstName||"").trim()&&String(d.lastName||"").trim()).slice().sort((a,b)=>(a.lastName||"").localeCompare(b.lastName||"","fr")||(a.firstName||"").localeCompare(b.firstName||"","fr"));
  const accountFor=d=>state.users.find(u=>u.diverId===d.id||String(u.name||"").trim().toLocaleLowerCase("fr")===((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr")));
@@ -2015,6 +2054,7 @@ document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.addEventListener("
  }
 }));
 document.getElementById("mainContent").addEventListener("click",e=>{
+ const refresh=e.target.closest("#refreshSecurity");if(refresh){loadSecurityLogs();return;}
  const createFor=e.target.closest("[data-create-user-for]");
  if(createFor){openUserDialog("",createFor.dataset.createUserFor);return;}
  const b=e.target.closest("[data-open-view]");
