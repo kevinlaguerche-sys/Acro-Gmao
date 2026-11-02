@@ -494,6 +494,123 @@ button:active{transform:scale(.985)}
 @media(max-width:600px){.v125-dashboard-stats{gap:9px}.v125-stat-card{min-height:75px;padding:11px;gap:9px}.v125-stat-icon{width:36px;height:36px;flex-basis:36px;font-size:20px}.v125-stat-card strong{font-size:23px}.v125-stat-card span:last-child{font-size:10px}.v125-next-event{padding:13px}.v125-event-count{font-size:10px;padding:6px 8px}}
 
 </style>
+<style>
+
+/* V125 — refonte d'interface de tous les modules ACRO */
+:root{--acro-ink:#102d4e;--acro-navy:#073653;--acro-blue:#087eaa;--acro-cyan:#0bb5c7;--acro-line:#d7e8f1;--acro-bg:#edf6fc;--acro-green:#168653}
+body{background:linear-gradient(145deg,#f8fcff 0%,#eef7fd 54%,#e8f4fb 100%);color:var(--acro-ink)}
+.topbar{min-height:64px;padding:8px 16px;background:linear-gradient(110deg,#073653,#07577c 68%,#0788a0);box-shadow:0 5px 22px #07365325}
+.brand{gap:11px}.brand-mark{width:40px;height:40px;border-radius:14px;background:linear-gradient(145deg,#72e4ef,#12b4c8);border:2px solid #c1f5f5;box-shadow:0 3px 12px #001d3033}
+.brand b{font-size:16px;letter-spacing:.04em}.brand small{color:#d8f2f6;font-size:9px;letter-spacing:.14em}
+.user-pill{border:1px solid #ffffff38;background:#ffffff18;color:#fff;border-radius:13px}
+.menu-toggle{border:1px solid #ffffff55;background:#ffffff17;color:white;border-radius:12px}
+.sidebar{background:#fff;border-right:1px solid #d9e9f2;box-shadow:8px 0 28px #174b6c0c}
+.side-label,.eyebrow{color:#087e9e;letter-spacing:.14em;font-weight:900}
+.nav-btn{border-radius:13px;color:#3a5b74;margin:3px 8px}
+.nav-btn:hover{background:#eff9fc;color:#087e9e}
+.nav-btn.active{background:linear-gradient(100deg,#e1f6fa,#effaff);color:#087e9e;box-shadow:inset 3px 0 #08a6b7}
+.content{max-width:1500px;padding:clamp(14px,2.3vw,32px)}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 19px;padding:0 0 14px;border-bottom:1px solid #dceaf2}
+.page-head h1{font-size:clamp(23px,3vw,31px);font-weight:900;letter-spacing:-.035em;color:#102d4e}
+.page-head p{margin-top:5px;color:#5d7489}
+.section,.panel,.stat,.module-card,.material-stat,.n1-skill-card{border:1px solid var(--acro-line);border-radius:19px;background:linear-gradient(150deg,#fff,#fbfdff);box-shadow:0 7px 22px #16486b0d}
+.section{padding:clamp(14px,2vw,21px);margin-bottom:15px}
+.section-head{gap:12px}.section-head h2{font-size:17px;font-weight:850;color:#123c61}
+.section-head p{color:#657e91}
+.btn{border-radius:13px;font-weight:800;transition:transform .15s,box-shadow .15s}
+.btn.primary{background:linear-gradient(110deg,#0788aa,#0aadb5);box-shadow:0 5px 13px #078eaa25}
+.btn:not(.primary):not(.soft):not(.danger){background:linear-gradient(110deg,#0a4568,#087e9b);color:#fff}
+.btn.soft{background:linear-gradient(145deg,#e9f8fc,#e3f5f8);border:1px solid #c8e7ef;color:#087d9c}
+.btn.danger{background:#fff1ef;border:1px solid #f2d5d0;color:#a43d32}
+.field label{color:#244b65;font-weight:800}
+.field input,.field select,.field textarea,input,select,textarea{border:1px solid #cbdfea;border-radius:12px;background:#fbfdff;color:#173b58;min-height:42px}
+.badge{border-radius:20px;background:#e4f6fa;border:1px solid #d0edf3;color:#087d99;font-weight:800}
+.badge.green{background:#e2f8eb;border-color:#c8eed8;color:#167548}
+.badge.orange{background:#fff3e3;border-color:#f5e3c8;color:#985912}
+.table-wrap{border:1px solid #dfebf2;border-radius:16px;background:#fff;overflow:auto}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th{padding:12px 11px;background:#eef7fb;color:#4b6b82;font-size:12px;font-weight:850}
+td{padding:12px 11px;border-bottom:1px solid #edf2f5;color:#284b65}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#f5fbfe}
+.subnav{gap:8px;flex-wrap:wrap}.subnav button{border-radius:13px;border:1px solid #d8e8f0;background:#fff;color:#49677e;padding:10px 13px}
+.subnav button.active{background:linear-gradient(110deg,#e1f6fa,#e9f8fc);border-color:#9edce7;color:#087e9b;box-shadow:inset 0 -2px #0aa7b5}
+.material-stats{gap:11px}.material-stat{border-radius:16px;padding:13px}
+.calendar-toolbar{padding:12px 14px;border:1px solid #dceaf2;border-radius:17px;background:#f7fbff}
+.calendar-month{color:#143b60;font-size:19px;font-weight:900}
+.calendar-grid{gap:5px;margin-top:12px}
+.calendar-weekday{color:#5d7c91;font-weight:850}
+.calendar-day{border:1px solid #dfebf2;border-radius:12px;background:#fff;min-height:75px}
+.calendar-day.today{border:2px solid #168653;background:#edfaf2}
+.calendar-day.today .calendar-day-number{background:#168653;color:#fff;border-radius:20px}
+.calendar-event-chip{background:#e2f6fb;color:#087d99;border-radius:7px;padding:3px 5px}
+.mft-open-btn{border:1px solid #9edce7!important;border-radius:13px!important;background:linear-gradient(110deg,#dff6fb,#eaf9ff)!important;color:#087d9c!important;padding:12px 17px!important}
+.n1-inline-progress{border-radius:17px}
+dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1px solid #d7e8f0;border-radius:23px;box-shadow:0 22px 65px #0b355044}
+.dialog-head,.mft-dialog-head,.n1-dialog-head{background:linear-gradient(112deg,#073653,#087e9b)}
+/* Formation : sélection + niveaux en cartes lisibles */
+#mainContent[data-view="formation"]>.section{position:relative}
+#mainContent[data-view="formation"] .field{max-width:100%}
+#mainContent[data-view="formation"] .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+#mainContent[data-view="formation"] .stat{min-height:90px;padding:14px;border-radius:16px}
+#mainContent[data-view="formation"] .n1-inline-progress{margin-top:14px}
+#mainContent[data-view="formation"] .n1-skill-card{border-radius:15px;padding:14px}
+/* Plongeurs et accès : tableaux en lignes-cartes, conservant les commandes */
+#mainContent[data-view="plongeurs"] .table-wrap,
+#mainContent[data-view="acces"] .table-wrap{border:0;background:transparent;overflow:visible}
+#mainContent[data-view="plongeurs"] table,
+#mainContent[data-view="acces"] table{border-collapse:separate;border-spacing:0 8px}
+#mainContent[data-view="plongeurs"] thead,
+#mainContent[data-view="acces"] thead{display:none}
+#mainContent[data-view="plongeurs"] tbody tr,
+#mainContent[data-view="acces"] tbody tr{background:#fff;box-shadow:0 3px 13px #174b6c0c;border:1px solid #e0edf3}
+#mainContent[data-view="plongeurs"] tbody td,
+#mainContent[data-view="acces"] tbody td{border:0;padding:11px 9px;background:transparent;vertical-align:middle}
+#mainContent[data-view="plongeurs"] tbody td:first-child,
+#mainContent[data-view="acces"] tbody td:first-child{border-radius:13px 0 0 13px}
+#mainContent[data-view="plongeurs"] tbody td:last-child,
+#mainContent[data-view="acces"] tbody td:last-child{border-radius:0 13px 13px 0}
+#mainContent[data-view="plongeurs"] .inline-form{gap:12px}
+#mainContent[data-view="plongeurs"] .inline-form .field{background:#f7fbfe;border:1px solid #e0edf4;border-radius:13px;padding:10px}
+/* Matériel : formulaire de prêt et actions */
+#mainContent[data-view="materiel"] .loan-registration-navy-outline{border:1px solid #cde4ef;background:linear-gradient(150deg,#fff,#f5fbff)}
+#mainContent[data-view="materiel"] .free-mode-button{border-radius:15px}
+#mainContent[data-view="materiel"] .qr-scan-row{gap:9px}
+#mainContent[data-view="materiel"] .material-tab-icon{font-size:19px}
+/* Planning : calendrier respirant, listes événementielles */
+#mainContent[data-view="planning"] .month-events-section{padding:0;overflow:hidden}
+#mainContent[data-view="planning"] .month-events-details>summary{padding:16px 18px}
+#mainContent[data-view="planning"] .calendar-legend{display:flex;flex-wrap:wrap;gap:12px;color:#5d7489;font-size:11px}
+#mainContent[data-view="acces"] .section{overflow:hidden}
+#mainContent[data-view="acces"] .section-head{align-items:flex-start}
+@media(max-width:900px){
+ .content{padding:14px}
+ .sidebar{background:#fff}
+ .section{padding:14px}
+ #mainContent[data-view="plongeurs"] .table-wrap,
+ #mainContent[data-view="acces"] .table-wrap{overflow-x:auto}
+}
+@media(max-width:620px){
+ .topbar{min-height:60px;padding:7px 9px}
+ .brand b{font-size:14px}.brand small{font-size:8px}
+ .brand-mark{width:35px;height:35px}
+ .content{padding:11px}
+ .page-head{align-items:flex-start;flex-wrap:wrap;margin-bottom:13px}
+ .page-head h1{font-size:23px}
+ .section{border-radius:16px;padding:13px;margin-bottom:11px}
+ .section-head{align-items:flex-start}
+ #mainContent[data-view="formation"] .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #mainContent[data-view="plongeurs"] .table-wrap,
+ #mainContent[data-view="acces"] .table-wrap{overflow-x:auto}
+ #mainContent[data-view="plongeurs"] table,
+ #mainContent[data-view="acces"] table{min-width:760px}
+ .calendar-day{min-height:58px;padding:5px}
+ .calendar-event-chip{font-size:9px;white-space:normal}
+ .material-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .material-stat{padding:9px}
+}
+
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -722,6 +839,7 @@ function render(view){
  if(!allowed(view)){notify("Cet écran ne fait pas partie de tes accès.");view="dashboard";if(!allowed(view)){logout();return}}
  document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
  const v=views[view], main=document.getElementById("mainContent");
+ main.dataset.view=view;
  let body="";
  if(view==="dashboard") body=dashboardHTML();
  if(view==="acces") body=accessHTML();
