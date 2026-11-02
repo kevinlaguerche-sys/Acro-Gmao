@@ -1196,7 +1196,7 @@ function showFreeConfirmStep(){
   const {button,form,caption}=pending;
   button.setAttribute("aria-pressed","true");button.classList.add("active");
   form.dataset.manualFree="true";form.dispatchEvent(new Event("acro-free-mode-change"));
-  button.innerHTML="✓ GRATUIT ACTIVÉ <span class="free-mode-caption">"+caption+" · aucun débit</span>";
+  button.innerHTML="✓ GRATUIT ACTIVÉ <span class=\\"free-mode-caption\\">"+caption+" · aucun débit</span>";
   closeFreeConfirm();
  });
 }
