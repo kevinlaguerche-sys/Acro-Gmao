@@ -840,19 +840,25 @@ function openAcroQrHub(kind){
  overlay.querySelector(".acro-qr-hub-again").addEventListener("click",()=>{setResult("En attente d'un QR Code","Choisis Scanner ou Importer pour commencer.");overlay.querySelector(".acro-qr-hub-preview").innerHTML="";const b=overlay.querySelector(".acro-qr-hub-open");b.hidden=true});
  overlay.querySelector(".acro-qr-hub-open").addEventListener("click",()=>{close();if(kind==="member")render("plongeurs");else if(kind==="equipment")render("materiel");else render("materiel")});
  const inputId=kind==="member"?"memberQRImport":kind==="equipment"?"equipmentQRImport":"blockQRImport";
- document.getElementById(inputId)?.addEventListener("change",async()=>{
-  const file=document.getElementById(inputId)?.files?.[0];if(!file)return;
+ const importInput=document.getElementById(inputId);
+ if(importInput)importInput.onchange=()=>{
+  const file=importInput.files?.[0];if(!file)return;
   setResult("Lecture de la photo en cours…","Analyse du QR Code et vérification dans l'inventaire.");
   if(acroQrHubObjectUrl)URL.revokeObjectURL(acroQrHubObjectUrl);acroQrHubObjectUrl=URL.createObjectURL(file);
   overlay.querySelector(".acro-qr-hub-preview").innerHTML=`<img src="${acroQrHubObjectUrl}" alt="Photo QR importée"><span>${esc(file.name)} · ${(file.size/1024/1024).toFixed(1)} Mo</span>`;
-  setTimeout(()=>{
-   const statusId=kind==="member"?"memberQRImportStatus":kind==="equipment"?"equipmentQRImportStatus":"blockQRImportStatus";
-   const status=document.getElementById(statusId),ok=!!status?.classList.contains("success");
-   const message=status?.textContent||"Lecture terminée.";
-   setResult(ok?"QR Code lu avec succès":"Lecture à vérifier",message,ok);
-   if(ok){const open=overlay.querySelector(".acro-qr-hub-open");open.hidden=false;open.textContent=kind==="member"?"Ouvrir la fiche plongeur":kind==="equipment"?"Voir le matériel sélectionné":"Revenir au gonflage";}
-  },700);
- });
+  const statusId=kind==="member"?"memberQRImportStatus":kind==="equipment"?"equipmentQRImportStatus":"blockQRImportStatus";
+  let checks=0;
+  const refreshResult=()=>{
+   if(!document.body.contains(overlay))return;
+   const status=document.getElementById(statusId),message=status?.textContent||"Lecture du QR Code en cours…";
+   const ok=!!status?.classList.contains("success"),failed=!!status?.classList.contains("error");
+   if(ok||failed||checks++>45){
+    setResult(ok?"QR Code lu avec succès":failed?"Lecture impossible":"Lecture à vérifier",message,ok);
+    if(ok){const open=overlay.querySelector(".acro-qr-hub-open");open.hidden=false;open.textContent=kind==="member"?"Ouvrir la fiche plongeur":kind==="equipment"?"Voir le matériel sélectionné":"Revenir au gonflage";}
+   }else setTimeout(refreshResult,300);
+  };
+  setTimeout(refreshResult,250);
+ };
 }
 document.addEventListener("click",e=>{
  if(acroQrHubBypass)return;
