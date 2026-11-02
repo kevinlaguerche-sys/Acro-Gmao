@@ -337,7 +337,7 @@
 .n1-progress-summary{background:linear-gradient(125deg,#082b50,#075db3);border:1px solid #4c9ee5;border-radius:18px;color:#fff;padding:16px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;box-shadow:0 12px 26px #0754a626}
 .n1-progress-summary strong{font:800 28px Manrope,sans-serif}.n1-progress-summary small{color:#c7e3ff}.n1-recent-work{margin-top:13px;padding-top:10px;border-top:1px solid #ffffff35;display:grid;gap:6px}.n1-recent-work>small{font-size:11px;font-weight:800;color:#d8edff;margin-bottom:2px}.n1-recent-work-item{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:#fff}.n1-recent-work-item span{font-weight:700;min-width:0}.n1-recent-work-item time{color:#c7e3ff;white-space:nowrap;font-size:10px}.n1-recent-empty{font-size:11px;color:#c7e3ff}
 .n1-progress-track{height:8px;border-radius:9px;background:#ffffff30;overflow:hidden;margin-top:9px}.n1-progress-track span{display:block;height:100%;background:linear-gradient(90deg,#36d4d0,#a4f1ec);border-radius:9px}
-.n1-progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.n1-progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.n1-progress-groups{display:grid;gap:16px;margin-top:14px}.n1-progress-group-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px}.n1-progress-group-heading h3{font-size:14px;font-weight:800;color:#173d60;margin:0}.n1-progress-results{display:grid;gap:9px;margin-top:16px}.n1-result-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #d5e6f7;border-radius:14px;padding:13px;color:#173d60}.n1-result-final{background:#edf5ff;border-color:#b9d8f5}
 .n1-skill-card{background:#fff;border:1px solid #d5e6f7;border-radius:16px;padding:13px;box-shadow:0 6px 18px #0a3a6510;min-width:0}.n1-skill-clickable{cursor:pointer;transition:.15s}.n1-skill-clickable:hover,.n1-skill-clickable:focus{border-color:#168ee0;box-shadow:0 8px 22px #0754a622;outline:none;transform:translateY(-1px)}.n1-skill-action-hint{font-size:11px;font-weight:800;color:#0759ae;margin-top:10px}.n1-inline-progress{margin-top:16px}.n1-progress-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.n1-progress-heading h2{font-size:18px;color:#123c65}.n1-progress-heading p{font-size:12px;color:#68819a;margin:5px 0 0}
 .n1-skill-title{font-weight:800;color:#123c65;line-height:1.35;font-size:14px;display:flex;gap:8px;align-items:flex-start}
 .n1-skill-title .n1-status-icon{font-size:19px;flex-shrink:0}
@@ -898,6 +898,27 @@ function isInitiatorTrainingAllowed(){if(isMaster())return true;const linked=cur
 function initiatorDiverList(){if(!isInitiatorTrainingAllowed())return [];const eligibleLevels=["NIVEAU 2","NIVEAU 3","NIVEAU 4","P5"];return (state.divers||[]).filter(d=>String(d.inProgress||"").trim().toUpperCase()==="FORMATION INITIATEUR"&&eligibleLevels.includes(String(d.currentLevel||"").trim().toUpperCase())).sort((a,b)=>(String(a.lastName||"")+String(a.firstName||"")).localeCompare(String(b.lastName||"")+String(b.firstName||""),"fr"))}
 function trainingDiverList(){const allowedLowerLevels=["NIVEAU 1","NIVEAU 2","PE12","PA12","PE20","PA20"];let visibleLevels=null;if(!isMaster()){const linked=currentLinkedDiver();const profile=String(linked?.encadrement||linked?.currentLevel||"").trim().toUpperCase();if(["E3","E4"].includes(profile)){visibleLevels=null;}else if(["E1","E2"].includes(profile)){visibleLevels=allowedLowerLevels;}else{return []}}return (state.divers||[]).filter(d=>{const training=String(d.inProgress||"").trim();if(!training||training.toUpperCase()==="FORMATION INITIATEUR")return false;if(visibleLevels===null)return true;return visibleLevels.includes(training.toUpperCase())||visibleLevels.includes(String(d.aptitudeLevel||"").trim().toUpperCase())}).sort((a,b)=>(String(a.lastName||"")+String(a.firstName||"")).localeCompare(String(b.lastName||"")+String(b.firstName||""),"fr"));}
 function isN1Diver(d){return !!d&&String(d.inProgress||"").trim().toUpperCase().includes("NIVEAU 1")}
+function isN2Diver(d){return !!d&&String(d.inProgress||"").trim().toUpperCase().includes("NIVEAU 2")}
+const N2_GROUPS=[
+ {key:"PE40",label:"Compétences spécifiques PE40",skills:[
+  {code:"N2-PE40-01",label:"Ventiler et s’équilibrer"},
+  {code:"N2-PE40-02",label:"Communiquer avec le GP"},
+  {code:"N2-PE40-03",label:"Retourner en surface"},
+  {code:"N2-PE40-04",label:"Intervenir en relais sur un équipier"}
+ ]},
+ {key:"COMMUNES",label:"Compétences communes",skills:[
+  {code:"N2-COM-01",label:"S’équiper et se mettre à l’eau"},
+  {code:"N2-COM-02",label:"S’immerger et se propulser"},
+  {code:"N2-COM-03",label:"Respecter le milieu et l’environnement"}
+ ]},
+ {key:"PA20",label:"Compétences spécifiques PA20",skills:[
+  {code:"N2-PA20-01",label:"Planifier la plongée"},
+  {code:"N2-PA20-02",label:"Être attentif au matériel des équipiers"},
+  {code:"N2-PA20-03",label:"Évoluer en autonomie"},
+  {code:"N2-PA20-04",label:"Intervenir et porter assistance"}
+ ]}
+];
+const N2_COMPETENCIES=N2_GROUPS.flatMap(g=>g.skills);
 const N1_COMPETENCIES=[
  {code:"N1-01",label:"S’équiper et se déséquiper"},
  {code:"N1-02",label:"Se mettre à l’eau et en sortir"},
@@ -912,7 +933,7 @@ const N1_COMPETENCIES=[
 ];
 function formationCommentPanel(d,list,kind){
  const prefix=kind==="initiator"?"initiator":"training",title=kind==="initiator"?"Formation initiateur":"Plongeur en formation";
- return `<div class="section"><div class="section-head"><h2>${kind==="initiator"?"🎓":"🤿"} ${title}</h2><span class="badge">${list.length} en formation</span></div><div class="field"><label for="${prefix}DiverSelect">Plongeur</label><select id="${prefix}DiverSelect" ${list.length?"":"disabled"}><option value="">— Sélectionner un plongeur —</option>${list.map(x=>`<option value="${esc(x.id)}" ${x.id===d?.id?"selected":""}>${esc((x.firstName||"")+" "+(x.lastName||"")).trim()}</option>`).join("")}</select></div>${!list.length?`<div class="empty">${kind==="initiator"?"Aucun plongeur éligible en formation initiateur. Cette formation est réservée aux plongeurs de niveau 2 ou supérieur et son suivi est visible uniquement par les E3 et E4 (Master inclus).":"Aucun plongeur n’est actuellement indiqué en formation. Dans « Gestion des plongeurs », renseigne son champ « Niveau en cours » pour qu’il apparaisse ici."}</div>`:d?`<div class="cards" style="margin-top:12px"><article class="stat"><small>Niveau actuel</small><strong><span class="badge green" style="font-size:14px;padding:7px 11px">${esc(d.currentLevel||"—")}${d.aptitudeLevel?" · "+esc(d.aptitudeLevel):""}</span></strong></article><article class="stat"><small>Formation suivie</small><strong><span class="badge orange" style="font-size:14px;padding:7px 11px">${esc(d.inProgress||"—")}</span></strong></article></div>${kind==="training"&&isN1Diver(d)?`<div id="n1ProgressInline" class="n1-inline-progress"><div class="empty">Chargement de la fiche de suivi…</div></div>`:`<div class="empty">${kind==="training"?"La fiche de suivi détaillée est disponible pour le cursus N1.":"Le suivi détaillé de cette formation sera disponible prochainement."}</div>`}`: ""}</div>`;
+ return `<div class="section"><div class="section-head"><h2>${kind==="initiator"?"🎓":"🤿"} ${title}</h2><span class="badge">${list.length} en formation</span></div><div class="field"><label for="${prefix}DiverSelect">Plongeur</label><select id="${prefix}DiverSelect" ${list.length?"":"disabled"}><option value="">— Sélectionner un plongeur —</option>${list.map(x=>`<option value="${esc(x.id)}" ${x.id===d?.id?"selected":""}>${esc((x.firstName||"")+" "+(x.lastName||"")).trim()}</option>`).join("")}</select></div>${!list.length?`<div class="empty">${kind==="initiator"?"Aucun plongeur éligible en formation initiateur. Cette formation est réservée aux plongeurs de niveau 2 ou supérieur et son suivi est visible uniquement par les E3 et E4 (Master inclus).":"Aucun plongeur n’est actuellement indiqué en formation. Dans « Gestion des plongeurs », renseigne son champ « Niveau en cours » pour qu’il apparaisse ici."}</div>`:d?`<div class="cards" style="margin-top:12px"><article class="stat"><small>Niveau actuel</small><strong><span class="badge green" style="font-size:14px;padding:7px 11px">${esc(d.currentLevel||"—")}${d.aptitudeLevel?" · "+esc(d.aptitudeLevel):""}</span></strong></article><article class="stat"><small>Formation suivie</small><strong><span class="badge orange" style="font-size:14px;padding:7px 11px">${esc(d.inProgress||"—")}</span></strong></article></div>${kind==="training"&&(isN1Diver(d)||isN2Diver(d))?`<div id="n1ProgressInline" class="n1-inline-progress"><div class="empty">Chargement de la fiche de suivi…</div></div>`:`<div class="empty">${kind==="training"?"Le suivi détaillé est disponible pour les cursus N1 et N2.":"Le suivi détaillé de cette formation sera disponible prochainement."}</div>`}`: ""}</div>`;
 }
 function formationHTML(){const list=trainingDiverList();const selected=document.getElementById("trainingDiverSelect")?.value||"";const d=list.find(x=>x.id===selected)||null;const normal=formationCommentPanel(d,list,"training");if(!isInitiatorTrainingAllowed())return normal+n1ProgressDialogHTML();const ilist=initiatorDiverList();const iselected=document.getElementById("initiatorDiverSelect")?.value||"";const id=ilist.find(x=>x.id===iselected)||null;return normal+formationCommentPanel(id,ilist,"initiator")+n1ProgressDialogHTML()}
 
@@ -938,6 +959,49 @@ async function openN1Progress(diverId){
   body.querySelectorAll("[data-open-n1-skill]").forEach(card=>{const open=()=>openN1Evaluation(diverId,card.dataset.openN1Skill,evaluations,validations);card.addEventListener("click",e=>{if(e.target.closest("details.n1-history"))return;open()});card.addEventListener("keydown",e=>{if(e.target.closest("details.n1-history"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}})});
  }catch(err){body.innerHTML=`<div class="empty">Impossible de charger la fiche : ${esc(err.message||"Erreur Supabase")}</div>`}
 }
+function n2GroupIsAcquired(group,validations){return group.skills.every(c=>validations.some(v=>v.competency_code===c.code))&&(group.key==="PE40"||group.key==="PA20"?N2_GROUPS.find(g=>g.key==="COMMUNES").skills.every(c=>validations.some(v=>v.competency_code===c.code)):true)}
+async function openN2Progress(diverId){
+ const d=(state.divers||[]).find(x=>x.id===diverId)||null;
+ if(!d||!isN2Diver(d)){notify("Cette fiche de progression est réservée au cursus N2.");return}
+ if(!supabaseClient){notify("Connexion Supabase indisponible.");return}
+ const body=document.getElementById("n1ProgressInline");if(!body)return;
+ body.innerHTML='<div class="empty">Chargement de la progression…</div>';
+ try{
+  const [evRes,valRes]=await Promise.all([supabaseClient.from("acro_n1_evaluations").select("*").eq("diver_id",diverId).order("created_at",{ascending:false}),supabaseClient.from("acro_n1_validations").select("*").eq("diver_id",diverId).order("validated_at",{ascending:true})]);
+  if(evRes.error)throw evRes.error;if(valRes.error)throw valRes.error;
+  const evaluations=evRes.data||[],validations=valRes.data||[];
+  const acquired=N2_COMPETENCIES.filter(c=>validations.some(v=>v.competency_code===c.code)).length;
+  const common=N2_GROUPS.find(g=>g.key==="COMMUNES");
+  const commonDone=common.skills.every(c=>validations.some(v=>v.competency_code===c.code));
+  const pe40Done=N2_GROUPS.find(g=>g.key==="PE40").skills.every(c=>validations.some(v=>v.competency_code===c.code))&&commonDone;
+  const pa20Done=N2_GROUPS.find(g=>g.key==="PA20").skills.every(c=>validations.some(v=>v.competency_code===c.code))&&commonDone;
+  const latest=[...evaluations].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);
+  body.innerHTML=`<div class="n1-progress-heading"><div><h2>📘 Fiche de suivi des compétences N2</h2><p>Clique directement sur une compétence pour ajouter une observation</p></div><span class="badge">${(d.firstName||"")+" "+(d.lastName||"")}</span></div>
+  <div class="n1-progress-summary"><div><small>Compétences N2 acquises</small><div><strong>${acquired} / 11</strong></div><div class="n1-progress-track"><span style="width:${acquired/11*100}%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>${latest.length?latest.map(e=>`<div class="n1-recent-work-item"><span>${esc(e.competency_label||N2_COMPETENCIES.find(c=>c.code===e.competency_code)?.label||e.competency_code)}</span><time>${new Date(e.created_at).toLocaleDateString("fr-FR")}</time></div>`).join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'}</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>${evaluations.length}</strong></div></div></div>
+  <div class="n1-progress-groups">${N2_GROUPS.map(group=>{const done=group.key==="COMMUNES"?commonDone:group.key==="PE40"?pe40Done:pa20Done;const count=group.skills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;return `<section class="n1-progress-group"><div class="n1-progress-group-heading"><h3>${esc(group.label)}</h3><span class="n1-pill ${done?"green":"blue"}">${count} / ${group.skills.length}${group.key!=="COMMUNES"?" + communes":""}</span></div><div class="n1-progress-grid">${group.skills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>`}).join("")}</div>
+  <div class="n1-progress-results"><div class="n1-result-card"><strong>Résultat PE40</strong><span class="badge ${pe40Done?"green":"orange"}">${pe40Done?"Acquis":"En cours"}</span></div><div class="n1-result-card"><strong>Résultat PA20</strong><span class="badge ${pa20Done?"green":"orange"}">${pa20Done?"Acquis":"En cours"}</span></div><div class="n1-result-card n1-result-final"><strong>Résultat Niveau 2</strong><span class="badge ${acquired===11?"green":"orange"}">${acquired===11?"Acquis":"En cours"}</span></div></div>`;
+  body.querySelectorAll("[data-open-n1-skill]").forEach(card=>{const open=()=>openN2Evaluation(diverId,card.dataset.openN1Skill,evaluations,validations);card.addEventListener("click",e=>{if(e.target.closest("details.n1-history"))return;open()});card.addEventListener("keydown",e=>{if(e.target.closest("details.n1-history"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}})});
+ }catch(err){body.innerHTML=`<div class="empty">Impossible de charger la fiche : ${esc(err.message||"Erreur Supabase")}</div>`}
+}
+function openN2Evaluation(diverId,code,evaluations,validations){
+ const skill=N2_COMPETENCIES.find(c=>c.code===code),dialog=document.getElementById("n1EvaluationDialog");if(!skill||!dialog)return;
+ const form=document.getElementById("n1EvaluationForm");form.reset();form.elements.competency.value=code;
+ const diver=state.divers.find(d=>d.id===diverId);
+ document.getElementById("n1EvaluationTitle").textContent=skill.label;
+ document.getElementById("n1EvaluationSubtitle").textContent="Ajouter une observation · "+(diver?.firstName||"")+" "+(diver?.lastName||"");
+ document.getElementById("n1EvaluationMessage").textContent="";if(!dialog.open)dialog.showModal();
+ form.onsubmit=async e=>{
+  e.preventDefault();const fd=new FormData(form),status=String(fd.get("status")),comment=String(fd.get("comment")||"").trim(),btn=form.querySelector("button[type=submit]"),msg=document.getElementById("n1EvaluationMessage");
+  btn.disabled=true;msg.textContent="";
+  try{
+   const {error:insertError}=await supabaseClient.from("acro_n1_evaluations").insert({diver_id:diverId,competency_code:skill.code,competency_label:skill.label,status,comment,evaluator_id:current.id,evaluator_name:current.name||"Encadrant"});if(insertError)throw insertError;
+   let note="";if(status==="Acquis"){const existing=validations.filter(v=>v.competency_code===skill.code);if(!existing.some(v=>v.evaluator_id===current.id)&&existing.length<3){const {error:validationError}=await supabaseClient.from("acro_n1_validations").insert({diver_id:diverId,competency_code:skill.code,evaluator_id:current.id,evaluator_name:current.name||"Encadrant"});if(validationError&&validationError.code!=="23505")throw validationError;if(validationError?.code==="23505")note=" (ta validation était déjà comptabilisée)"}else if(existing.some(v=>v.evaluator_id===current.id))note=" (ta validation était déjà comptabilisée)";else note=" (les trois validations sont déjà enregistrées)"}
+   dialog.close();notify("Évaluation enregistrée"+note);await openN2Progress(diverId);
+  }catch(err){msg.textContent="Enregistrement impossible : "+(err.message||"erreur Supabase")}
+  finally{btn.disabled=false}
+ };
+}
+
 function openN1Evaluation(diverId,code,evaluations,validations){
  const skill=N1_COMPETENCIES.find(c=>c.code===code),dialog=document.getElementById("n1EvaluationDialog");if(!skill||!dialog)return;
  const form=document.getElementById("n1EvaluationForm");form.reset();form.elements.competency.value=code;
@@ -962,7 +1026,7 @@ function openN1Evaluation(diverId,code,evaluations,validations){
  };
 }
 
-function wireFormation(){["training","initiator"].forEach(prefix=>{const sel=document.getElementById(prefix+"DiverSelect");sel?.addEventListener("change",()=>{const id=sel.value;render("formation");const next=document.getElementById(prefix+"DiverSelect");if(next)next.value=id;if(prefix==="training"&&id){const d=trainingDiverList().find(x=>x.id===id);if(d&&isN1Diver(d))openN1Progress(id)}})});const selected=document.getElementById("trainingDiverSelect")?.value;if(selected){const d=trainingDiverList().find(x=>x.id===selected);if(d&&isN1Diver(d))openN1Progress(selected)}document.getElementById("n1EvaluationClose")?.addEventListener("click",()=>document.getElementById("n1EvaluationDialog")?.close())}
+function wireFormation(){["training","initiator"].forEach(prefix=>{const sel=document.getElementById(prefix+"DiverSelect");sel?.addEventListener("change",()=>{const id=sel.value;render("formation");const next=document.getElementById(prefix+"DiverSelect");if(next)next.value=id;if(prefix==="training"&&id){const d=trainingDiverList().find(x=>x.id===id);if(d&&isN1Diver(d))openN1Progress(id);else if(d&&isN2Diver(d))openN2Progress(id)}})});const selected=document.getElementById("trainingDiverSelect")?.value;if(selected){const d=trainingDiverList().find(x=>x.id===selected);if(d&&isN1Diver(d))openN1Progress(selected);else if(d&&isN2Diver(d))openN2Progress(selected)}document.getElementById("n1EvaluationClose")?.addEventListener("click",()=>document.getElementById("n1EvaluationDialog")?.close())}
 function isDiveForecastEvent(ev){return !!ev}
 function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
 function diveAllEvents(){return (state.events||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
