@@ -471,6 +471,29 @@ button:active{transform:scale(.985)}
 }
 
 </style>
+<style>
+
+/* V125 — mise en page inspirée de la maquette mobile */
+.v125-dashboard-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:4px 0 15px}
+.v125-stat-card{display:flex;align-items:center;gap:12px;min-height:82px;padding:14px;border:1px solid #d8e8f1;border-radius:17px;background:linear-gradient(145deg,#fff,#f5fbff);box-shadow:0 5px 15px #174b6c10}
+.v125-stat-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;background:#e1f5fc;font-size:23px}
+.v125-stat-card strong{display:block;color:#102e50;font:800 26px Manrope,Arial,sans-serif;line-height:1.1}
+.v125-stat-card span:last-child{display:block;color:#48647b;font-size:12px;font-weight:650;margin-top:4px}
+.v125-stat-card.green .v125-stat-icon{background:#def8eb}
+.v125-stat-card.navy .v125-stat-icon{background:#e7effb}
+.v125-next-event{position:relative;display:flex;align-items:flex-start;gap:12px;margin:0 0 14px;padding:17px;border:1px solid #c8e1f1;border-radius:19px;background:linear-gradient(120deg,#e8f5ff,#dff1ff);box-shadow:0 5px 16px #1b638c10}
+.v125-next-icon{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#078db6;font-weight:900;font-size:19px}
+.v125-next-content{min-width:0;flex:1}.v125-next-content .eyebrow{font-size:10px}.v125-next-content h2{font-size:17px;margin:3px 0 7px;color:#123b60}.v125-next-content p{margin:4px 0;color:#294c68;font-size:12px}
+.v125-event-count{align-self:flex-end;white-space:nowrap;padding:7px 10px;border-radius:20px;background:#d9f8e5;color:#167545;font-size:11px;font-weight:800}
+.v125-planning-cta{display:flex;align-items:center;gap:11px;width:100%;padding:13px 17px;margin:0 0 22px;border:1px solid #9bdcc7;border-radius:17px;background:linear-gradient(110deg,#e0f8ef,#d4f4e8);color:#176b4a;font-weight:850;text-align:left;box-shadow:0 4px 12px #18865312}
+.v125-planning-cta span{font-size:21px}.v125-planning-cta b{margin-left:auto;font-size:24px}
+.v125-section-label{margin:5px 0 10px;color:#0b7594;font-size:10px;font-weight:900;letter-spacing:.16em}
+.quick-grid .module-card{position:relative;min-height:82px;padding:14px;align-items:center;border-radius:17px}
+.quick-grid .module-card h3{font-size:15px}.quick-grid .module-card p{font-size:11px}
+.v125-card-arrow{margin-left:auto;color:#168aa7;font-size:23px}
+@media(max-width:600px){.v125-dashboard-stats{gap:9px}.v125-stat-card{min-height:75px;padding:11px;gap:9px}.v125-stat-icon{width:36px;height:36px;flex-basis:36px;font-size:20px}.v125-stat-card strong{font-size:23px}.v125-stat-card span:last-child{font-size:10px}.v125-next-event{padding:13px}.v125-event-count{font-size:10px;padding:6px 8px}}
+
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -1147,7 +1170,23 @@ dialog::backdrop,#planningDialog::backdrop,#planningDayDialog::backdrop,#n1Progr
  notify("Extraction lancée : "+items.length+" QR code(s) dans une nouvelle fenêtre.");
 }
 
-function dashboardHTML(){return `<div class="quick-grid">${["materiel","formation","planning","plongee"].filter(allowed).map(k=>`<button class="module-card" data-open-view="${k}"><span class="module-icon">${views[k].icon}</span><span><h3>${views[k].title}</h3><p>${views[k].subtitle}</p></span></button>`).join("")||'<p class="empty">Aucun module attribué. Contacte le Master.</p>'}</div>`}
+function dashboardHTML(){
+ const divers=state.divers||[],events=(state.events||[]).filter(e=>e&&e.date),equipment=(state.equipment||[]).filter(e=>e&&e.active!==false);
+ const today=todayISO(),upcoming=events.filter(e=>e.date>=today).sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
+ const next=upcoming[0],training=divers.filter(d=>String(d.inProgress||"").trim()).length;
+ const eventType=next?(EVENT_TYPES[next.type]||EVENT_TYPES.event):null;
+ const cards=[
+  {icon:"🤿",value:divers.length,label:"Plongeurs licenciés",tone:"blue"},
+  {icon:"🎓",value:training,label:"En formation",tone:"navy"},
+  {icon:"🗓️",value:upcoming.length,label:"Sorties à venir",tone:"blue"},
+  {icon:"🧰",value:equipment.length,label:"Matériels enregistrés",tone:"green"}
+ ];
+ return `<div class="v125-dashboard-stats">${cards.map(c=>`<article class="v125-stat-card ${c.tone}"><span class="v125-stat-icon">${c.icon}</span><div><strong>${c.value}</strong><span>${c.label}</span></div></article>`).join("")}</div>
+ <section class="v125-next-event"><div class="v125-next-icon">ⓘ</div><div class="v125-next-content"><span class="eyebrow">PROCHAINE SORTIE</span>${next?`<h2>${esc(next.title||eventType?.label||"Événement du club")}</h2><p>🗓️ ${dateFR(next.date)} ${next.time?" · "+esc(next.time):""}</p><p>📍 ${esc(next.location||"Lieu à confirmer")}</p>`:'<h2>Aucune sortie programmée</h2><p>Les prochains événements apparaîtront ici.</p>'}</div>${next?`<span class="v125-event-count">${Array.isArray(next.diveParticipants)?next.diveParticipants.length:0} inscrits</span>`:""}</section>
+ <button class="v125-planning-cta" type="button" data-open-view="planning"><span>▦</span> Voir le planning <b>›</b></button>
+ <div class="v125-section-label">ACCÈS RAPIDE</div>
+ <div class="quick-grid">${["materiel","formation","planning","plongee"].filter(allowed).map(k=>`<button class="module-card" data-open-view="${k}"><span class="module-icon">${views[k].icon}</span><span><h3>${views[k].title}</h3><p>${views[k].subtitle}</p></span><b class="v125-card-arrow">›</b></button>`).join("")||'<p class="empty">Aucun module attribué. Contacte le Master.</p>'}</div>`;
+}
 
 function isInitiatorTrainingAllowed(){if(isMaster())return true;const linked=currentLinkedDiver();const profile=String(linked?.encadrement||linked?.currentLevel||"").trim().toUpperCase();return ["E3","E4"].includes(profile)}
 function initiatorDiverList(){if(!isInitiatorTrainingAllowed())return [];const eligibleLevels=["NIVEAU 2","NIVEAU 3","NIVEAU 4","P5"];return (state.divers||[]).filter(d=>String(d.inProgress||"").trim().toUpperCase()==="FORMATION INITIATEUR"&&eligibleLevels.includes(String(d.currentLevel||"").trim().toUpperCase())).sort((a,b)=>(String(a.lastName||"")+String(a.firstName||"")).localeCompare(String(b.lastName||"")+String(b.firstName||""),"fr"))}
