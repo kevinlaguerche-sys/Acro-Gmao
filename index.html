@@ -340,7 +340,7 @@
 .n1-progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.n1-progress-groups{display:grid;gap:16px;margin-top:14px}.n1-progress-group-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px}.n1-progress-group-heading h3{font-size:14px;font-weight:800;color:#173d60;margin:0}.n1-progress-results{display:grid;gap:9px;margin-top:16px}.n1-result-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #d5e6f7;border-radius:14px;padding:13px;color:#173d60}.n1-result-final{background:#edf5ff;border-color:#b9d8f5}
 .n1-skill-card{background:#fff;border:1px solid #d5e6f7;border-radius:16px;padding:13px;box-shadow:0 6px 18px #0a3a6510;min-width:0}.n1-skill-clickable{cursor:pointer;transition:.15s}.n1-skill-clickable:hover,.n1-skill-clickable:focus{border-color:#168ee0;box-shadow:0 8px 22px #0754a622;outline:none;transform:translateY(-1px)}.n1-skill-action-hint{font-size:11px;font-weight:800;color:#0759ae;margin-top:10px}.n1-inline-progress{margin-top:16px}.n1-progress-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.n1-progress-heading h2{font-size:18px;color:#123c65}.n1-progress-heading p{font-size:12px;color:#68819a;margin:5px 0 0}
 .n1-skill-title{font-weight:800;color:#123c65;line-height:1.35;font-size:14px;display:flex;gap:8px;align-items:flex-start}
-.n1-skill-title .n1-status-icon{font-size:19px;flex-shrink:0}
+.n1-skill-title .n1-status-icon{font-size:19px;flex-shrink:0}.n1-theory-icon{font-size:18px;flex-shrink:0}.n1-theory-card{border-color:#b9d8f5;background:linear-gradient(145deg,#fff,#f4f9ff)}.n1-master-remove-acquired{margin-top:10px;border:1px solid #f1c4c4;background:#fff4f4;color:#a83232;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}.n1-master-remove-acquired:disabled{opacity:.55;cursor:wait}
 .n1-skill-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;color:#68819a;font-size:11px}
 .n1-skill-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
 .n1-pill{border-radius:20px;padding:5px 8px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:4px}
@@ -926,7 +926,8 @@ const N2_GROUPS=[
   {code:"N2-PA20-04",label:"Intervenir et porter assistance"}
  ]}
 ];
-const N2_COMPETENCIES=N2_GROUPS.flatMap(g=>g.skills);
+const N2_THEORY={PE40:{code:"N2-PE40-THEORY",label:"Théorie PE40 – connaissances théoriques",type:"theory"},PA20:{code:"N2-PA20-THEORY",label:"Théorie PA20 – connaissances théoriques",type:"theory"},N2:{code:"N2-THEORY",label:"Théorie N2 – connaissances théoriques",type:"theory"}};
+const N2_COMPETENCIES=[...N2_GROUPS.flatMap(g=>g.skills),...Object.values(N2_THEORY)];
 const N3_GROUPS=[
  {key:"PA40",label:"Compétences spécifiques PA40",skills:[
   {code:"N3-PA40-01",label:"Planifier la plongée"},
@@ -941,7 +942,8 @@ const N3_GROUPS=[
   {code:"N3-PA60-02",label:"Évoluer en autonomie"}
  ]}
 ];
-const N3_COMPETENCIES=N3_GROUPS.flatMap(g=>g.skills);
+const N3_THEORY={PA40:{code:"N3-PA40-THEORY",label:"Théorie PA40 – connaissances théoriques",type:"theory"},PE60:{code:"N3-PE60-THEORY",label:"Théorie PE60 – connaissances théoriques",type:"theory"},PA60:{code:"N3-PA60-THEORY",label:"Théorie PA60 – connaissances théoriques",type:"theory"},N3:{code:"N3-THEORY",label:"Théorie N3 – connaissances théoriques",type:"theory"}};
+const N3_COMPETENCIES=[...N3_GROUPS.flatMap(g=>g.skills),...Object.values(N3_THEORY)];
 const N1_COMPETENCIES=[
  {code:"N1-01",label:"S’équiper et se déséquiper"},
  {code:"N1-02",label:"Se mettre à l’eau et en sortir"},
@@ -952,7 +954,8 @@ const N1_COMPETENCIES=[
  {code:"N1-07",label:"Communiquer"},
  {code:"N1-08",label:"Appliquer les conduites de sécurité"},
  {code:"N1-09",label:"Respecter le milieu et l’environnement"},
- {code:"N1-10",label:"Retourner en surface"}
+ {code:"N1-10",label:"Retourner en surface"},
+ {code:"N1-THEORY",label:"Théorie – connaissances théoriques",type:"theory"}
 ];
 function formationCommentPanel(d,list,kind){
  const prefix=kind==="initiator"?"initiator":"training",title=kind==="initiator"?"Formation initiateur":"Plongeur en formation";
@@ -966,8 +969,28 @@ function n1ProgressCardHTML(skill,evaluations,validations){
  const ev=evaluations.filter(e=>e.competency_code===skill.code).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
  const val=validations.filter(v=>v.competency_code===skill.code),acquired=val.length>0;
  const counts={Acquis:ev.filter(e=>e.status==="Acquis").length,ECA:ev.filter(e=>e.status==="ECA").length,NA:ev.filter(e=>e.status==="NA").length};
- return `<article class="n1-skill-card n1-skill-clickable" role="button" tabindex="0" data-open-n1-skill="${esc(skill.code)}" aria-label="Évaluer ${esc(skill.label)}"><div class="n1-skill-title"><span class="n1-status-icon" style="color:${acquired?'#168b4b':ev.length?'#c27a12':'#9aafc2'}">${n1StatusIcon(acquired,ev.length)}</span><span>${esc(skill.label)}</span></div><div class="n1-skill-meta"><span>${ev.length} fois travaillée</span><span>${acquired?'Compétence acquise':'À travailler'}</span></div><div class="n1-skill-badges"><span class="n1-pill green">${counts.Acquis} acquis</span><span class="n1-pill orange">${counts.ECA} ECA</span><span class="n1-pill red">${counts.NA} NA</span></div><div class="n1-skill-meta"><strong>Validations moniteurs</strong><strong>${val.length}/3</strong></div><div class="n1-validation-row">${[0,1,2].map(i=>`<span class="n1-validation-dot ${val[i]?'done':''}" title="${val[i]?esc(val[i].evaluator_name):'Validation disponible'}">${val[i]?'✓':i+1}</span>`).join("")}</div>${ev.length?`<details class="n1-history"><summary>Historique <span>(${ev.length} observation${ev.length>1?"s":""})</span></summary><div class="n1-history-list">${ev.map(e=>`<div class="n1-history-item"><strong>${esc(e.status)}</strong> · ${new Date(e.created_at).toLocaleDateString('fr-FR')} · ${esc(e.evaluator_name)}${e.comment?`<br>${esc(e.comment)}`:""}</div>`).join("")}</div></details>`:""}<div class="n1-skill-action-hint">＋ Cliquer pour ajouter une observation</div></article>`;
+ return `<article class="n1-skill-card n1-skill-clickable ${skill.type==="theory"?"n1-theory-card":""}" role="button" tabindex="0" data-open-n1-skill="${esc(skill.code)}" aria-label="Évaluer ${esc(skill.label)}"><div class="n1-skill-title"><span class="n1-status-icon" style="color:${acquired?'#168b4b':ev.length?'#c27a12':'#9aafc2'}">${n1StatusIcon(acquired,ev.length)}</span>${skill.type==="theory"?'<span class="n1-theory-icon" aria-label="Théorie" title="Théorie">📘</span>':""}<span>${esc(skill.label)}</span></div><div class="n1-skill-meta"><span>${ev.length} fois travaillée</span><span>${acquired?'Compétence acquise':'À travailler'}</span></div><div class="n1-skill-badges"><span class="n1-pill green">${counts.Acquis} acquis</span><span class="n1-pill orange">${counts.ECA} ECA</span><span class="n1-pill red">${counts.NA} NA</span></div><div class="n1-skill-meta"><strong>Validations moniteurs</strong><strong>${val.length}/3</strong></div><div class="n1-validation-row">${[0,1,2].map(i=>`<span class="n1-validation-dot ${val[i]?'done':''}" title="${val[i]?esc(val[i].evaluator_name):'Validation disponible'}">${val[i]?'✓':i+1}</span>`).join("")}</div>${ev.length?`<details class="n1-history"><summary>Historique <span>(${ev.length} observation${ev.length>1?"s":""})</span></summary><div class="n1-history-list">${ev.map(e=>`<div class="n1-history-item"><strong>${esc(e.status)}</strong> · ${new Date(e.created_at).toLocaleDateString('fr-FR')} · ${esc(e.evaluator_name)}${e.comment?`<br>${esc(e.comment)}`:""}</div>`).join("")}</div></details>`:""}${isMaster()&&acquired?`<button type="button" class="n1-master-remove-acquired" data-remove-acquired="${esc(skill.code)}">Retirer l'acquis</button>`:""}<div class="n1-skill-action-hint">＋ Cliquer pour ajouter une observation</div></article>`;
 }
+async function wireProgressCards(body,diverId,evaluations,validations,openEvaluation,refreshProgress){
+ body.querySelectorAll("[data-open-n1-skill]").forEach(card=>{
+  const open=()=>openEvaluation(diverId,card.dataset.openN1Skill,evaluations,validations);
+  card.addEventListener("click",e=>{if(e.target.closest("details.n1-history")||e.target.closest("[data-remove-acquired]"))return;open()});
+  card.addEventListener("keydown",e=>{if(e.target.closest("details.n1-history")||e.target.closest("[data-remove-acquired]"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
+ });
+ body.querySelectorAll("[data-remove-acquired]").forEach(button=>button.addEventListener("click",async e=>{
+  e.preventDefault();e.stopPropagation();if(!isMaster())return;
+  const code=button.dataset.removeAcquired;
+  if(!confirm("Retirer toutes les validations de cette compétence ? Les observations et commentaires seront conservés."))return;
+  button.disabled=true;
+  try{
+   const {error}=await supabaseClient.from("acro_n1_validations").delete().eq("diver_id",diverId).eq("competency_code",code);
+   if(error)throw error;
+   notify("Acquis retiré. L'historique des observations est conservé.");
+   await refreshProgress(diverId);
+  }catch(err){button.disabled=false;notify("Suppression impossible : "+(err.message||"erreur Supabase"))}
+ }));
+}
+
 async function openN1Progress(diverId){
  const d=(state.divers||[]).find(x=>x.id===diverId)||null;
  if(!d||!isN1Diver(d)){notify("Cette fiche de progression est réservée au cursus N1.");return}
@@ -979,7 +1002,7 @@ async function openN1Progress(diverId){
   if(evRes.error)throw evRes.error;if(valRes.error)throw valRes.error;
   const evaluations=evRes.data||[],validations=valRes.data||[],acquired=N1_COMPETENCIES.filter(c=>validations.some(v=>v.competency_code===c.code)).length;
   body.innerHTML=`<div class="n1-progress-heading"><div><h2>📘 Fiche de suivi des compétences N1</h2><p>Clique directement sur une compétence pour ajouter une observation</p></div><span class="badge">${(d.firstName||"")+" "+(d.lastName||"")}</span></div><div class="n1-progress-summary"><div><small>Compétences N1 acquises</small><div><strong>${acquired} / 10</strong></div><div class="n1-progress-track"><span style="width:${acquired*10}%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>${(()=>{const latest=[...evaluations].sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);return latest.length?latest.map(e=>`<div class="n1-recent-work-item"><span>${esc(e.competency_label||N1_COMPETENCIES.find(c=>c.code===e.competency_code)?.label||e.competency_code)}</span><time>${new Date(e.created_at).toLocaleDateString("fr-FR")}</time></div>`).join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'})()}</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>${evaluations.length}</strong></div></div></div><div class="n1-progress-grid">${N1_COMPETENCIES.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div>`;
-  body.querySelectorAll("[data-open-n1-skill]").forEach(card=>{const open=()=>openN1Evaluation(diverId,card.dataset.openN1Skill,evaluations,validations);card.addEventListener("click",e=>{if(e.target.closest("details.n1-history"))return;open()});card.addEventListener("keydown",e=>{if(e.target.closest("details.n1-history"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}})});
+  await wireProgressCards(body,diverId,evaluations,validations,openN1Evaluation,openN1Progress);
  }catch(err){body.innerHTML=`<div class="empty">Impossible de charger la fiche : ${esc(err.message||"Erreur Supabase")}</div>`}
 }
 function n2GroupIsAcquired(group,validations){return group.skills.every(c=>validations.some(v=>v.competency_code===c.code))&&(group.key==="PE40"||group.key==="PA20"?N2_GROUPS.find(g=>g.key==="COMMUNES").skills.every(c=>validations.some(v=>v.competency_code===c.code)):true)}
@@ -995,19 +1018,20 @@ async function openN2Progress(diverId){
   const evaluations=evRes.data||[],validations=valRes.data||[];
   const course=isPE40Diver(d)?"PE40":isPA20Diver(d)?"PA20":"N2";
   const visibleGroups=course==="PE40"?N2_GROUPS.filter(g=>["PE40","COMMUNES"].includes(g.key)):course==="PA20"?N2_GROUPS.filter(g=>["PA20","COMMUNES"].includes(g.key)):N2_GROUPS;
-  const visibleSkills=visibleGroups.flatMap(g=>g.skills);
+  const theorySkills=course==="PE40"?[N2_THEORY.PE40]:course==="PA20"?[N2_THEORY.PA20]:[N2_THEORY.PE40,N2_THEORY.PA20,N2_THEORY.N2];
+  const visibleSkills=[...visibleGroups.flatMap(g=>g.skills),...theorySkills];
   const acquired=visibleSkills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;
   const latest=[...evaluations].filter(e=>visibleSkills.some(c=>c.code===e.competency_code)).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);
   const common=N2_GROUPS.find(g=>g.key==="COMMUNES");
   const commonDone=common.skills.every(c=>validations.some(v=>v.competency_code===c.code));
-  const pe40Done=N2_GROUPS.find(g=>g.key==="PE40").skills.every(c=>validations.some(v=>v.competency_code===c.code))&&commonDone;
-  const pa20Done=N2_GROUPS.find(g=>g.key==="PA20").skills.every(c=>validations.some(v=>v.competency_code===c.code))&&commonDone;
+  const pe40Done=N2_GROUPS.find(g=>g.key==="PE40").skills.every(c=>validations.some(v=>v.competency_code===c.code))&&commonDone&&validations.some(v=>v.competency_code===N2_THEORY.PE40.code);
+  const pa20Done=N2_GROUPS.find(g=>g.key==="PA20").skills.every(c=>validations.some(v=>v.competency_code===c.code))&&commonDone&&validations.some(v=>v.competency_code===N2_THEORY.PA20.code);
   const courseTitle=course==="PE40"?"PE40":course==="PA20"?"PA20":"N2";
   body.innerHTML=`<div class="n1-progress-heading"><div><h2>📘 Fiche de suivi des compétences ${courseTitle}</h2><p>Clique directement sur une compétence pour ajouter une observation</p></div><span class="badge">${(d.firstName||"")+" "+(d.lastName||"")}</span></div>
   <div class="n1-progress-summary"><div><small>Compétences ${courseTitle} acquises</small><div><strong>${acquired} / ${visibleSkills.length}</strong></div><div class="n1-progress-track"><span style="width:${acquired/visibleSkills.length*100}%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>${latest.length?latest.map(e=>`<div class="n1-recent-work-item"><span>${esc(e.competency_label||visibleSkills.find(c=>c.code===e.competency_code)?.label||e.competency_code)}</span><time>${new Date(e.created_at).toLocaleDateString("fr-FR")}</time></div>`).join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'}</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>${evaluations.filter(e=>visibleSkills.some(c=>c.code===e.competency_code)).length}</strong></div></div></div>
-  <div class="n1-progress-groups">${visibleGroups.map(group=>{const done=group.key==="COMMUNES"?commonDone:group.key==="PE40"?pe40Done:pa20Done;const count=group.skills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;return `<section class="n1-progress-group"><div class="n1-progress-group-heading"><h3>${esc(group.label)}</h3><span class="n1-pill ${done?"green":"blue"}">${count} / ${group.skills.length}</span></div><div class="n1-progress-grid">${group.skills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>`}).join("")}</div>
-  <div class="n1-progress-results">${course==="PE40"?`<div class="n1-result-card n1-result-final"><strong>Résultat PE40</strong><span class="badge ${pe40Done?"green":"orange"}">${pe40Done?"Acquis":"En cours"}</span></div>`:course==="PA20"?`<div class="n1-result-card n1-result-final"><strong>Résultat PA20</strong><span class="badge ${pa20Done?"green":"orange"}">${pa20Done?"Acquis":"En cours"}</span></div>`:`<div class="n1-result-card"><strong>Résultat PE40</strong><span class="badge ${pe40Done?"green":"orange"}">${pe40Done?"Acquis":"En cours"}</span></div><div class="n1-result-card"><strong>Résultat PA20</strong><span class="badge ${pa20Done?"green":"orange"}">${pa20Done?"Acquis":"En cours"}</span></div><div class="n1-result-card n1-result-final"><strong>Résultat Niveau 2</strong><span class="badge ${acquired===11?"green":"orange"}">${acquired===11?"Acquis":"En cours"}</span></div>`}</div>`;
-  body.querySelectorAll("[data-open-n1-skill]").forEach(card=>{const open=()=>openN2Evaluation(diverId,card.dataset.openN1Skill,evaluations,validations);card.addEventListener("click",e=>{if(e.target.closest("details.n1-history"))return;open()});card.addEventListener("keydown",e=>{if(e.target.closest("details.n1-history"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}})});
+  <div class="n1-progress-groups">${visibleGroups.map(group=>{const done=group.key==="COMMUNES"?commonDone:group.key==="PE40"?pe40Done:pa20Done;const count=group.skills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;return `<section class="n1-progress-group"><div class="n1-progress-group-heading"><h3>${esc(group.label)}</h3><span class="n1-pill ${done?"green":"blue"}">${count} / ${group.skills.length}</span></div><div class="n1-progress-grid">${group.skills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>`}).join("")}</div><section class="n1-progress-group n1-theory-group"><div class="n1-progress-group-heading"><h3>Connaissances théoriques</h3><span class="n1-pill blue">${theorySkills.filter(c=>validations.some(v=>v.competency_code===c.code)).length} / ${theorySkills.length}</span></div><div class="n1-progress-grid">${theorySkills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>
+  <div class="n1-progress-results">${course==="PE40"?`<div class="n1-result-card n1-result-final"><strong>Résultat PE40</strong><span class="badge ${pe40Done?"green":"orange"}">${pe40Done?"Acquis":"En cours"}</span></div>`:course==="PA20"?`<div class="n1-result-card n1-result-final"><strong>Résultat PA20</strong><span class="badge ${pa20Done?"green":"orange"}">${pa20Done?"Acquis":"En cours"}</span></div>`:`<div class="n1-result-card"><strong>Résultat PE40</strong><span class="badge ${pe40Done?"green":"orange"}">${pe40Done?"Acquis":"En cours"}</span></div><div class="n1-result-card"><strong>Résultat PA20</strong><span class="badge ${pa20Done?"green":"orange"}">${pa20Done?"Acquis":"En cours"}</span></div><div class="n1-result-card n1-result-final"><strong>Résultat Niveau 2</strong><span class="badge ${acquired===11?"green":"orange"}">${acquired===visibleSkills.length?"Acquis":"En cours"}</span></div>`}</div>`;
+  await wireProgressCards(body,diverId,evaluations,validations,openN2Evaluation,openN2Progress);
  }catch(err){body.innerHTML=`<div class="empty">Impossible de charger la fiche : ${esc(err.message||"Erreur Supabase")}</div>`}
 }
 async function openN3Progress(diverId){
@@ -1022,20 +1046,21 @@ async function openN3Progress(diverId){
   const evaluations=evRes.data||[],validations=valRes.data||[];
   const course=isPA40Diver(d)?"PA40":isPE60Diver(d)?"PE60":isPA60Diver(d)?"PA60":"N3";
   const visibleGroups=course==="PA40"?N3_GROUPS.filter(g=>g.key==="PA40"):course==="PE60"?N3_GROUPS.filter(g=>["PA40","PE60"].includes(g.key)):N3_GROUPS;
-  const visibleSkills=visibleGroups.flatMap(g=>g.skills);
+  const theorySkills=course==="PA40"?[N3_THEORY.PA40]:course==="PE60"?[N3_THEORY.PA40,N3_THEORY.PE60]:course==="PA60"?[N3_THEORY.PA40,N3_THEORY.PE60,N3_THEORY.PA60]:[N3_THEORY.PA40,N3_THEORY.PE60,N3_THEORY.PA60,N3_THEORY.N3];
+  const visibleSkills=[...visibleGroups.flatMap(g=>g.skills),...theorySkills];
   const isAcquired=group=>group.skills.every(c=>validations.some(v=>v.competency_code===c.code));
-  const pa40Done=isAcquired(N3_GROUPS[0]);
-  const pe60Done=pa40Done&&isAcquired(N3_GROUPS[1]);
-  const pa60Done=pe60Done&&isAcquired(N3_GROUPS[2]);
-  const n3Done=pa60Done;
+  const pa40Done=isAcquired(N3_GROUPS[0])&&validations.some(v=>v.competency_code===N3_THEORY.PA40.code);
+  const pe60Done=pa40Done&&isAcquired(N3_GROUPS[1])&&validations.some(v=>v.competency_code===N3_THEORY.PE60.code);
+  const pa60Done=pe60Done&&isAcquired(N3_GROUPS[2])&&validations.some(v=>v.competency_code===N3_THEORY.PA60.code);
+  const n3Done=pa60Done&&validations.some(v=>v.competency_code===N3_THEORY.N3.code);
   const acquired=visibleSkills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;
   const latest=[...evaluations].filter(e=>visibleSkills.some(c=>c.code===e.competency_code)).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);
   const courseTitle=course;
   body.innerHTML=`<div class="n1-progress-heading"><div><h2>📘 Fiche de suivi des compétences ${courseTitle}</h2><p>Clique directement sur une compétence pour ajouter une observation</p></div><span class="badge">${(d.firstName||"")+" "+(d.lastName||"")}</span></div>
   <div class="n1-progress-summary"><div><small>Compétences ${courseTitle} acquises</small><div><strong>${acquired} / ${visibleSkills.length}</strong></div><div class="n1-progress-track"><span style="width:${acquired/visibleSkills.length*100}%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>${latest.length?latest.map(e=>`<div class="n1-recent-work-item"><span>${esc(e.competency_label||visibleSkills.find(c=>c.code===e.competency_code)?.label||e.competency_code)}</span><time>${new Date(e.created_at).toLocaleDateString("fr-FR")}</time></div>`).join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'}</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>${evaluations.filter(e=>visibleSkills.some(c=>c.code===e.competency_code)).length}</strong></div></div></div>
-  <div class="n1-progress-groups">${visibleGroups.map(group=>{const done=isAcquired(group);const count=group.skills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;return `<section class="n1-progress-group"><div class="n1-progress-group-heading"><h3>${esc(group.label)}</h3><span class="n1-pill ${done?"green":"blue"}">${count} / ${group.skills.length}</span></div><div class="n1-progress-grid">${group.skills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>`}).join("")}</div>
+  <div class="n1-progress-groups">${visibleGroups.map(group=>{const done=isAcquired(group);const count=group.skills.filter(c=>validations.some(v=>v.competency_code===c.code)).length;return `<section class="n1-progress-group"><div class="n1-progress-group-heading"><h3>${esc(group.label)}</h3><span class="n1-pill ${done?"green":"blue"}">${count} / ${group.skills.length}</span></div><div class="n1-progress-grid">${group.skills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>`}).join("")}</div><section class="n1-progress-group n1-theory-group"><div class="n1-progress-group-heading"><h3>Connaissances théoriques</h3><span class="n1-pill blue">${theorySkills.filter(c=>validations.some(v=>v.competency_code===c.code)).length} / ${theorySkills.length}</span></div><div class="n1-progress-grid">${theorySkills.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div></section>
   <div class="n1-progress-results">${course==="PA40"?`<div class="n1-result-card n1-result-final"><strong>Résultat PA40</strong><span class="badge ${pa40Done?"green":"orange"}">${pa40Done?"Acquis":"En cours"}</span></div>`:course==="PE60"?`<div class="n1-result-card"><strong>Résultat PA40</strong><span class="badge ${pa40Done?"green":"orange"}">${pa40Done?"Acquis":"En cours"}</span></div><div class="n1-result-card n1-result-final"><strong>Résultat PE60</strong><span class="badge ${pe60Done?"green":"orange"}">${pe60Done?"Acquis":"En cours"}</span></div>`:`<div class="n1-result-card"><strong>Résultat PA40</strong><span class="badge ${pa40Done?"green":"orange"}">${pa40Done?"Acquis":"En cours"}</span></div><div class="n1-result-card"><strong>Résultat PE60</strong><span class="badge ${pe60Done?"green":"orange"}">${pe60Done?"Acquis":"En cours"}</span></div><div class="n1-result-card"><strong>Résultat PA60</strong><span class="badge ${pa60Done?"green":"orange"}">${pa60Done?"Acquis":"En cours"}</span></div><div class="n1-result-card n1-result-final"><strong>Résultat Niveau 3</strong><span class="badge ${n3Done?"green":"orange"}">${n3Done?"Acquis":"En cours"}</span></div>`}</div>`;
-  body.querySelectorAll("[data-open-n1-skill]").forEach(card=>{const open=()=>openN3Evaluation(diverId,card.dataset.openN1Skill,evaluations,validations);card.addEventListener("click",e=>{if(e.target.closest("details.n1-history"))return;open()});card.addEventListener("keydown",e=>{if(e.target.closest("details.n1-history"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}})});
+  await wireProgressCards(body,diverId,evaluations,validations,openN3Evaluation,openN3Progress);
  }catch(err){body.innerHTML=`<div class="empty">Impossible de charger la fiche : ${esc(err.message||"Erreur Supabase")}</div>`}
 }
 function openN3Evaluation(diverId,code,evaluations,validations){
