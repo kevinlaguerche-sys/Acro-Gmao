@@ -311,7 +311,20 @@
 .calendar-day .calendar-events{width:100%}
 .calendar-day .calendar-event-chip{max-width:100%}
 @media(max-width:700px){.dive-event-open{padding:12px;gap:9px}.dive-event-counts{font-size:10px}.calendar-day{min-height:90px;padding:5px}.calendar-event-chip{font-size:9px}}
-.free-mode-button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:45px;margin:9px 0;padding:10px 13px;border:2px solid #168447;border-radius:11px;background:linear-gradient(135deg,#e8f8ed,#d1fae0);color:#126333;font-size:clamp(13px,2.7vw,18px);font-weight:900;letter-spacing:.03em;box-shadow:0 3px 10px #16844720}.free-mode-button.active{background:#168447;color:#fff;border-color:#0e6934;animation:acroFreePulse 1s ease-in-out infinite;box-shadow:0 0 0 3px #16844725,0 0 15px #16844770}.free-mode-button .free-mode-caption{display:block;font-size:10px;letter-spacing:0;font-weight:700;opacity:.9}@keyframes acroFreePulse{0%,100%{filter:brightness(1);box-shadow:0 0 0 3px #16844722,0 0 12px #16844755}50%{filter:brightness(1.18);box-shadow:0 0 0 7px #16844730,0 0 25px #16844799}}</style>
+.free-mode-button{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:45px;margin:9px 0;padding:10px 13px;border:2px solid #168447;border-radius:11px;background:linear-gradient(135deg,#e8f8ed,#d1fae0);color:#126333;font-size:clamp(13px,2.7vw,18px);font-weight:900;letter-spacing:.03em;box-shadow:0 3px 10px #16844720}.free-mode-button.active{background:#168447;color:#fff;border-color:#0e6934;animation:acroFreePulse 1s ease-in-out infinite;box-shadow:0 0 0 3px #16844725,0 0 15px #16844770}.free-mode-button .free-mode-caption{display:block;font-size:10px;letter-spacing:0;font-weight:700;opacity:.9}@keyframes acroFreePulse{0%,100%{filter:brightness(1);box-shadow:0 0 0 3px #16844722,0 0 12px #16844755}50%{filter:brightness(1.18);box-shadow:0 0 0 7px #16844730,0 0 25px #16844799}}
+/* Confirmation de gratuité ACRO — fenêtre en deux étapes */
+.free-mode-button{width:66.666%!important;min-height:36px!important;margin:9px auto!important;padding:7px 9px!important;font-size:clamp(11px,2.1vw,14px)!important;}
+.free-mode-button .free-mode-caption{font-size:9px!important}
+#acroFreeConfirm[hidden]{display:none!important}
+#acroFreeConfirm{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:16px;background:rgba(3,18,34,.72);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.acro-free-card{position:relative;width:min(540px,100%);max-height:92dvh;overflow:auto;border:1px solid #d8e9f4;border-radius:25px;background:linear-gradient(160deg,#fff 0%,#f5faff 100%);box-shadow:0 28px 90px #00172c66;color:#102b50;animation:acroFreePop .22s ease-out}
+@keyframes acroFreePop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.acro-free-wave{height:112px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;color:white;background:linear-gradient(120deg,#006bb8,#078fc9 58%,#073e83);border-radius:24px 24px 48% 12%/24px 24px 22% 10%}
+.acro-free-diver{font-size:42px;filter:drop-shadow(0 4px 5px #001a3b66)}.acro-free-brand{font:800 19px/1.05 Manrope,sans-serif;letter-spacing:.05em;text-align:right}.acro-free-close{width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#092b50;font-size:27px;line-height:1}
+.acro-free-tag{position:relative;width:82px;height:82px;margin:-45px auto 8px;border:5px solid white;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#dff5ff,#80c9f4);box-shadow:0 7px 24px #078fc955;color:#0875c5;font-size:39px}.acro-free-tag b{position:absolute;font-size:21px;color:white}.acro-free-tag i{position:absolute;width:48px;height:7px;background:#ed493e;transform:rotate(-43deg);border-radius:8px}
+.acro-free-content{padding:0 28px 26px;text-align:center}.acro-free-content h2{font:800 clamp(22px,5vw,29px)/1.15 Manrope,sans-serif;margin:7px 0 10px;color:#092b50}.acro-free-lead{font-size:15px;line-height:1.5;color:#314b68;margin:0 auto 17px;max-width:430px}.acro-free-info{display:flex;align-items:center;justify-content:center;gap:11px;padding:13px 12px;border:1px solid #b6d8ff;border-radius:15px;background:#e7f2ff;color:#124b9b;font-size:15px}.acro-free-info span{font-size:23px;color:#0878d1}.acro-free-steps{display:flex;align-items:center;justify-content:center;gap:8px;margin:22px auto 18px}.acro-free-step{display:flex;flex-direction:column;align-items:center;gap:5px;color:#718198;font-size:12px;min-width:95px}.acro-free-step span{width:43px;height:43px;border-radius:50%;display:grid;place-items:center;background:#dbe4ef;color:#53647c;font-size:21px;font-weight:900}.acro-free-step.current span{background:linear-gradient(145deg,#1598ed,#075ac1);color:#fff;box-shadow:0 0 0 5px #d9efff}.acro-free-step.done span{background:#168b48;color:#fff}.acro-free-step b{font-size:12px}.acro-free-step.current b{color:#092b50}.acro-free-line{height:4px;width:62px;border-radius:5px;background:#79b9ed;margin-top:-20px}.acro-free-question{display:flex;align-items:center;justify-content:center;gap:12px;padding:15px;border-radius:16px;background:linear-gradient(120deg,#eaf4ff,#d6eaff);color:#103d7b;font-size:16px;line-height:1.35;margin-bottom:20px}.acro-free-question span{font-size:30px;flex-shrink:0}.acro-free-actions{display:grid;grid-template-columns:.85fr 1.15fr;gap:10px}.acro-free-actions button{min-height:54px;border-radius:14px;padding:10px;font-weight:800;font-size:14px}.acro-free-cancel{border:1px solid #a9bad0;background:#fff;color:#12365e}.acro-free-confirm{border:1px solid #0b9b45;background:linear-gradient(135deg,#0ab54f,#087c39);color:#fff;box-shadow:0 7px 18px #0a9d4b40}.acro-free-confirm:active{transform:scale(.98)}
+@media(max-width:420px){.acro-free-content{padding:0 17px 19px}.acro-free-wave{height:94px;padding:14px 17px}.acro-free-diver{font-size:34px}.acro-free-brand{font-size:16px}.acro-free-tag{width:72px;height:72px;margin-top:-39px}.acro-free-question{font-size:14px;padding:12px}.acro-free-actions{grid-template-columns:1fr 1.2fr}.acro-free-actions button{font-size:12px;min-height:50px}.acro-free-step{min-width:83px}.acro-free-line{width:35px}}
+</style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -458,7 +471,9 @@ function printQrCard(containerId){
  const clone=card.cloneNode(true);
  clone.querySelectorAll("button").forEach(b=>b.remove());
  clone.querySelectorAll("[id]").forEach(el=>el.removeAttribute("id"));
- const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Carte QR ACRO Plongée</title><style>body{font-family:Arial,sans-serif;margin:0;padding:24px;color:#10283c}main{max-width:420px;margin:0 auto}.section{border:1px solid #dce8ee;border-radius:16px;padding:20px;text-align:center;box-shadow:none}.section h3{font-size:20px;margin:0 0 16px}.section p{font-size:13px;color:#526778}.section img{width:200px;height:200px;object-fit:contain;margin:8px auto;display:block}@page{margin:12mm}@media print{body{padding:0}.section{break-inside:avoid;border:1px solid #999}}</style></head><body><main>${clone.outerHTML}</main><script>window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(resolve=>{i.onload=resolve;i.onerror=resolve}))).then(()=>setTimeout(()=>{window.focus();window.print()},300))});<\/script></body></html>`;
+ const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Carte QR ACRO Plongée</title><style>body{font-family:Arial,sans-serif;margin:0;padding:24px;color:#10283c}main{max-width:420px;margin:0 auto}.section{border:1px solid #dce8ee;border-radius:16px;padding:20px;text-align:center;box-shadow:none}.section h3{font-size:20px;margin:0 0 16px}.section p{font-size:13px;color:#526778}.section img{width:200px;height:200px;object-fit:contain;margin:8px auto;display:block}@page{margin:12mm}@media print{body{padding:0}.section{break-inside:avoid;border:1px solid #999}}</style></head><body><main>${clone.outerHTML}</main><script>window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(resolve=>{i.onload=resolve;i.onerror=resolve}))).then(()=>setTimeout(()=>{window.focus();window.print()},300))});<\/script>
+<div id="acroFreeConfirm" hidden aria-hidden="true"></div>
+</body></html>`;
  popup.document.open();popup.document.write(html);popup.document.close();
 }
 function loadMemberQRGenerator(cb){if(window.QRCode){cb&&cb();return}if(window.__acroQrLoading){const wait=()=>{if(window.QRCode){cb&&cb();return}if(!window.__acroQrLoading){notify("Générateur QR indisponible : vérifie Internet.");return}setTimeout(wait,150)};wait();return}window.__acroQrLoading=true;const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";s.onload=()=>{window.__acroQrLoading=false;if(window.QRCode)cb&&cb();else notify("Le générateur QR s’est chargé sans être disponible.")};s.onerror=()=>{window.__acroQrLoading=false;notify("Générateur QR indisponible : vérifie Internet.")};document.head.appendChild(s)}
@@ -1159,7 +1174,44 @@ Le solde du plongeur pourra devenir négatif.`))return;
   if(form)form.requestSubmit();
  });
 }
-function wireFreeModeToggle(buttonId,formId,caption){const button=document.getElementById(buttonId),form=document.getElementById(formId);if(!button||!form)return;form.dataset.manualFree="false";button.addEventListener("click",()=>{const active=button.getAttribute("aria-pressed")!=="true";if(active&&!window.confirm("Confirmation de gratuité\n\nConfirmer l’activation de la gratuité pour cette opération ?\n\nAucun Bitacro ne sera débité."))return;button.setAttribute("aria-pressed",String(active));button.classList.toggle("active",active);form.dataset.manualFree=String(active);form.dispatchEvent(new Event("acro-free-mode-change"));button.innerHTML=active?"✓ GRATUIT ACTIVÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>":"🎁 ACTIVER LA GRATUITÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";});}
+let acroFreePending=null;
+function closeFreeConfirm(){const modal=document.getElementById("acroFreeConfirm");if(modal){modal.hidden=true;modal.setAttribute("aria-hidden","true");}acroFreePending=null;}
+function showFreeConfirmStep(step){
+ const modal=document.getElementById("acroFreeConfirm");if(!modal)return;
+ const first=step===1;
+ modal.innerHTML=`<div class="acro-free-card" role="dialog" aria-modal="true" aria-labelledby="acroFreeTitle">
+  <div class="acro-free-wave"><span class="acro-free-diver">🤿</span><span class="acro-free-brand">ACRO<br>PLONGÉE</span><button type="button" class="acro-free-close" data-free-cancel aria-label="Fermer">×</button></div>
+  <div class="acro-free-tag" aria-hidden="true">🏷️<b>€</b><i></i></div>
+  <div class="acro-free-content">
+   <h2 id="acroFreeTitle">Activation de la gratuité</h2>
+   <p class="acro-free-lead">${first?"Vous êtes sur le point d’activer la gratuité pour cette opération.":"Dernière vérification avant l’activation définitive."}</p>
+   <div class="acro-free-info"><span>ⓘ</span><strong>Aucun Bitacro ne sera débité.</strong></div>
+   <div class="acro-free-steps"><div class="acro-free-step ${first?"current done":"done"}"><span>1</span><b>Confirmation</b></div><div class="acro-free-line"></div><div class="acro-free-step ${first?"":"current"}"><span>2</span><b>Validation finale</b></div></div>
+   <div class="acro-free-question"><span>${first?"🎁":"✅"}</span><strong>${first?"Souhaitez-vous poursuivre la procédure ?":"Confirmez-vous définitivement la gratuité de cette opération ?"}</strong></div>
+   <div class="acro-free-actions"><button type="button" class="acro-free-cancel" data-free-cancel>✕  Annuler</button><button type="button" class="acro-free-confirm" data-free-next>${first?"✓  Continuer (étape 1/2)":"✓  Confirmer la gratuité (étape 2/2)"}</button></div>
+  </div>
+ </div>`;
+ modal.hidden=false;modal.setAttribute("aria-hidden","false");
+ modal.querySelector("[data-free-cancel]")?.addEventListener("click",closeFreeConfirm);
+ modal.querySelector("[data-free-next]")?.addEventListener("click",()=>{
+  if(first){showFreeConfirmStep(2);return;}
+  const pending=acroFreePending;if(!pending)return;
+  const {button,form,caption}=pending;
+  button.setAttribute("aria-pressed","true");button.classList.add("active");
+  form.dataset.manualFree="true";form.dispatchEvent(new Event("acro-free-mode-change"));
+  button.innerHTML="✓ GRATUIT ACTIVÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";
+  closeFreeConfirm();
+ });
+}
+function wireFreeModeToggle(buttonId,formId,caption){
+ const button=document.getElementById(buttonId),form=document.getElementById(formId);if(!button||!form)return;
+ form.dataset.manualFree="false";
+ button.addEventListener("click",()=>{
+  const active=button.getAttribute("aria-pressed")!=="true";
+  if(!active){button.setAttribute("aria-pressed","false");button.classList.remove("active");form.dataset.manualFree="false";form.dispatchEvent(new Event("acro-free-mode-change"));button.innerHTML="🎁 ACTIVER LA GRATUITÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";return;}
+  acroFreePending={button,form,caption};showFreeConfirmStep(1);
+ });
+}
 function wireMaterial(){
  wireFreeModeToggle("loanFreeToggle","loanForm","Matériel à 0 Bitacro");
  wireFreeModeToggle("manualFreeToggle","manualLoanForm","Matériel à 0 Bitacro");
