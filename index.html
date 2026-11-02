@@ -662,20 +662,6 @@ dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1
 </style>
 <style>
 
-.acro-qr-hub-overlay{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(5,31,50,.62);backdrop-filter:blur(5px);overflow:auto}
-.acro-qr-hub{width:min(100%,560px);max-height:min(94dvh,900px);overflow:auto;border:1px solid #d6e8f1;border-radius:25px;background:linear-gradient(160deg,#fff 0%,#f3faff 100%);box-shadow:0 25px 90px #001b2e55;color:#102d4e}
-.acro-qr-hub-header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:14px 17px;background:linear-gradient(110deg,#073653,#087e9b);color:white}
-.acro-qr-hub-brand{display:flex;align-items:center;gap:11px}.acro-qr-hub-logo{display:grid;place-items:center;width:44px;height:44px;border:2px solid #a9eff4;border-radius:14px;background:linear-gradient(145deg,#70e2ed,#12aec5);font-size:24px}.acro-qr-hub-brand b,.acro-qr-hub-brand small{display:block}.acro-qr-hub-brand b{font-size:15px;letter-spacing:.04em}.acro-qr-hub-brand small{font-size:9px;letter-spacing:.13em;color:#d3f0f5}
-.acro-qr-hub-close{width:38px;height:38px;border:1px solid #ffffff55;border-radius:12px;background:#ffffff18;color:#fff;font-size:27px;line-height:1}
-.acro-qr-hub-body{padding:22px}.acro-qr-hub-eyebrow{font-size:10px;font-weight:900;letter-spacing:.16em;color:#087e9e}.acro-qr-hub-body h2{margin:5px 0 7px;font-size:26px;font-weight:900;color:#102d4e}.acro-qr-hub-intro{margin:0 0 17px;color:#5d7489;line-height:1.5}
-.acro-qr-hub-context{padding:13px 15px;margin-bottom:14px;border:1px solid #d3e7f1;border-radius:15px;background:#f2f9fd}.acro-qr-hub-context span,.acro-qr-hub-context strong,.acro-qr-hub-context small{display:block}.acro-qr-hub-context span{font-size:9px;letter-spacing:.14em;color:#087e9e;font-weight:900}.acro-qr-hub-context strong{font-size:16px;margin:3px 0}.acro-qr-hub-context small{font-size:12px;color:#60788c}
-.acro-qr-hub-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.acro-qr-hub-actions button{min-height:126px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #b9dfef;border-radius:19px;background:linear-gradient(145deg,#e5f5ff,#d9efff);color:#0c4265}.acro-qr-hub-actions button span{font-size:31px}.acro-qr-hub-actions button b{font-size:18px}.acro-qr-hub-actions button small{font-size:11px;color:#42647c}.acro-qr-hub-actions .acro-qr-hub-import{border-color:#9bdcc7;background:linear-gradient(145deg,#e6fff3,#d1f7e6);color:#176b4a}
-.acro-qr-hub-help{margin-top:16px;padding:15px;border:1px solid #d0e5f0;border-radius:17px;background:linear-gradient(145deg,#f1f9fe,#eaf6fd)}.acro-qr-hub-help b{display:block;margin-bottom:9px;color:#123c60}.acro-qr-hub-help p{margin:6px 0;color:#3d5b73;font-size:13px}
-.acro-qr-hub-result{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:15px;padding:16px;border:1px solid #d5e7ef;border-radius:18px;background:#f8fcff;text-align:center}.acro-qr-hub-result.success{border-color:#a8e2c0;background:linear-gradient(145deg,#effdf5,#e1f9ec)}.acro-qr-hub-result-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#dcecf4;color:#087e9b;font-size:24px;font-weight:900}.acro-qr-hub-result.success .acro-qr-hub-result-icon{background:#15934e;color:#fff}.acro-qr-hub-result-title{font-size:16px;color:#123c60}.acro-qr-hub-result-text{font-size:12px;line-height:1.4;color:#60788c;margin:0}
-.acro-qr-hub-preview{display:flex;align-items:center;gap:10px;max-width:100%;margin-top:8px;padding:8px;border:1px solid #d7e7ef;border-radius:13px;background:#fff;text-align:left}.acro-qr-hub-preview:empty{display:none}.acro-qr-hub-preview img{width:66px;height:66px;object-fit:cover;border-radius:9px}.acro-qr-hub-preview span{font-size:11px;overflow-wrap:anywhere;color:#47647a}
-.acro-qr-hub-open,.acro-qr-hub-again{width:100%;min-height:48px;margin-top:10px;border:0;border-radius:14px;background:linear-gradient(110deg,#087fa5,#0ba8b5);color:white;font-weight:850}.acro-qr-hub-again{border:1px solid #b8dce9;background:linear-gradient(110deg,#e4f5fc,#edfaff);color:#12496b}
-@media(max-width:520px){.acro-qr-hub-overlay{padding:7px;align-items:flex-end}.acro-qr-hub{max-height:96dvh;border-radius:23px}.acro-qr-hub-body{padding:16px}.acro-qr-hub-body h2{font-size:23px}.acro-qr-hub-actions button{min-height:112px}}
-
 </style>
 </head>
 <body>
@@ -812,61 +798,6 @@ const views={
  analyseMateriel:{title:"Analyse matériel",subtitle:"Suivi des recettes, des sorties et de la rotation du matériel du club.",icon:"📊"}
 };
 function parseMemberQR(raw){try{const x=JSON.parse(raw);return x&&x.type==="acro-member"&&x.id?x:null}catch(e){return null}}
-
-/* Centre QR ACRO V125 — interface dédiée, caméra + import galerie */
-let acroQrHubContext=null,acroQrHubBypass=false,acroQrHubObjectUrl=null;
-function openAcroQrHub(kind){
- acroQrHubContext=kind;
- const old=document.getElementById("acroQrHub");if(old)old.remove();
- const labels={member:"Carte plongeur",equipment:"Matériel du club",block:"Bloc de gonflage"};
- const descriptions={member:"Identifie un adhérent à partir de sa carte ACRO.",equipment:"Reconnais un équipement du club pour le prêt.",block:"Lis l'étiquette du bloc avant le gonflage."};
- const overlay=document.createElement("div");overlay.id="acroQrHub";overlay.className="acro-qr-hub-overlay";
- overlay.innerHTML=`<section class="acro-qr-hub" role="dialog" aria-modal="true" aria-labelledby="acroQrHubTitle">
- <header class="acro-qr-hub-header"><div class="acro-qr-hub-brand"><span class="acro-qr-hub-logo">🤿</span><span><b>ACRO PLONGÉE</b><small>GESTION DU CLUB</small></span></div><button type="button" class="acro-qr-hub-close" aria-label="Fermer">×</button></header>
- <div class="acro-qr-hub-body"><div class="acro-qr-hub-eyebrow">LECTEUR INTELLIGENT</div><h2 id="acroQrHubTitle">▦ Lecteur QR Code</h2><p class="acro-qr-hub-intro">Scanne un QR Code avec la caméra ou importe une photo depuis ton téléphone.</p>
- <div class="acro-qr-hub-context"><span>TYPE DE QR CODE</span><strong>${labels[kind]}</strong><small>${descriptions[kind]}</small></div>
- <div class="acro-qr-hub-actions"><button type="button" class="acro-qr-hub-camera"><span>📷</span><b>Scanner</b><small>Utiliser la caméra</small></button><button type="button" class="acro-qr-hub-import"><span>▧</span><b>Importer</b><small>Choisir une photo</small></button></div>
- <div class="acro-qr-hub-help"><b>ⓘ Fonctionnement</b><p>✓ Lecture automatique du QR Code</p><p>✓ Identification dans les données du club</p><p>✓ Vérification avant toute opération</p></div>
- <div class="acro-qr-hub-result" aria-live="polite"><div class="acro-qr-hub-result-icon">✓</div><b class="acro-qr-hub-result-title">En attente d'un QR Code</b><p class="acro-qr-hub-result-text">Choisis Scanner ou Importer pour commencer.</p><div class="acro-qr-hub-preview"></div><button type="button" class="acro-qr-hub-open" hidden>Ouvrir la fiche</button></div>
- <button type="button" class="acro-qr-hub-again">↻ Scanner un autre QR Code</button>
- </div></section>`;
- document.body.appendChild(overlay);
- const close=()=>{overlay.remove();if(acroQrHubObjectUrl){URL.revokeObjectURL(acroQrHubObjectUrl);acroQrHubObjectUrl=null}};
- overlay.querySelector(".acro-qr-hub-close").addEventListener("click",close);
- overlay.addEventListener("click",e=>{if(e.target===overlay)close()});
- const setResult=(title,message,success=false)=>{const box=overlay.querySelector(".acro-qr-hub-result");box.classList.toggle("success",success);box.querySelector(".acro-qr-hub-result-title").textContent=title;box.querySelector(".acro-qr-hub-result-text").textContent=message;box.querySelector(".acro-qr-hub-result-icon").textContent=success?"✓":"!";};
- overlay.querySelector(".acro-qr-hub-camera").addEventListener("click",()=>{close();const id=kind==="member"?"scanMemberQR":kind==="equipment"?"startEquipmentQR":"scanBlockQR";acroQrHubBypass=true;document.getElementById(id)?.click();acroQrHubBypass=false});
- overlay.querySelector(".acro-qr-hub-import").addEventListener("click",()=>{const id=kind==="member"?"memberQRImport":kind==="equipment"?"equipmentQRImport":"blockQRImport";document.getElementById(id)?.click()});
- overlay.querySelector(".acro-qr-hub-again").addEventListener("click",()=>{setResult("En attente d'un QR Code","Choisis Scanner ou Importer pour commencer.");overlay.querySelector(".acro-qr-hub-preview").innerHTML="";const b=overlay.querySelector(".acro-qr-hub-open");b.hidden=true});
- overlay.querySelector(".acro-qr-hub-open").addEventListener("click",()=>{close();if(kind==="member")render("plongeurs");else if(kind==="equipment")render("materiel");else render("materiel")});
- const inputId=kind==="member"?"memberQRImport":kind==="equipment"?"equipmentQRImport":"blockQRImport";
- const importInput=document.getElementById(inputId);
- if(importInput)importInput.onchange=()=>{
-  const file=importInput.files?.[0];if(!file)return;
-  setResult("Lecture de la photo en cours…","Analyse du QR Code et vérification dans l'inventaire.");
-  if(acroQrHubObjectUrl)URL.revokeObjectURL(acroQrHubObjectUrl);acroQrHubObjectUrl=URL.createObjectURL(file);
-  overlay.querySelector(".acro-qr-hub-preview").innerHTML=`<img src="${acroQrHubObjectUrl}" alt="Photo QR importée"><span>${esc(file.name)} · ${(file.size/1024/1024).toFixed(1)} Mo</span>`;
-  const statusId=kind==="member"?"memberQRImportStatus":kind==="equipment"?"equipmentQRImportStatus":"blockQRImportStatus";
-  let checks=0;
-  const refreshResult=()=>{
-   if(!document.body.contains(overlay))return;
-   const status=document.getElementById(statusId),message=status?.textContent||"Lecture du QR Code en cours…";
-   const ok=!!status?.classList.contains("success"),failed=!!status?.classList.contains("error");
-   if(ok||failed||checks++>45){
-    setResult(ok?"QR Code lu avec succès":failed?"Lecture impossible":"Lecture à vérifier",message,ok);
-    if(ok){const open=overlay.querySelector(".acro-qr-hub-open");open.hidden=false;open.textContent=kind==="member"?"Ouvrir la fiche plongeur":kind==="equipment"?"Voir le matériel sélectionné":"Revenir au gonflage";}
-   }else setTimeout(refreshResult,300);
-  };
-  setTimeout(refreshResult,250);
- };
-}
-document.addEventListener("click",e=>{
- if(acroQrHubBypass)return;
- const btn=e.target.closest("#scanMemberQR,#startEquipmentQR,#scanBlockQR");
- if(!btn)return;
- e.preventDefault();e.stopImmediatePropagation();
- openAcroQrHub(btn.id==="scanMemberQR"?"member":btn.id==="startEquipmentQR"?"equipment":"block");
-},true);
 
 async function decodeQrImageFile(file){
  if(!file||!file.type?.startsWith("image/"))throw new Error("Choisis une image contenant un QR Code.");
