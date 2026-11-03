@@ -1122,6 +1122,20 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 .app-settings-section{max-width:760px}.app-setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 2px;border-bottom:1px solid #e2edf3}.app-setting-row strong,.app-setting-block label{display:block;color:#123b60;font-weight:800}.app-setting-row small{display:block;color:#718696;font-size:12px;margin-top:4px}.app-switch{position:relative;display:inline-flex;flex:0 0 54px;width:54px;height:30px}.app-switch input{position:absolute;opacity:0;width:1px;height:1px}.app-switch span{position:absolute;inset:0;border-radius:30px;background:#cbd8e1;transition:.2s}.app-switch span:before{content:"";position:absolute;width:22px;height:22px;left:4px;top:4px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:.2s}.app-switch input:checked+span{background:#078fba}.app-switch input:checked+span:before{transform:translateX(24px)}.app-switch input:focus-visible+span{outline:3px solid #7dd3fc;outline-offset:3px}.app-setting-block{display:grid;gap:10px;padding:17px 2px;border-bottom:1px solid #e2edf3}.app-setting-block label{display:flex;justify-content:space-between;gap:12px}.app-setting-block input[type=range]{width:100%;accent-color:#078fba}.app-setting-block select{width:100%;padding:12px;border:1px solid #cbdde8;border-radius:12px;background:#fff;color:#123b60}.app-setting-tests{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.app-settings-actions{max-width:760px;display:flex;justify-content:flex-end;margin-top:12px}@media(max-width:520px){.app-setting-tests .btn{flex:1;min-width:0}.app-settings-section{padding:16px}.app-setting-row{align-items:flex-start}.app-setting-row>div{min-width:0}}
 
 .planning-delete-icon{flex:0 0 42px;width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:12px;background:#fff0f0;color:#d62828;cursor:pointer;transition:background .18s,transform .18s}.planning-delete-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.planning-delete-icon:hover{background:#ffdada;transform:scale(1.04)}.planning-delete-icon:focus-visible{outline:3px solid #fca5a5;outline-offset:2px}@media(max-width:520px){.day-event-item{gap:10px}.planning-delete-icon{width:40px;height:40px;flex-basis:40px}}
+
+.acro-confirm-dialog{width:min( calc(100% - 32px), 430px);padding:0;border:1px solid #b8e1eb;border-radius:24px;overflow:hidden;background:#fff;color:#123b60;box-shadow:0 24px 70px #052b3b55}
+.acro-confirm-dialog::backdrop{background:rgba(3,28,43,.72);backdrop-filter:blur(5px)}
+.acro-confirm-top{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;background:linear-gradient(120deg,#073b52,#087f91 70%,#12b8b0);color:#fff}
+.acro-confirm-brand{display:flex;align-items:center;gap:11px;font-size:13px;font-weight:900;letter-spacing:.09em}.acro-confirm-brand small{display:block;margin-top:4px;color:#bcecf0;font-size:9px;letter-spacing:.13em}.acro-confirm-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:#ffffff20;font-size:22px}
+.acro-confirm-close{font-size:26px;color:#c6e9ee;line-height:1}
+.acro-confirm-content{padding:24px 23px 21px;text-align:center}
+.acro-confirm-trash{width:58px;height:58px;margin:0 auto 13px;display:grid;place-items:center;border-radius:19px;background:#fff0f0;color:#d62828}.acro-confirm-trash svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.acro-confirm-content h2{margin:0;color:#123b60;font-size:21px;font-weight:900}
+.acro-confirm-event{margin:9px 0 0;color:#078da0;font-weight:800;font-size:14px}
+.acro-confirm-message{margin:13px auto 0;max-width:330px;color:#60788a;font-size:13px;line-height:1.55}
+.acro-confirm-actions{display:flex;gap:11px;margin-top:23px}.acro-confirm-actions button{flex:1;min-height:47px;border-radius:14px;font-weight:800}.acro-confirm-actions .danger{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(120deg,#d8323e,#b91f35);color:white;border:0}.acro-confirm-actions .danger svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:420px){.acro-confirm-content{padding:21px 17px 18px}.acro-confirm-actions{gap:8px}.acro-confirm-actions button{padding:10px 8px}}
+
 </style>
 
 </head>
@@ -1217,6 +1231,24 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 <dialog id="planningDayDialog">
  <div class="dialog-head"><div><div style="font-size:10px;letter-spacing:.12em;color:#9dc4d5;font-weight:800">ACRO PLONGÉE · PLANNING</div><h2 id="planningDayTitle" style="font-size:19px;margin-top:4px">Événements du jour</h2></div><button type="button" class="btn small soft" id="closePlanningDay">Fermer</button></div>
  <div class="dialog-body"><div id="planningDayEvents" class="day-event-list"></div><div class="day-dialog-actions"><button type="button" class="btn soft" id="closePlanningDayBottom">Fermer</button><button type="button" class="btn primary" id="addPlanningDayEvent">＋ Créer un événement</button></div></div>
+</dialog>
+
+
+<dialog id="planningDeleteConfirm" class="acro-confirm-dialog">
+ <div class="acro-confirm-top">
+  <div class="acro-confirm-brand"><span class="acro-confirm-mark">🤿</span><span>ACRO PLONGÉE <small>ESPACE MASTER · PLANNING</small></span></div>
+  <span class="acro-confirm-close" aria-hidden="true">×</span>
+ </div>
+ <div class="acro-confirm-content">
+  <div class="acro-confirm-trash"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg></div>
+  <h2>Supprimer cet événement ?</h2>
+  <p class="acro-confirm-event" id="planningDeleteEventName">Événement du planning</p>
+  <p class="acro-confirm-message">Cette action supprimera définitivement cet événement du Planning et de l’onglet Plongée.</p>
+  <div class="acro-confirm-actions">
+   <button type="button" class="btn soft" id="cancelPlanningDelete">Annuler</button>
+   <button type="button" class="btn danger" id="acceptPlanningDelete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13"/></svg> Supprimer</button>
+  </div>
+ </div>
 </dialog>
 
 <dialog id="planningDialog">
@@ -2377,12 +2409,32 @@ function wirePlanning(){
   saveState();let notificationSent=true;if(!id)notificationSent=await publishEventCreatedNotification(record);form.dataset.submitting="0";if(submitButton)submitButton.disabled=false;document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":(notificationSent?"Événement créé":"Événement créé, mais notification non envoyée"));
  };
 }
+
+function showPlanningDeleteConfirm(event,date){
+ const dialog=document.getElementById("planningDeleteConfirm");
+ if(!dialog)return Promise.resolve(false);
+ const type=EVENT_TYPES[event?.type]||EVENT_TYPES.event;
+ const name=document.getElementById("planningDeleteEventName");
+ name.textContent=type.label+" · "+dateFR(date);
+ return new Promise(resolve=>{
+  let settled=false;
+  const finish=value=>{if(settled)return;settled=true;dialog.close();cleanup();resolve(value)};
+  const yes=document.getElementById("acceptPlanningDelete");
+  const no=document.getElementById("cancelPlanningDelete");
+  const onYes=()=>finish(true),onNo=()=>finish(false),onClose=()=>finish(false);
+  function cleanup(){yes.removeEventListener("click",onYes);no.removeEventListener("click",onNo);dialog.removeEventListener("cancel",onClose);dialog.removeEventListener("close",onClose)}
+  yes.addEventListener("click",onYes);no.addEventListener("click",onNo);
+  dialog.addEventListener("cancel",onClose);dialog.addEventListener("close",onClose);
+  if(typeof dialog.showModal==="function")dialog.showModal();else finish(false);
+ });
+}
+
 async function deletePlanningEvent(id,date){
  if(!isMaster())return;
  const eventId=String(id||"");
  const existing=(state.events||[]).find(ev=>String(ev.id)===eventId);
  if(!existing)return;
- if(!confirm("Supprimer définitivement cet événement du Planning et de l’onglet Plongée ?"))return;
+ if(!(await showPlanningDeleteConfirm(existing,date)))return;
  const previousEvents=[...(state.events||[])];
  state.events=(state.events||[]).filter(ev=>String(ev.id)!==eventId);
  try{
