@@ -1301,6 +1301,44 @@ function printQrCard(containerId){
  clone.querySelectorAll("[id]").forEach(el=>el.removeAttribute("id"));
  const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Carte QR ACRO Plongée</title><style>body{font-family:Arial,sans-serif;margin:0;padding:24px;color:#10283c}main{max-width:420px;margin:0 auto}.section{border:1px solid #dce8ee;border-radius:16px;padding:20px;text-align:center;box-shadow:none}.section h3{font-size:20px;margin:0 0 16px}.section p{font-size:13px;color:#526778}.section img{width:200px;height:200px;object-fit:contain;margin:8px auto;display:block}@page{margin:12mm}@media print{body{padding:0}.section{break-inside:avoid;border:1px solid #999}}</style></head><body><main>${clone.outerHTML}</main><script>window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(resolve=>{i.onload=resolve;i.onerror=resolve}))).then(()=>setTimeout(()=>{window.focus();window.print()},300))});<\/script>
 <div id="acroFreeConfirm" hidden aria-hidden="true"></div>
+
+<script id="acro-audio-system-v126">
+(function(){
+ "use strict";
+ const CLICK_VOLUME=0.16;
+ let audioContext=null,lastClickAt=0;
+ function context(){
+  const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;
+  if(!audioContext)audioContext=new Ctx();
+  if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
+  return audioContext;
+ }
+ function tone(frequency,start,duration,volume,type){
+  const ctx=context();if(!ctx)return;
+  const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||"sine";
+  osc.frequency.setValueAtTime(frequency,ctx.currentTime+start);
+  gain.gain.setValueAtTime(0.0001,ctx.currentTime+start);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002,volume),ctx.currentTime+start+0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+start+duration);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+duration+0.02);
+ }
+ function success(){tone(880,0,0.105,0.58,"sine");tone(1175,0.12,0.16,0.72,"sine")}
+ function error(){tone(245,0,0.19,0.78,"triangle");tone(165,0.22,0.23,0.78,"triangle")}
+ function click(){const now=Date.now();if(now-lastClickAt<65)return;lastClickAt=now;tone(690,0,0.025,CLICK_VOLUME,"sine")}
+ function notify(message){
+  const text=String(message||"");
+  if(/(erreur|impossible|échec|echec|introuvable|inconnu|inconnue|aucun|aucune|refus|non disponible|obligatoire|indisponible|invalide|échoué|échouée|bloqué|bloquée|manquant|manquante|n'a pas été|n’a pas été)/i.test(text))error();
+  else success();
+ }
+ document.addEventListener("click",function(event){
+  const control=event.target&&event.target.closest&&event.target.closest("button,[role='button'],.nav-btn,.module-card");
+  if(!control||control.disabled||control.getAttribute("aria-disabled")==="true")return;
+  click();
+ },true);
+ window.ACROAudio={success,error,click,notify,settings:{volume:"fort",click:"discret"}};
+})();
+</script>
+
 </body></html>`;
  popup.document.open();popup.document.write(html);popup.document.close();
 }
@@ -1364,7 +1402,7 @@ function currentMasterPersonName(){
 }
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function notify(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add("hidden"),2600)}
+function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add("hidden"),2600)}
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
 function allowed(view){if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
@@ -2552,7 +2590,7 @@ function wireMaterial(){
   host.querySelectorAll("[data-remove-scanned-equipment]").forEach(btn=>btn.addEventListener("click",()=>{const id=btn.dataset.removeScannedEquipment;const input=[...host.querySelectorAll('input[name="loanEquipment"]')].find(x=>x.value===id);if(input)input.remove();refreshEqSelection()}));
   const count=valid.length,el=document.getElementById("loanSelectedCount");if(el)el.textContent=count+" équipement"+(count===1?"":"s")+" sélectionné"+(count===1?"":"s");
  };
- const startEqScanner=async()=>{const box=document.getElementById(scanMode==="member"?"memberQRBox":"equipmentQRBox"),video=document.getElementById(scanMode==="member"?"memberQRVideo":"equipmentQRVideo"),status=document.getElementById(scanMode==="member"?"memberQRStatus":"equipmentQRStatus");box.classList.add("active");box.scrollIntoView({behavior:"smooth",block:"center"});status.textContent=scanMode==="member"?"Ouverture de la caméra pour la carte plongeur…":"Ouverture de la caméra pour le matériel…";try{if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia)throw new Error("La caméra est bloquée pour ce fichier local. Ouvre ACRO Plongée depuis une adresse HTTPS, puis autorise la caméra.");eqStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});video.srcObject=eqStream;video.muted=true;video.playsInline=true;await video.play();eqActive=true;loadMemberQRReader(()=>{});const scan=async()=>{if(!eqActive)return;try{if(video.readyState>=2&&video.videoWidth&&window.jsQR){const c=document.createElement("canvas");c.width=video.videoWidth;c.height=video.videoHeight;const ctx=c.getContext("2d",{willReadFrequently:true});ctx.drawImage(video,0,0,c.width,c.height);const im=ctx.getImageData(0,0,c.width,c.height),code=jsQR(im.data,im.width,im.height,{inversionAttempts:"attemptBoth"});if(code){let data=null;try{data=JSON.parse(code.data)}catch(_){}if(scanMode==="equipment"&&(!data||!(data.type==="acro-equipment"||data.type==="equipment"||data.category||data.number))){status.textContent="QR détecté, mais son contenu ne correspond pas au format matériel ACRO. Contenu lu : "+String(code.data).slice(0,100);stopEqScanner();return}if(scanMode==="member"&&data&&data.type==="acro-member"&&data.id){const diver=(state.divers||[]).find(x=>x.id===data.id);if(!diver){status.textContent="Carte plongeur inconnue. Vérifie la fiche du plongeur.";stopEqScanner();return}const person=masterPeople().find(p=>p.id===diver.id)||masterPeople().find(p=>p.name===((diver.firstName||"")+" "+(diver.lastName||"")).trim());if(!person){status.textContent="Plongeur absent de la liste des personnes.";stopEqScanner();return}borrowerSelect.value=person.id;showWallet("Carte plongeur reconnue : "+person.name);status.textContent=isEncadrantDiver(diver)?("Carte reconnue : "+person.name+" — encadrant, matériel gratuit. Scanne maintenant le matériel."):("Carte reconnue : "+person.name+" — solde "+(Number(diver.balance)||0).toFixed(2)+" Bitacros. Scanne maintenant le matériel.");stopEqScanner();return}if(data&&(data.type==="acro-equipment"||data.type==="equipment"||data.category||data.number)&&(data.id||data.number||data.serial||data.label)){
+ const startEqScanner=async()=>{const box=document.getElementById(scanMode==="member"?"memberQRBox":"equipmentQRBox"),video=document.getElementById(scanMode==="member"?"memberQRVideo":"equipmentQRVideo"),status=document.getElementById(scanMode==="member"?"memberQRStatus":"equipmentQRStatus");box.classList.add("active");box.scrollIntoView({behavior:"smooth",block:"center"});status.textContent=scanMode==="member"?"Ouverture de la caméra pour la carte plongeur…":"Ouverture de la caméra pour le matériel…";try{if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia)throw new Error("La caméra est bloquée pour ce fichier local. Ouvre ACRO Plongée depuis une adresse HTTPS, puis autorise la caméra.");eqStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});video.srcObject=eqStream;video.muted=true;video.playsInline=true;await video.play();eqActive=true;loadMemberQRReader(()=>{});const scan=async()=>{if(!eqActive)return;try{if(video.readyState>=2&&video.videoWidth&&window.jsQR){const c=document.createElement("canvas");c.width=video.videoWidth;c.height=video.videoHeight;const ctx=c.getContext("2d",{willReadFrequently:true});ctx.drawImage(video,0,0,c.width,c.height);const im=ctx.getImageData(0,0,c.width,c.height),code=jsQR(im.data,im.width,im.height,{inversionAttempts:"attemptBoth"});if(code){let data=null;try{data=JSON.parse(code.data)}catch(_){}if(scanMode==="equipment"&&(!data||!(data.type==="acro-equipment"||data.type==="equipment"||data.category||data.number))){status.textContent="QR détecté, mais son contenu ne correspond pas au format matériel ACRO. Contenu lu : "+String(code.data).slice(0,100);window.ACROAudio?.error();stopEqScanner();return}if(scanMode==="member"&&data&&data.type==="acro-member"&&data.id){const diver=(state.divers||[]).find(x=>x.id===data.id);if(!diver){status.textContent="Carte plongeur inconnue. Vérifie la fiche du plongeur.";window.ACROAudio?.error();stopEqScanner();return}const person=masterPeople().find(p=>p.id===diver.id)||masterPeople().find(p=>p.name===((diver.firstName||"")+" "+(diver.lastName||"")).trim());if(!person){status.textContent="Plongeur absent de la liste des personnes.";window.ACROAudio?.error();stopEqScanner();return}borrowerSelect.value=person.id;window.ACROAudio?.success();showWallet("Carte plongeur reconnue : "+person.name);status.textContent=isEncadrantDiver(diver)?("Carte reconnue : "+person.name+" — encadrant, matériel gratuit. Scanne maintenant le matériel."):("Carte reconnue : "+person.name+" — solde "+(Number(diver.balance)||0).toFixed(2)+" Bitacros. Scanne maintenant le matériel.");stopEqScanner();return}if(data&&(data.type==="acro-equipment"||data.type==="equipment"||data.category||data.number)&&(data.id||data.number||data.serial||data.label)){
  // Résolution robuste : l'identifiant du QR peut provenir d'une ancienne fiche
  // ou d'un état Supabase rafraîchi. On essaie d'abord l'ID, puis les références.
  const norm=v=>String(v??"").trim().toLocaleLowerCase("fr").replace(/\s+/g," ");
@@ -2585,17 +2623,18 @@ function wireMaterial(){
  if(!e&&supabaseClient){
   try{await loadRemoteState();e=findEquipmentFromQR()}catch(refreshError){console.warn("Actualisation Supabase avant résolution QR impossible",refreshError)}
  }
- if(!e){status.textContent="QR lu, mais aucun équipement correspondant trouvé dans l'inventaire ("+(Array.isArray(state.equipment)?state.equipment.length:0)+" équipement(s)). Référence lue : "+String(data.number||data.equipmentNumber||data.label||data.id||code.data).slice(0,100)+". Aucun équipement n'a été ajouté. Vérifie le numéro dans Master matériel et la synchronisation Supabase.";stopEqScanner();return}
- if(!isAcroClubLoanEquipment(e)){const warning=document.getElementById("equipmentQRPersonalWarning");if(warning){warning.style.display="block";warning.textContent="Élément ne pouvant être prêté, appartient à un plongeur. Matériel scanné : "+equipmentTypeLabel(e.type)+" n° "+(e.number||e.label||e.id)+".";}status.textContent="Élément ne pouvant être prêté, appartient à un plongeur.";stopEqScanner();return}
+ if(!e){window.ACROAudio?.error();status.textContent="QR lu, mais aucun équipement correspondant trouvé dans l'inventaire ("+(Array.isArray(state.equipment)?state.equipment.length:0)+" équipement(s)). Référence lue : "+String(data.number||data.equipmentNumber||data.label||data.id||code.data).slice(0,100)+". Aucun équipement n'a été ajouté. Vérifie le numéro dans Master matériel et la synchronisation Supabase.";stopEqScanner();return}
+ if(!isAcroClubLoanEquipment(e)){window.ACROAudio?.error();const warning=document.getElementById("equipmentQRPersonalWarning");if(warning){warning.style.display="block";warning.textContent="Élément ne pouvant être prêté, appartient à un plongeur. Matériel scanné : "+equipmentTypeLabel(e.type)+" n° "+(e.number||e.label||e.id)+".";}status.textContent="Élément ne pouvant être prêté, appartient à un plongeur.";stopEqScanner();return}
  const alreadyOut=(state.loans||[]).some(l=>String(l.equipmentId)===String(e.id)&&!l.returnedAt);
- if(e.active===false||alreadyOut){status.textContent="QR lu : "+equipmentTypeLabel(e.type)+" n° "+(e.number||e.label||e.id)+". Équipement non disponible (désactivé ou déjà prêté).";stopEqScanner();return}
- if(e.type==="detendeur"&&e.needsDisinfection){status.textContent="QR lu : détendeur "+(e.number||e.label||e.id)+", mais désinfection obligatoire avant le prêt.";stopEqScanner();return}
+ if(e.active===false||alreadyOut){window.ACROAudio?.error();status.textContent="QR lu : "+equipmentTypeLabel(e.type)+" n° "+(e.number||e.label||e.id)+". Équipement non disponible (désactivé ou déjà prêté).";stopEqScanner();return}
+ if(e.type==="detendeur"&&e.needsDisinfection){window.ACROAudio?.error();status.textContent="QR lu : détendeur "+(e.number||e.label||e.id)+", mais désinfection obligatoire avant le prêt.";stopEqScanner();return}
  const personalWarning=document.getElementById("equipmentQRPersonalWarning");if(personalWarning)personalWarning.style.display="none";
  const host=document.getElementById("equipmentQRSelection");
- if(!host){status.textContent="QR lu, matériel reconnu, mais la zone de sélection est absente. Ferme puis rouvre le formulaire de prêt.";stopEqScanner();return}
+ if(!host){status.textContent="QR lu, matériel reconnu, mais la zone de sélection est absente. Ferme puis rouvre le formulaire de prêt.";window.ACROAudio?.error();stopEqScanner();return}
  let cb=[...host.querySelectorAll('input[name="loanEquipment"]')].find(x=>String(x.value)===String(e.id));
  if(!cb){cb=document.createElement("input");cb.type="checkbox";cb.name="loanEquipment";cb.value=e.id;cb.checked=true;cb.hidden=true;host.appendChild(cb)}else cb.checked=true;
  refreshEqSelection();
+ window.ACROAudio?.success();
  status.textContent="✓ Matériel ajouté : "+equipmentTypeLabel(e.type)+" — référence "+(e.number||e.label||e.serial||e.id)+". Il reste dans la liste. Appuie sur « Continuer » pour scanner un autre équipement.";
  const nextBtn=document.getElementById("continueEquipmentQR");if(nextBtn)nextBtn.disabled=false;
  stopEqScanner();return
@@ -2820,7 +2859,7 @@ function renderInflationPanel(){
        if(block){
         document.getElementById("inflationBlock").value=block;document.getElementById("inflationBlock").dispatchEvent(new Event("input",{bubbles:true}));
         qrStatus.textContent="QR code lu : bloc "+block;
-        stopQR();notify("QR code lu : bloc "+block);return;
+        window.ACROAudio?.success();stopQR();notify("QR code lu : bloc "+block);return;
        }
       }
      }
