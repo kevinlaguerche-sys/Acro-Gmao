@@ -1317,9 +1317,11 @@ async function loginByName(lastName,firstName,password){
  if(error||!data?.session){document.getElementById("loginMessage").textContent="Connexion impossible : "+(data?.error||(error?.message||"Vérifie le nom, le prénom et le mot de passe."));return false}
  const {data:sessionData,error:sessionError}=await client.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});
  if(sessionError||!sessionData?.user){document.getElementById("loginMessage").textContent="Session impossible à ouvrir. Réessaie.";return false}
- const {data:profile,error:profileError}=await client.from("acro_profiles").select("user_id,display_name,role,is_active").eq("user_id",sessionData.user.id).maybeSingle();
+ const {data:profile,error:profileError}=await client.from("acro_profiles").select("user_id,display_name,role,is_active,permissions").eq("user_id",sessionData.user.id).maybeSingle();
  if(profileError||!profile||profile.is_active===false){await client.auth.signOut();document.getElementById("loginMessage").textContent="Profil club introuvable ou désactivé. Demande au Master de vérifier le compte.";return false}
- const perms=profile.role==="master"?["dashboard","materiel","formation","planning","plongee","masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"]:profile.role==="encadrant"?["dashboard","materiel","formation","planning","plongee"]:["dashboard","planning"];
+ const basePerms=profile.role==="master"?["dashboard","materiel","formation","planning","plongee","masterMateriel","analyse","analyseMateriel","plongeurs","acces","sauvegarde"]:profile.role==="encadrant"?["dashboard","materiel","formation","planning","plongee"]:["dashboard","planning"];
+ const storedPerms=Array.isArray(profile.permissions)?profile.permissions.filter(p=>typeof p==="string"):[];
+ const perms=profile.role==="master"?basePerms:[...new Set([...basePerms,...storedPerms])];
  current={id:sessionData.user.id,email:sessionData.user.email||"",name:profile.display_name||(`${firstName} ${lastName}`.trim()),role:profile.role,permissions:perms,active:true};
  try{await loadRemoteState()}catch(e){console.error(e);await client.auth.signOut();current=null;remoteReady=false;document.getElementById("loginMessage").textContent="Authentifié, mais lecture des données du club impossible : "+(e.message||"vérifie les politiques Supabase");return false}
  showApp();return true;
