@@ -948,6 +948,48 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 }
 </style>
 
+<style>
+#mainContent[data-view="planning"] .acro-planning-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(310px,.85fr);gap:14px;align-items:start}
+#mainContent[data-view="planning"] .acro-calendar-panel{padding:16px;background:linear-gradient(145deg,#f8fdff,#e8f7fc);border-color:#c9e5f1}
+#mainContent[data-view="planning"] .acro-calendar-panel>.calendar-toolbar{padding:16px;border-radius:16px;background:linear-gradient(110deg,#f8fdff,#dff5fb);border-color:#c9e5f1;position:relative;overflow:hidden}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-month{font-size:25px;color:#102d49}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-grid{gap:5px}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-day{min-height:92px;border-radius:12px;padding:6px;background:#fff;border-color:#cbdfea}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-day.selected{border:2px solid #168c3e;background:#effbf1}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-events{display:flex;flex-direction:row;flex-wrap:wrap;gap:3px;margin-top:3px}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-chip{width:31px;height:31px;min-width:31px;padding:2px;border-radius:50%;display:grid;place-items:center;background:transparent!important}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-icon{width:27px;height:27px;min-width:27px;border-radius:50%;padding:3px;background:#e1f4fa;display:grid;place-items:center}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-icon svg,#mainContent[data-view="planning"] .acro-day-event-icon svg,#mainContent[data-view="planning"] .acro-legend-item svg{width:100%;height:100%;display:block}
+#mainContent[data-view="planning"] .acro-planning-side{display:grid;gap:13px;min-width:0}
+#mainContent[data-view="planning"] .acro-day-panel,#mainContent[data-view="planning"] .acro-legend-panel{padding:16px;border-radius:18px;background:linear-gradient(145deg,#fff,#f5fbfe);border-color:#d1e6ef}
+#mainContent[data-view="planning"] .acro-side-heading{display:flex;align-items:center;gap:11px}
+#mainContent[data-view="planning"] .acro-side-calendar-icon{width:43px;height:43px;border-radius:11px;background:#087e91;color:white;display:grid;place-items:center;font-size:26px}
+#mainContent[data-view="planning"] .acro-side-heading .eyebrow{color:#087e91;font-size:11px}
+#mainContent[data-view="planning"] .acro-side-heading h2{font-size:18px;color:#102d49}
+#mainContent[data-view="planning"] .acro-event-count{display:table;margin:11px auto;padding:6px 16px;border-radius:24px;background:#08a1b5;color:white;font-weight:800;font-size:13px}
+#mainContent[data-view="planning"] .acro-day-events{display:grid;gap:9px}
+#mainContent[data-view="planning"] .acro-day-event{display:flex;align-items:center;gap:10px;border:1px solid #c9e2ed;border-left:6px solid #168bd1;border-radius:14px;padding:10px;background:#fff}
+#mainContent[data-view="planning"] .acro-day-event.material{border-left-color:#f18b00}
+#mainContent[data-view="planning"] .acro-day-event-icon{width:55px;height:55px;flex:0 0 55px;border-radius:50%;padding:8px;background:#dff4fb}
+#mainContent[data-view="planning"] .acro-day-event.material .acro-day-event-icon{background:#ffedd8}
+#mainContent[data-view="planning"] .acro-day-event.director .acro-day-event-icon{background:#e9e0ff}
+#mainContent[data-view="planning"] .acro-day-event-body{min-width:0;flex:1}
+#mainContent[data-view="planning"] .acro-day-event-body small{display:block;color:#526b7c;font-size:12px;margin-bottom:3px}
+#mainContent[data-view="planning"] .acro-day-event-body strong{display:block;font-size:14px;color:#142d49;line-height:1.2}
+#mainContent[data-view="planning"] .acro-day-event-body div{font-size:12px;color:#5b7181;margin-top:4px;overflow-wrap:anywhere}
+#mainContent[data-view="planning"] .acro-empty-day{padding:20px 12px;text-align:center;color:#6b8092;background:#f7fbfd;border:1px dashed #c8dce6;border-radius:13px;font-size:13px}
+#mainContent[data-view="planning"] .acro-day-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+#mainContent[data-view="planning"] .acro-legend-title{display:flex;align-items:center;gap:9px;margin-bottom:10px;color:#087e91;font-weight:900}
+#mainContent[data-view="planning"] .acro-legend-item{display:flex;align-items:center;gap:10px;padding:7px 9px;margin-top:6px;border:1px solid #d2e3eb;border-radius:12px;background:#f8fcfe}
+#mainContent[data-view="planning"] .acro-legend-item i{width:49px;height:49px;min-width:49px;padding:7px;border-radius:50%;background:#dff4fb}
+#mainContent[data-view="planning"] .acro-legend-item:nth-child(3) i{background:#e9e0ff}
+#mainContent[data-view="planning"] .acro-legend-item:nth-child(4) i{background:#d7f5f5}
+#mainContent[data-view="planning"] .acro-legend-item:nth-child(5) i{background:#ffedd8}
+#mainContent[data-view="planning"] .acro-legend-item b{display:block;font-size:13px;color:#142d49}
+#mainContent[data-view="planning"] .acro-legend-item small{display:block;font-size:11px;color:#526b7c;line-height:1.25}
+@media(max-width:900px){#mainContent[data-view="planning"] .acro-planning-layout{grid-template-columns:1fr}}
+@media(max-width:620px){#mainContent[data-view="planning"] .acro-calendar-panel{padding:9px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-day{min-height:76px;padding:4px 3px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-chip{width:26px;height:26px;min-width:26px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-icon{width:24px;height:24px;min-width:24px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-month{font-size:20px}}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -2046,6 +2088,29 @@ function planningHTML(){
  ${(state.events||[]).filter(ev=>ev.date.startsWith(year+"-"+String(month+1).padStart(2,"0"))).sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||""))).length?`<div class="table-wrap"><table><thead><tr><th>Date</th><th>Événement</th><th>Responsable</th></tr></thead><tbody>${(state.events||[]).filter(ev=>ev.date.startsWith(year+"-"+String(month+1).padStart(2,"0"))).sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||""))).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return `<tr><td>${dateFR(ev.date)}</td><td>${typ.icon} <strong>${esc(ev.title||typ.label)}</strong><div class="planning-hint">${typ.label}${ev.location?" · 📍 "+esc(ev.location):""}</div></td><td>${esc(ev.responsible||"—")}${isDiveForecastEvent(ev)?`<div class="planning-hint">Encadrants intéressés (${((ev.diveParticipants)||[]).length}) : ${((ev.diveParticipants)||[]).map(x=>esc(x.name)).join(", ")||"aucun pour le moment"}</div>`:""}</td></tr>`}).join("")}</tbody></table></div>`:'<div class="empty">Aucun événement enregistré pour ce mois. Clique sur une date pour en créer un.</div>'}
  </details></div>`;
 }
+function planningIconSVG(type){
+ const common='viewBox="0 0 64 64" aria-hidden="true"';
+ if(type==='director_pool')return '<svg '+common+'><g fill="none" stroke="#073b52" stroke-width="3.5" stroke-linecap="round"><path d="M17 43V13a5 5 0 0 1 10 0v30M17 22h10M17 31h10M38 43V13a5 5 0 0 1 10 0v30M38 22h10M38 31h10"/></g><path d="M6 48q7-7 14 0t14 0 14 0 10 0v9H6z" fill="#16a8d0"/><path d="M6 55q7-7 14 0t14 0 14 0 10 0" fill="none" stroke="#087da9" stroke-width="2.5"/></svg>';
+ if(type==='director_dive')return '<svg '+common+'><rect x="15" y="13" width="20" height="40" rx="7" fill="#7545c8" stroke="#552ba2" stroke-width="3"/><path d="M21 10h9v5h-9zM35 21h8v7h-8M43 24h5q7 0 7 8v6m-7-2-4 4m4-4 5 2" fill="none" stroke="#552ba2" stroke-width="3" stroke-linecap="round"/></svg>';
+ if(type==='director_fosse'||type==='dive_fosse')return '<svg '+common+'><path d="M7 29Q31 2 57 29Q32 20 7 29Z" fill="#18b7bd"/><path d="M32 27v23m0 0-7-8m7 8 7-8" fill="none" stroke="#075d6c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+ if(type==='material_distribution'||type==='inflation')return '<svg '+common+'><path d="M11 20h42v32H11z" rx="5" fill="#f28a00"/><path d="M22 20v-5a5 5 0 0 1 5-5h10a5 5 0 0 1 5 5v5" fill="none" stroke="#e97800" stroke-width="4"/><path d="m23 29 18 18m0-18L23 47" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>';
+ if(type==='dive_exploration')return '<svg '+common+'><path d="M5 30q8-11 16 0t16 0 16 0M5 42q8-11 16 0t16 0 16 0" fill="none" stroke="#178d59" stroke-width="4" stroke-linecap="round"/></svg>';
+ return '<svg '+common+'><path d="M32 8 57 21 32 34 7 21z" fill="#168bc6"/><path d="M17 27v12c8 8 22 8 30 0V27" fill="none" stroke="#0879bd" stroke-width="3"/></svg>';
+}
+const acroOriginalPlanningHTML=planningHTML;
+function planningHTML(){
+ let html=acroOriginalPlanningHTML();
+ html=html.replace(/<span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span>/g,'<span class="calendar-event-icon" aria-hidden="true">'+planningIconSVG('director_pool')+'</span>');
+ const date=window.acroPlanningSelectedDate||todayISO();
+ const dayEvents=(state.events||[]).filter(ev=>ev.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+ const label=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+ const cards=dayEvents.length?dayEvents.map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;const tm=ev.startTime&&ev.endTime?esc(ev.startTime)+' – '+esc(ev.endTime):ev.time?esc(ev.time):'Horaire à préciser';return '<article class="acro-day-event '+typ.className+'"><span class="acro-day-event-icon">'+planningIconSVG(ev.type)+'</span><div class="acro-day-event-body"><small>'+tm+'</small><strong>'+esc(ev.title||typ.label)+'</strong><div>'+ (ev.location?'⌖ '+esc(ev.location):'Lieu à préciser')+'</div></div></article>';}).join(''):'<div class="acro-empty-day">Aucun événement prévu pour cette date.</div>';
+ const side='<aside class="acro-planning-side"><section class="section acro-day-panel"><div class="acro-side-heading"><span class="acro-side-calendar-icon">▦</span><div><div class="eyebrow">PROGRAMME DU JOUR</div><h2>'+label+'</h2></div></div><div class="acro-event-count">'+dayEvents.length+' événement'+(dayEvents.length>1?'s':'')+'</div><div class="acro-day-events">'+cards+'</div><div class="acro-day-actions"><button type="button" class="btn soft small" id="openSelectedPlanningDay">Détails de la journée</button>'+(current&&planningAllowedTypes().length?'<button type="button" class="btn primary small" id="addSelectedPlanningEvent">＋ Ajouter</button>':'')+'</div></section><section class="section acro-legend-panel"><div class="acro-legend-title">ⓘ <strong>LÉGENDE DES ÉVÉNEMENTS</strong></div><div class="acro-legend-item"><i>'+planningIconSVG('director_pool')+'</i><span><b>Directeur de bassin</b><small>Encadrement des séances en piscine</small></span></div><div class="acro-legend-item"><i>'+planningIconSVG('director_dive')+'</i><span><b>Directeur de plongée</b><small>Encadrement des plongées en milieu naturel</small></span></div><div class="acro-legend-item"><i>'+planningIconSVG('director_fosse')+'</i><span><b>Directeur de fosse</b><small>Encadrement des séances en fosse</small></span></div><div class="acro-legend-item"><i>'+planningIconSVG('material_distribution')+'</i><span><b>Matériel / Gonflage</b><small>Distribution du matériel et gonflage des blocs</small></span></div></section></aside>';
+ html=html.replace('<div class="section">','<div class="acro-planning-layout"><div class="section acro-calendar-panel">');
+ html=html.replace('</div>\n <div class="section month-events-section">','</div>'+side+'</div>\n <div class="section month-events-section">');
+ return html;
+}
+
 function canCreateMaterialEvents(){return isMaster()||(current?.permissions||[]).includes("materiel")||canMasterMateriel()}
 function currentLinkedDiver(){if(!current||isMaster())return null;return (state.divers||[]).find(d=>d.id===current.diverId)|| (state.divers||[]).find(d=>((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr")===String(current.name||"").trim().toLocaleLowerCase("fr")))||null}
 function planningAllowedTypes(){if(isMaster())return ["director_pool","director_dive","director_fosse","material_distribution"];const d=currentLinkedDiver();const level=String(d?.currentLevel||"").trim().toUpperCase();const enc=String(d?.encadrement||"").trim().toUpperCase();const out=[];if(["E1","E2","E3","E4"].includes(level)||["E1","E2","E3","E4"].includes(enc))out.push("director_pool");if(["E3","E4"].includes(level)||["E3","E4"].includes(enc))out.push("director_dive","director_fosse");if(level==="P5"||enc==="P5")out.push("director_dive");if(canCreateMaterialEvents())out.push("material_distribution");return [...new Set(out)]}
@@ -2055,7 +2120,9 @@ function wirePlanning(){
  document.getElementById("planningPrev").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("planning")});
  document.getElementById("planningNext").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("planning")});
  document.getElementById("planningToday").addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);render("planning")});
- document.querySelectorAll("[data-calendar-date]").forEach(b=>b.addEventListener("click",()=>openPlanningDayDialog(b.dataset.calendarDate)));
+ document.querySelectorAll("[data-calendar-date]").forEach(b=>b.addEventListener("click",()=>{window.acroPlanningSelectedDate=b.dataset.calendarDate;render("planning")}));
+  document.getElementById("openSelectedPlanningDay")?.addEventListener("click",()=>openPlanningDayDialog(window.acroPlanningSelectedDate||todayISO()));
+  document.getElementById("addSelectedPlanningEvent")?.addEventListener("click",()=>openPlanningDialog(window.acroPlanningSelectedDate||todayISO()));
  const form=document.getElementById("planningEventForm");
  const closeDay=()=>document.getElementById("planningDayDialog").close();
  document.getElementById("closePlanningDay").addEventListener("click",closeDay);
