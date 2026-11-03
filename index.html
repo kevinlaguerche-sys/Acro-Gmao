@@ -1506,7 +1506,7 @@ function showApp(){
 }
 async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
 function stopInflationScannerIfOpen(){try{if(typeof stopQR==="function")stopQR()}catch(e){}}
-function render(view){
+function render(view,skipAccessSync=false){
  if(!allowed(view)){notify("Cet écran ne fait pas partie de tes accès.");view="dashboard";if(!allowed(view)){logout();return}}
  document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
  const v=views[view], main=document.getElementById("mainContent");
@@ -1539,7 +1539,7 @@ function render(view){
  if(view==="materiel") wireMaterial();
  if(view==="securite"&&isMaster()) loadSecurityLogs();
  if(view==="masterMateriel"&&isMaster()){document.getElementById("newEquipmentBtn")?.addEventListener("click",()=>{const f=document.getElementById("equipmentForm");if(f){delete f.dataset.editEquipment;f.reset();const submit=f.querySelector('button[type="submit"]');if(submit)submit.textContent="Enregistrer";const title=document.querySelector("#equipmentFormWrap .equipment-edit-title");if(title)title.textContent="Créer un équipement";}document.getElementById("equipmentFormWrap").classList.remove("hidden");document.getElementById("equipmentType")?.focus()});wireMasterMaterial();}
- if(view==="acces"&&isMaster()){wireEventLocations();document.getElementById("createUserBtn")?.addEventListener("click",()=>openUserDialog());document.querySelectorAll("[data-edit-user]").forEach(b=>b.addEventListener("click",()=>openUserDialog(b.dataset.editUser)));document.querySelectorAll("[data-toggle-user]").forEach(b=>b.addEventListener("click",()=>toggleUser(b.dataset.toggleUser)));document.querySelectorAll("[data-delete-user]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deleteUser)))}
+ if(view==="acces"&&isMaster()){wireEventLocations();document.getElementById("createUserBtn")?.addEventListener("click",()=>openUserDialog());document.querySelectorAll("[data-edit-user]").forEach(b=>b.addEventListener("click",()=>openUserDialog(b.dataset.editUser)));document.querySelectorAll("[data-toggle-user]").forEach(b=>b.addEventListener("click",()=>toggleUser(b.dataset.toggleUser)));document.querySelectorAll("[data-delete-user]").forEach(b=>b.addEventListener("click",()=>deleteUser(b.dataset.deleteUser)));if(!skipAccessSync)syncAccessUsersFromServer().then(()=>{if(document.getElementById("mainContent")?.dataset.view==="acces")render("acces",true)}).catch(err=>{console.error("Synchronisation des comptes impossible",err);notify("Impossible de charger les comptes depuis le serveur : "+(err.message||"erreur inconnue"))})}
 
  if(view==="plongeurs"&&isMaster()) wireDivers();
  if(view==="sauvegarde"&&isMaster()) wireBackup();
@@ -3077,6 +3077,15 @@ async function loadSecurityLogs(){
  finally{if(button)button.disabled=false;}
 }
 
+async function syncAccessUsersFromServer(){
+ const client=initSupabase();if(!client)throw new Error("Connexion Supabase indisponible.");
+ const {data,error}=await client.functions.invoke("member-access",{body:{action:"list_users"}});
+ if(error)throw error;
+ if(!data?.ok||!Array.isArray(data.users))throw new Error(data?.error||"Réponse serveur invalide.");
+ state.users=data.users.map(p=>({id:p.user_id,authUserId:p.user_id,diverId:p.diver_id||"",name:p.display_name||"",role:p.role==="plongeur"?"diver":p.role,permissions:Array.isArray(p.permissions)?p.permissions:[],active:p.is_active!==false}));
+ try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){console.warn("Cache local des comptes non actualisé",e)}
+ return state.users;
+}
 function accessHTML(){
  const divers=(state.divers||[]).filter(d=>d&&d.id&&String(d.firstName||"").trim()&&String(d.lastName||"").trim()).slice().sort((a,b)=>(a.lastName||"").localeCompare(b.lastName||"","fr")||(a.firstName||"").localeCompare(b.firstName||"","fr"));
  const accountFor=d=>state.users.find(u=>u.diverId===d.id||String(u.name||"").trim().toLocaleLowerCase("fr")===((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr")));
@@ -3119,6 +3128,7 @@ function openUserDialog(id="", preselectedDiverId=""){
 function updateRolePermissionsUI(){const master=document.getElementById("newMasterRole").value==="master";document.getElementById("permissionOptions")?.classList.toggle("hidden",master)}
 document.getElementById("newRole").addEventListener("change",updateRolePermissionsUI);
 document.getElementById("newMasterRole").addEventListener("change",updateRolePermissionsUI);
+document.getElementById("newDiver").addEventListener("change",()=>{const id=document.getElementById("newDiver").value;if(!id||document.getElementById("editUserId").value)return;const diver=(state.divers||[]).find(d=>d.id===id);if(!diver)return;const fullName=((diver.firstName||"")+" "+(diver.lastName||"")).trim().toLocaleLowerCase("fr");const existing=state.users.find(u=>u.diverId===id||String(u.name||"").trim().toLocaleLowerCase("fr")===fullName);if(existing)openUserDialog(existing.id);});
 function closeUserDialog(){document.getElementById("userDialog").close()}
 function toggleUser(id){if(!isMaster())return;const u=state.users.find(x=>x.id===id);if(!u)return;u.active=u.active===false;saveState();render("acces");notify(u.active?"Compte activé":"Compte désactivé")}
 function deleteUser(id){if(!isMaster())return;const u=state.users.find(x=>x.id===id);if(!u)return;if(!confirm("Effacer le compte de "+(u.name||"ce plongeur")+" de la liste locale des accès ? Attention : cela ne supprime pas le compte Auth côté serveur Supabase."))return;state.users=state.users.filter(x=>x.id!==id);saveState();render("acces");notify("Compte retiré de la liste locale des accès")}
