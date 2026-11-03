@@ -1034,6 +1034,54 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 #mainContent .calendar-event-chip .dive-event-chip-label{font-size:9px;line-height:1.15}
 </style>
 
+
+<style id="acro-dive-calendar-fit-cells">
+/* Calendrier Plongée : chaque événement tient dans sa case, pictogramme et statut visibles */
+#mainContent[data-view="plongee"] .calendar-day{
+ min-height:104px!important;
+ padding:6px 5px!important;
+ gap:5px!important;
+}
+#mainContent[data-view="plongee"] .calendar-day .calendar-events{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:stretch!important;
+ flex-wrap:nowrap!important;
+ width:100%!important;
+ gap:4px!important;
+ min-width:0!important;
+}
+#mainContent[data-view="plongee"] .calendar-day .calendar-event-chip{
+ display:flex!important;
+ flex:0 0 auto!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ min-height:25px!important;
+ box-sizing:border-box!important;
+ padding:2px 4px!important;
+ gap:5px!important;
+ border-radius:7px!important;
+ overflow:hidden!important;
+}
+#mainContent[data-view="plongee"] .calendar-day .dive-calendar-event-icon,
+#mainContent[data-view="plongee"] .calendar-day .dive-calendar-event-icon svg{
+ width:22px!important;height:22px!important;min-width:22px!important;max-width:22px!important;max-height:22px!important;flex:0 0 22px!important;
+}
+#mainContent[data-view="plongee"] .calendar-day .calendar-event-chip .dive-status{
+ width:17px!important;height:17px!important;min-width:17px!important;flex:0 0 17px!important;font-size:10px!important;
+}
+#mainContent[data-view="plongee"] .calendar-day .dive-event-chip-label{display:none!important}
+@media(max-width:700px){
+ #mainContent[data-view="plongee"] .calendar-day{min-height:100px!important;padding:5px 3px!important}
+ #mainContent[data-view="plongee"] .calendar-day .calendar-event-chip{min-height:24px!important;padding:2px 3px!important;gap:3px!important}
+ #mainContent[data-view="plongee"] .calendar-day .dive-calendar-event-icon,
+ #mainContent[data-view="plongee"] .calendar-day .dive-calendar-event-icon svg{width:21px!important;height:21px!important;min-width:21px!important;max-width:21px!important;max-height:21px!important;flex-basis:21px!important}
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
