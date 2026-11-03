@@ -82,13 +82,15 @@
 .calendar-event-chip{font-size:10px;line-height:1.25;background:#e7f8f7;color:#087e87;border-radius:5px;padding:4px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .calendar-event-chip.material{background:#fff0dc;color:#c46b08}
 .calendar-event-chip.director{background:#edf0ff;color:#414ca0}
-.calendar-event-chip.director-pool{background:#e4f4ff;color:#0879bd}
-.calendar-event-chip.director-dive{background:#f0eaff;color:#7050b5}
-.calendar-event-chip.director-fosse{background:#e2f8f5;color:#078b83}
+.calendar-event-chip.director{background:#edf0ff;color:#414ca0}
+.calendar-event-chip.dive-exploration{background:#e2f6e9;color:#21834b}
+.calendar-event-chip.dive-teaching{background:#e4f4ff;color:#0879bd}
+.calendar-event-chip.dive-fosse{background:#e2f8f5;color:#078b83}
 .calendar-event-icon{display:inline-grid;place-items:center;width:27px;height:27px;min-width:27px;border-radius:50%;font-size:16px;line-height:1}
-.calendar-event-chip.director-pool .calendar-event-icon{background:#d3edff}
-.calendar-event-chip.director-dive .calendar-event-icon{background:#e6dcff}
-.calendar-event-chip.director-fosse .calendar-event-icon{background:#cef1ec}
+.calendar-event-chip.director .calendar-event-icon{background:#e6dcff}
+.calendar-event-chip.dive-exploration .calendar-event-icon{background:#d8f0df}
+.calendar-event-chip.dive-teaching .calendar-event-icon{background:#d3edff}
+.calendar-event-chip.dive-fosse .calendar-event-icon{background:#cef1ec}
 .calendar-event-chip.material .calendar-event-icon{background:#ffe4bf}
 .calendar-events{display:flex;flex-direction:row;flex-wrap:wrap;gap:5px;align-items:center}
 .calendar-event-chip{display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;padding:2px;border-radius:50%;font-size:0;overflow:visible;white-space:normal}
@@ -2001,14 +2003,14 @@ function wireDiveForecast(){
 
 const EVENT_TYPES={
  event:{label:"Événement",icon:"📅",className:""},
- director_pool:{label:"Directeur de bassin",icon:"🏊",className:"director-pool"},
- director_dive:{label:"Directeur de plongée",icon:"🤿",className:"director-dive"},
- director_fosse:{label:"Directeur de plongée fosse",icon:"🫧",className:"director-fosse"},
- dive_exploration:{label:"Plongée en exploration",icon:"🤿",className:"director"},
- dive_teaching:{label:"Plongée en enseignement",icon:"🎓",className:"director"},
- dive_fosse:{label:"Plongée en fosse",icon:"🫧",className:"director"},
- material_distribution:{label:"Matériel / Gonflage",icon:"🧰",className:"material"},
- inflation:{label:"Matériel / Gonflage",icon:"🧰",className:"material"}
+ director_pool:{label:"Directeur de bassin",icon:"👥",className:"director"},
+ director_dive:{label:"Directeur de plongée",icon:"👥",className:"director"},
+ director_fosse:{label:"Directeur de plongée fosse",icon:"👥",className:"director"},
+ dive_exploration:{label:"Plongée en exploration",icon:"🌊",className:"dive-exploration"},
+ dive_teaching:{label:"Plongée en enseignement",icon:"🎓",className:"dive-teaching"},
+ dive_fosse:{label:"Plongée en fosse",icon:"🛟",className:"dive-fosse"},
+ material_distribution:{label:"Matériel / Gonflage",icon:"⚙️",className:"material"},
+ inflation:{label:"Matériel / Gonflage",icon:"⚙️",className:"material"}
 };
 let planningMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 function monthLabel(d){return d.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}
@@ -2037,7 +2039,7 @@ function planningHTML(){
  return `<div class="section">
   <div class="calendar-toolbar"><div><div class="eyebrow">CALENDRIER DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="planningPrev">←</button><button class="btn soft" type="button" id="planningToday">Aujourd’hui</button><button class="btn soft" type="button" id="planningNext">→</button></div></div>
   <div class="calendar-grid">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells.join("")}</div>
-  <div class="calendar-legend acro-calendar-legend"><span><i class="calendar-event-icon" style="background:#d3edff">🏊</i><b>Directeur de bassin</b></span><span><i class="calendar-event-icon" style="background:#e6dcff">🤿</i><b>Directeur de plongée</b></span><span><i class="calendar-event-icon" style="background:#cef1ec">🫧</i><b>Directeur de fosse</b></span><span><i class="calendar-event-icon" style="background:#ffe4bf">🧰</i><b>Matériel / Gonflage</b></span></div>
+  <div class="calendar-legend acro-calendar-legend"><span><i class="calendar-event-icon" style="background:#d8f0df">🌊</i><b>Exploration</b></span><span><i class="calendar-event-icon" style="background:#d3edff">🎓</i><b>Enseignement</b></span><span><i class="calendar-event-icon" style="background:#cef1ec">🛟</i><b>Fosse</b></span><span><i class="calendar-event-icon" style="background:#e6dcff">👥</i><b>Direction</b></span><span><i class="calendar-event-icon" style="background:#ffe4bf">⚙️</i><b>Matériel / Gonflage</b></span></div>
   <p class="planning-hint" style="margin-top:12px">Clique sur une date pour consulter les événements et, selon tes autorisations, en créer un.</p>
  </div>
  <div class="section month-events-section"><details class="month-events-details"><summary><span><strong>📅 Événements du mois</strong> <span class="badge">${(state.events||[]).filter(ev=>ev.date.startsWith(year+"-"+String(month+1).padStart(2,"0"))).length} événement(s)</span></span><span class="month-events-arrow" aria-hidden="true">▸</span></summary>
