@@ -2215,7 +2215,7 @@ function openDiveEventDialog(eventId){
  body.querySelectorAll("[data-master-remove-response]").forEach(btn=>btn.addEventListener("click",()=>{if(!isMaster())return;const target=(state.events||[]).find(x=>String(x.id)===String(btn.dataset.masterRemoveResponse));if(!target)return;const uid=btn.dataset.responseUser;target.diveResponses=(target.diveResponses||[]).filter(x=>x.userId!==uid);target.diveParticipants=(target.diveParticipants||[]).filter(x=>x.userId!==uid);saveState();openDiveEventDialog(target.id);notify("Réponse retirée par le Master")}));
  if(typeof dialog.showModal==="function"){if(!dialog.open)dialog.showModal();}else dialog.setAttribute("open","");
 }
-function saveDiveResponse(eventId,choice){
+async function saveDiveResponse(eventId,choice){
  if(!isDiveEncadrant())return;
  const ev=(state.events||[]).find(x=>String(x.id)===String(eventId));if(!ev||!["yes","no"].includes(choice))return;
  const userId=current?.id||"",name=current?.name||"Encadrant";if(!userId)return;
