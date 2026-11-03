@@ -1,0 +1,19 @@
+{
+  "name": "ACRO Plongée",
+  "short_name": "ACRO",
+  "description": "Application du club ACRO Plongée",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#061b32",
+  "theme_color": "#061b32",
+  "icons": [
+    {
+      "src": "./acro-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
