@@ -2126,7 +2126,7 @@ function wirePlanning(){
  document.getElementById("planningPrev").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);window.acroPlanningSelectedDate=isoLocal(planningMonth);render("planning")});
  document.getElementById("planningNext").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);window.acroPlanningSelectedDate=isoLocal(planningMonth);render("planning")});
  document.getElementById("planningToday").addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);window.acroPlanningSelectedDate=todayISO();render("planning")});
- document.querySelectorAll("[data-calendar-date]").forEach(b=>b.addEventListener("click",()=>{window.acroPlanningSelectedDate=b.dataset.calendarDate;render("planning")}));
+ document.querySelectorAll("[data-calendar-date]").forEach(b=>b.addEventListener("click",()=>{const date=b.dataset.calendarDate;window.acroPlanningSelectedDate=date;openPlanningDialog(date)}));
   document.getElementById("openSelectedPlanningDay")?.addEventListener("click",()=>openPlanningDayDialog(window.acroPlanningSelectedDate||todayISO()));
   document.getElementById("addSelectedPlanningEvent")?.addEventListener("click",()=>openPlanningDialog(window.acroPlanningSelectedDate||todayISO()));
  const form=document.getElementById("planningEventForm");
