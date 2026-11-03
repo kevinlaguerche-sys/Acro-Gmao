@@ -10,9 +10,9 @@
   "theme_color": "#061b32",
   "icons": [
     {
-      "src": "./acro-icon.svg",
+      "src": "./acro-icon.jpg",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     }
   ]
