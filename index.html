@@ -1118,6 +1118,9 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 .acro-notification-content small{color:#718392;font-size:11px;line-height:1.35}
 .acro-notification-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 16px;border-top:1px solid #e1edf1}
 @media(max-width:520px){.acro-notification-dialog{border-radius:18px}.acro-notification-head{padding:14px}.acro-notification-list{padding:10px}.acro-notification-foot{padding:10px;flex-wrap:wrap}.acro-notification-foot .btn{width:100%}}
+
+.app-settings-section{max-width:760px}.app-setting-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 2px;border-bottom:1px solid #e2edf3}.app-setting-row strong,.app-setting-block label{display:block;color:#123b60;font-weight:800}.app-setting-row small{display:block;color:#718696;font-size:12px;margin-top:4px}.app-switch{position:relative;display:inline-flex;flex:0 0 54px;width:54px;height:30px}.app-switch input{position:absolute;opacity:0;width:1px;height:1px}.app-switch span{position:absolute;inset:0;border-radius:30px;background:#cbd8e1;transition:.2s}.app-switch span:before{content:"";position:absolute;width:22px;height:22px;left:4px;top:4px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:.2s}.app-switch input:checked+span{background:#078fba}.app-switch input:checked+span:before{transform:translateX(24px)}.app-switch input:focus-visible+span{outline:3px solid #7dd3fc;outline-offset:3px}.app-setting-block{display:grid;gap:10px;padding:17px 2px;border-bottom:1px solid #e2edf3}.app-setting-block label{display:flex;justify-content:space-between;gap:12px}.app-setting-block input[type=range]{width:100%;accent-color:#078fba}.app-setting-block select{width:100%;padding:12px;border:1px solid #cbdde8;border-radius:12px;background:#fff;color:#123b60}.app-setting-tests{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.app-settings-actions{max-width:760px;display:flex;justify-content:flex-end;margin-top:12px}@media(max-width:520px){.app-setting-tests .btn{flex:1;min-width:0}.app-settings-section{padding:16px}.app-setting-row{align-items:flex-start}.app-setting-row>div{min-width:0}}
+
 </style>
 
 </head>
@@ -1167,6 +1170,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
     <button class="nav-btn" data-view="formation"><span class="ico">🎓</span>Formation</button>
     <button class="nav-btn" data-view="planning"><span class="ico">🗓️</span>Planning</button>
     <button class="nav-btn" data-view="plongee"><span class="ico">🤿</span>Plongée</button>
+    <div class="side-label">Préférences</div>
+    <button class="nav-btn" data-view="settings"><span class="ico">⚙️</span>Paramètres application</button>
     <div class="sidebar-bottom"><div class="side-label">Administration Master</div>
       <button class="nav-btn hidden" data-view="masterMateriel"><span class="ico">🧰</span>Master matériel</button>
       <button class="nav-btn hidden" data-view="analyse"><span class="ico">📊</span>Analyse encadrants</button>
@@ -1263,6 +1268,7 @@ const views={
  formation:{title:"Formation",subtitle:"Organisation des cursus, formations et progression des membres.",icon:"🎓"},
  planning:{title:"Planning",subtitle:"Retrouve les séances et les prochains rendez-vous du club.",icon:"🗓️"},
  plongee:{title:"Plongée",subtitle:"Espace dédié à l'organisation des sorties et activités de plongée.",icon:"🤿"},
+ settings:{title:"Paramètres application",subtitle:"Personnalise les sons et les vibrations de ton application.",icon:"⚙️"},
  acces:{title:"Gestion des accès",subtitle:"Crée les comptes et choisis les écrans visibles pour chaque membre.",icon:"🛡️"},
  plongeurs:{title:"Gestion des plongeurs",subtitle:"Crée les comptes des plongeurs et attribue à chacun les modules auxquels il peut accéder.",icon:"🤿"},
  sauvegarde:{title:"Extraction / Sauvegarde",subtitle:"Exporte les données du club ou importe les fiches plongeurs et le matériel.",icon:"💾"},
@@ -1270,6 +1276,28 @@ const views={
  analyse:{title:"Analyse encadrants",subtitle:"Indicateurs annuels d’activité des encadrants et de programmation des événements.",icon:"📊"},
  analyseMateriel:{title:"Analyse matériel",subtitle:"Suivi des recettes, des sorties et de la rotation du matériel du club.",icon:"📊"}
 };
+
+function appSettingsHTML(){
+ const p=window.ACROAudio?.getSettings?.()||{sound:true,vibration:true,volume:80,profile:"classic"};
+ return `
+ <section class="section app-settings-section">
+  <div class="section-head"><h2>🔊 Sons et vibrations</h2><span class="badge">Sur cet appareil</span></div>
+  <p class="muted">Choisis séparément les retours sonores et les vibrations du téléphone. Tes préférences sont conservées sur cet appareil.</p>
+  <div class="app-setting-row"><div><strong>Activer les sons</strong><small>Validation, erreur, scan QR et clics</small></div><label class="app-switch"><input type="checkbox" data-audio-setting="sound" ${p.sound?"checked":""}><span></span></label></div>
+  <div class="app-setting-row"><div><strong>Activer la vibration</strong><small>Retour haptique lors des actions et des scans</small></div><label class="app-switch"><input type="checkbox" data-audio-setting="vibration" ${p.vibration?"checked":""}><span></span></label></div>
+  <div class="app-setting-block"><label for="audioVolume">Volume des sons <strong id="audioVolumeValue">${p.volume}%</strong></label><input id="audioVolume" type="range" min="0" max="100" step="5" value="${p.volume}" data-audio-setting="volume" ${p.sound?"":"disabled"}></div>
+  <div class="app-setting-block"><label for="audioProfile">Type de son</label><select id="audioProfile" data-audio-setting="profile" ${p.sound?"":"disabled"}>
+   <option value="classic" ${p.profile==="classic"?"selected":""}>Classique</option>
+   <option value="modern" ${p.profile==="modern"?"selected":""}>Moderne</option>
+   <option value="sport" ${p.profile==="sport"?"selected":""}>Sportif</option>
+   <option value="discreet" ${p.profile==="discreet"?"selected":""}>Discret</option>
+  </select></div>
+  <div class="app-setting-tests"><button type="button" class="btn soft" data-audio-preview="success">▶ Tester validation</button><button type="button" class="btn soft" data-audio-preview="error">▶ Tester erreur</button></div>
+ </section>
+ <section class="section app-settings-section"><div class="section-head"><h2>🔔 Notifications</h2></div><p class="muted">Les notifications visuelles restent indépendantes des sons et vibrations. Tu peux couper le son tout en gardant les retours visuels.</p></section>
+ <div class="app-settings-actions"><button type="button" class="btn soft" id="resetAppSettings">↺ Réinitialiser</button></div>`;
+}
+
 function parseMemberQR(raw){try{const x=JSON.parse(raw);return x&&x.type==="acro-member"&&x.id?x:null}catch(e){return null}}
 
 async function decodeQrImageFile(file){
@@ -1366,7 +1394,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add("hidden"),2600)}
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
-function allowed(view){if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
+function allowed(view){if(view==="settings")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
 function loginLocal(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
@@ -1463,6 +1491,7 @@ function render(view){
  if(view==="planning") body=planningHTML();
  if(view==="formation") body=formationHTML();
  if(view==="plongee") body=diveForecastHTML();
+ if(view==="settings") body=appSettingsHTML();
  main.innerHTML=`<div class="page-head"><div><div class="eyebrow">${isMaster()?"ESPACE MASTER":(isMasterSection(view)?"CONSULTATION SEULE":"ESPACE MEMBRE")}</div><h1>${v.icon} ${v.title}${view==="masterMateriel"?` <button type="button" class="title-back-button" id="titleBackToMaterial" aria-label="Retour à la page Matériel" title="Retour à Matériel">←</button>`:""}</h1>${v.subtitle?`<p>${v.subtitle}</p>`:""}</div>${view==="plongeurs"&&isMaster()?'<button class="btn primary" id="createDiverBtn">＋ Ajouter un plongeur</button>':view==="acces"&&isMaster()?'<button class="btn primary" id="createUserBtn">＋ Créer un utilisateur</button>':view==="masterMateriel"&&isMaster()?'<div class="header-actions"><button class="btn primary" id="newEquipmentBtn">＋ Créer un équipement</button></div>':""}</div>${body}`;
  const readOnlyMasterView=!isMaster()&&isMasterSection(view);
  if(readOnlyMasterView){
@@ -3033,7 +3062,11 @@ document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.addEventListener("
   document.getElementById("menuToggle").textContent="☰";
  }
 }));
+document.getElementById("mainContent").addEventListener("change",e=>{const el=e.target;if(!el.matches("[data-audio-setting]"))return;const key=el.dataset.audioSetting;const value=el.type==="checkbox"?el.checked:(el.type==="range"?Number(el.value):el.value);window.ACROAudio?.setSettings({[key]:value});const out=document.getElementById("audioVolumeValue");if(out&&key==="volume")out.textContent=value+"%";if(key==="sound"){document.getElementById("audioVolume").disabled=!value;document.getElementById("audioProfile").disabled=!value;}});
+document.getElementById("mainContent").addEventListener("input",e=>{const el=e.target;if(el.dataset.audioSetting==="volume"){const out=document.getElementById("audioVolumeValue");if(out)out.textContent=el.value+"%";window.ACROAudio?.setSettings({volume:Number(el.value)});}});
 document.getElementById("mainContent").addEventListener("click",e=>{
+ const preview=e.target.closest("[data-audio-preview]");if(preview){window.ACROAudio?.preview(preview.dataset.audioPreview);return;}
+ const reset=e.target.closest("#resetAppSettings");if(reset){window.ACROAudio?.setSettings({sound:true,vibration:true,volume:80,profile:"classic"});render("settings");notify("Paramètres réinitialisés");return;}
  const refresh=e.target.closest("#refreshSecurity");if(refresh){loadSecurityLogs();return;}
  const createFor=e.target.closest("[data-create-user-for]");
  if(createFor){openUserDialog("",createFor.dataset.createUserFor);return;}
@@ -3135,40 +3168,25 @@ function handleEquipmentRemoveConfirm(){
 
 </script>
 
-<script id="acro-audio-system-v126">
+<script id="acro-audio-system-v127">
 (function(){
  "use strict";
- const CLICK_VOLUME=0.16;
+ const STORAGE="acro_app_audio_settings_v1",defaults={sound:true,vibration:true,volume:80,profile:"classic"};
+ const profiles={classic:{ok:[880,1175],bad:[245,165],click:690},modern:{ok:[660,990],bad:[310,190],click:820},sport:{ok:[740,1480],bad:[220,130],click:560},discreet:{ok:[784,1046],bad:[280,210],click:620}};
+ let prefs={...defaults};try{prefs={...defaults,...JSON.parse(localStorage.getItem(STORAGE)||"{}")}}catch(e){}
  let audioContext=null,lastClickAt=0;
- function context(){
-  const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;
-  if(!audioContext)audioContext=new Ctx();
-  if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
-  return audioContext;
- }
- function tone(frequency,start,duration,volume,type){
-  const ctx=context();if(!ctx)return;
-  const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||"sine";
-  osc.frequency.setValueAtTime(frequency,ctx.currentTime+start);
-  gain.gain.setValueAtTime(0.0001,ctx.currentTime+start);
-  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002,volume),ctx.currentTime+start+0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+start+duration);
-  osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+duration+0.02);
- }
- function success(){tone(880,0,0.105,0.58,"sine");tone(1175,0.12,0.16,0.72,"sine")}
- function error(){tone(245,0,0.19,0.78,"triangle");tone(165,0.22,0.23,0.78,"triangle")}
- function click(){const now=Date.now();if(now-lastClickAt<65)return;lastClickAt=now;tone(690,0,0.025,CLICK_VOLUME,"sine")}
- function notify(message){
-  const text=String(message||"");
-  if(/(erreur|impossible|échec|echec|introuvable|inconnu|inconnue|aucun|aucune|refus|non disponible|obligatoire|indisponible|invalide|échoué|échouée|bloqué|bloquée|manquant|manquante|n'a pas été|n’a pas été)/i.test(text))error();
-  else success();
- }
- document.addEventListener("click",function(event){
-  const control=event.target&&event.target.closest&&event.target.closest("button,[role='button'],.nav-btn,.module-card");
-  if(!control||control.disabled||control.getAttribute("aria-disabled")==="true")return;
-  click();
- },true);
- window.ACROAudio={success,error,click,notify,settings:{volume:"fort",click:"discret"}};
+ function getSettings(){return {...prefs}}
+ function setSettings(next){prefs={...prefs,...next};prefs.volume=Math.max(0,Math.min(100,Number(prefs.volume)||0));if(!profiles[prefs.profile])prefs.profile="classic";try{localStorage.setItem(STORAGE,JSON.stringify(prefs))}catch(e){}}
+ function vibrate(pattern){if(!prefs.vibration||!navigator.vibrate)return;try{navigator.vibrate(pattern)}catch(e){}}
+ function context(){if(!prefs.sound||prefs.volume<=0)return null;const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;if(!audioContext)audioContext=new Ctx();if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});return audioContext}
+ function tone(freq,start,duration,level,type){const ctx=context();if(!ctx)return;const osc=ctx.createOscillator(),gain=ctx.createGain(),vol=(prefs.volume/100)*level;osc.type=type||"sine";osc.frequency.setValueAtTime(freq,ctx.currentTime+start);gain.gain.setValueAtTime(.0001,ctx.currentTime+start);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),ctx.currentTime+start+.012);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+start+duration);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+duration+.02)}
+ function success(){const p=profiles[prefs.profile];tone(p.ok[0],0,.10,.52,"sine");tone(p.ok[1],.12,.15,.62,"sine");vibrate(35)}
+ function error(){const p=profiles[prefs.profile];tone(p.bad[0],0,.17,.65,"triangle");tone(p.bad[1],.20,.20,.65,"triangle");vibrate([45,35,75])}
+ function click(){const now=Date.now();if(now-lastClickAt<65)return;lastClickAt=now;const p=profiles[prefs.profile];tone(p.click,0,.025,.13,"sine");vibrate(8)}
+ function notify(message){const t=String(message||"");if(/(erreur|impossible|échec|echec|introuvable|inconnu|inconnue|aucun|aucune|refus|non disponible|obligatoire|indisponible|invalide|échoué|échouée|bloqué|bloquée|manquant|manquante|n'a pas été|n’a pas été)/i.test(t))error();else success()}
+ function preview(kind){if(kind==="error")error();else success()}
+ document.addEventListener("click",function(event){const control=event.target&&event.target.closest&&event.target.closest("button,[role='button'],.nav-btn,.module-card");if(!control||control.disabled||control.getAttribute("aria-disabled")==="true")return;click()},true);
+ window.ACROAudio={success,error,click,notify,preview,getSettings,setSettings};
 })();
 </script>
 
