@@ -782,6 +782,80 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 }
 </style>
 
+
+<style>
+/* Ajustement fidèle à la maquette mobile validée par le club */
+body:has(#loginView:not(.hidden)){background:linear-gradient(145deg,#eaf7ff,#f8fcff 55%,#e5f5ff)}
+body:has(#loginView:not(.hidden)) .topbar{
+ width:calc(100% - 24px);max-width:800px;height:82px;margin:8px auto 0;
+ padding:0 15px;border-radius:24px;overflow:hidden;
+ background:linear-gradient(105deg,#073653 0%,#075b83 58%,#087f9a 100%);
+ box-shadow:0 7px 20px #063a5825;justify-content:flex-start
+}
+body:has(#loginView:not(.hidden)) .top-left{gap:12px;min-width:0}
+body:has(#loginView:not(.hidden)) #menuToggle{
+ visibility:visible!important;width:48px;height:48px;padding:0;flex:0 0 48px;
+ border-radius:14px;border:1px solid #36a9d0;background:linear-gradient(145deg,#087da5,#075579);
+ font-size:26px;box-shadow:0 4px 10px #001c3738
+}
+body:has(#loginView:not(.hidden)) .brand{gap:10px;min-width:0}
+body:has(#loginView:not(.hidden)) .brand-mark{
+ width:52px;height:52px;flex:0 0 52px;border-radius:50%;border:2px solid #8de8f1;
+ background:linear-gradient(145deg,#31d4e6,#0788b9);font-size:29px;box-shadow:0 4px 12px #001c3740
+}
+body:has(#loginView:not(.hidden)) .brand b{font-size:19px;letter-spacing:.025em;white-space:nowrap}
+body:has(#loginView:not(.hidden)) .brand small{font-size:8px;letter-spacing:.16em;color:#d3f6fa}
+body:has(#loginView:not(.hidden)) .topbar:after{
+ content:"🏊🏻‍♂️";font-size:38px;position:absolute;right:20px;top:20px;
+ transform:rotate(-18deg);filter:drop-shadow(0 4px 3px #002a4540);opacity:.9
+}
+body:has(#loginView:not(.hidden)) .top-right{display:none}
+.login-v125{width:min(100%,800px);max-width:800px;min-height:0;padding:16px 12px 18px;gap:14px}
+.login-v125 .login-panel{padding:20px 20px 19px;border-radius:25px}
+.login-v125 .login-panel>.eyebrow{font-size:15px;margin-bottom:8px}
+.login-v125 .login-panel h2{font-size:clamp(22px,5.8vw,30px);gap:9px;margin:0 0 9px;white-space:nowrap}
+.login-lock{font-size:33px}
+.login-v125 .login-panel>.muted{font-size:15px;line-height:1.38;margin:0 0 14px}
+.login-v125 .mft-link{min-height:48px;margin:0 0 16px;border-radius:17px;font-size:16px}
+.login-v125 .login-field{grid-template-columns:40% minmax(0,1fr);margin:9px 0 11px}
+.login-v125 .login-field>label{
+ min-height:39px;padding:0 10px;gap:7px;font-size:13px;white-space:nowrap;
+ border-radius:14px 0 0 14px
+}
+.login-v125 .login-field input{min-height:39px;padding:8px 12px;font-size:16px;border-radius:0 14px 14px 0}
+.password-login-wrap button{width:34px;height:34px;right:5px;font-size:22px}
+.password-login-wrap input{padding-right:44px!important}
+.login-api-tab{margin:6px 0 10px;padding:9px 12px;font-size:12px}
+.login-api-box{padding:12px}
+.login-v125 .login-submit{min-height:52px;margin-top:7px;border-radius:18px;font-size:19px}
+.login-ocean-footer{min-height:140px;padding:32px 12px 16px;border-radius:24px;gap:12px}
+.login-ocean-footer b{font-size:23px}.login-ocean-footer small{font-size:14px}
+.login-cylinder{font-size:42px}.login-coral{font-size:45px}.login-fish{font-size:25px}
+@media(max-width:420px){
+ body:has(#loginView:not(.hidden)) .topbar{height:76px;padding:0 10px}
+ body:has(#loginView:not(.hidden)) #menuToggle{width:43px;height:43px;flex-basis:43px;font-size:23px}
+ body:has(#loginView:not(.hidden)) .top-left{gap:8px}
+ body:has(#loginView:not(.hidden)) .brand{gap:7px}
+ body:has(#loginView:not(.hidden)) .brand-mark{width:46px;height:46px;flex-basis:46px;font-size:25px}
+ body:has(#loginView:not(.hidden)) .brand b{font-size:16px}
+ body:has(#loginView:not(.hidden)) .brand small{font-size:7px}
+ body:has(#loginView:not(.hidden)) .topbar:after{right:10px;top:17px;font-size:30px;opacity:.55}
+ .login-v125{padding:13px 10px 15px;gap:12px}
+ .login-v125 .login-panel{padding:17px 14px 16px}
+ .login-v125 .login-panel h2{font-size:22px}
+ .login-lock{font-size:29px}
+ .login-v125 .login-panel>.muted{font-size:14px}
+ .login-v125 .login-field{grid-template-columns:40% minmax(0,1fr)}
+ .login-v125 .login-field>label{font-size:12px;padding:0 7px;gap:5px}
+ .login-v125 .login-field input{font-size:15px;padding:7px 9px}
+ .login-v125 .mft-link{font-size:14px}
+ .login-v125 .login-submit{min-height:49px;font-size:18px}
+ .login-ocean-footer{min-height:125px;padding-top:29px}
+ .login-ocean-footer b{font-size:20px}.login-ocean-footer small{font-size:12px}
+ .login-cylinder{font-size:34px}.login-coral{font-size:37px}
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
