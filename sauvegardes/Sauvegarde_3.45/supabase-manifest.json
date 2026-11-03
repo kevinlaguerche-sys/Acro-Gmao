@@ -1,0 +1,834 @@
+{
+  "backup_name": "Sauvegarde 3.45",
+  "created_at": "2026-11-03",
+  "github_repository": "kevinlaguerche-sys/Acro-Gmao",
+  "github_branch": "sauvegarde-3.45",
+  "source_branch_snapshot": "main au commit 657e44649386bc0424f9ba70dc25546615b76666",
+  "supabase": {
+    "project_name": "Acro Gmao",
+    "project_ref": "qaxqnfwjfllxulewdxvs",
+    "region": "eu-west-1",
+    "status": "ACTIVE_HEALTHY",
+    "database_version": "17.11.0.003",
+    "tables": [
+      {
+        "name": "public.acro_profiles",
+        "rls_enabled": true,
+        "rows": 10,
+        "columns": [
+          {
+            "name": "user_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "display_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "role",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "'plongeur'::text",
+            "check": "role = ANY (ARRAY['master'::text, 'encadrant'::text, 'plongeur'::text])"
+          },
+          {
+            "name": "is_active",
+            "data_type": "boolean",
+            "format": "bool",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "true"
+          },
+          {
+            "name": "created_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          },
+          {
+            "name": "updated_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          },
+          {
+            "name": "diver_id",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "permissions",
+            "data_type": "jsonb",
+            "format": "jsonb",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "'[]'::jsonb",
+            "check": "jsonb_typeof(permissions) = 'array'::text"
+          }
+        ],
+        "primary_keys": [
+          "user_id"
+        ],
+        "foreign_key_constraints": [
+          {
+            "name": "acro_profiles_diver_id_fkey",
+            "source_table": "public.acro_profiles",
+            "source_columns": [
+              "diver_id"
+            ],
+            "target_table": "public.acro_divers",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_profiles_user_id_fkey",
+            "source_table": "public.acro_profiles",
+            "source_columns": [
+              "user_id"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "public.acro_app_state",
+        "rls_enabled": true,
+        "rows": 1,
+        "columns": [
+          {
+            "name": "club_id",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "state",
+            "data_type": "jsonb",
+            "format": "jsonb",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "'{}'::jsonb"
+          },
+          {
+            "name": "updated_by",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "updated_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          }
+        ],
+        "primary_keys": [
+          "club_id"
+        ],
+        "foreign_key_constraints": [
+          {
+            "name": "acro_app_state_updated_by_fkey",
+            "source_table": "public.acro_app_state",
+            "source_columns": [
+              "updated_by"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "public.acro_divers",
+        "rls_enabled": true,
+        "rows": 36,
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "first_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "last_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "current_level",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "aptitude_level",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "in_progress",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "encadrement",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "balance",
+            "data_type": "numeric",
+            "format": "numeric",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "0"
+          },
+          {
+            "name": "bitacros_earned",
+            "data_type": "numeric",
+            "format": "numeric",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "0"
+          },
+          {
+            "name": "bitacros_gagnes",
+            "data_type": "numeric",
+            "format": "numeric",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "0"
+          },
+          {
+            "name": "solde_de_bitacros",
+            "data_type": "numeric",
+            "format": "numeric",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "0"
+          },
+          {
+            "name": "extra",
+            "data_type": "jsonb",
+            "format": "jsonb",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "'{}'::jsonb"
+          },
+          {
+            "name": "created_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          },
+          {
+            "name": "updated_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          }
+        ],
+        "primary_keys": [
+          "id"
+        ],
+        "foreign_key_constraints": [
+          {
+            "name": "acro_profiles_diver_id_fkey",
+            "source_table": "public.acro_profiles",
+            "source_columns": [
+              "diver_id"
+            ],
+            "target_table": "public.acro_divers",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_n1_validations_diver_id_fkey",
+            "source_table": "public.acro_n1_validations",
+            "source_columns": [
+              "diver_id"
+            ],
+            "target_table": "public.acro_divers",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_n1_evaluations_diver_id_fkey",
+            "source_table": "public.acro_n1_evaluations",
+            "source_columns": [
+              "diver_id"
+            ],
+            "target_table": "public.acro_divers",
+            "target_columns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "public.acro_n1_evaluations",
+        "rls_enabled": true,
+        "rows": 12,
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "gen_random_uuid()"
+          },
+          {
+            "name": "diver_id",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "competency_code",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "check": "competency_code = ANY (ARRAY['N1-01'::text, 'N1-02'::text, 'N1-03'::text, 'N1-04'::text, 'N1-05'::text, 'N1-06'::text, 'N1-07'::text, 'N1-08'::text, 'N1-09'::text, 'N1-10'::text, 'N1-THEORY'::text, 'N2-PE40-01'::text, 'N2-PE40-02'::text, 'N2-PE40-03'::text, 'N2-PE40-04'::text, 'N2-COM-01'::text, 'N2-COM-02'::text, 'N2-COM-03'::text, 'N2-PA20-01'::text, 'N2-PA20-02'::text, 'N2-PA20-03'::text, 'N2-PA20-04'::text, 'N2-PE40-THEORY'::text, 'N2-PA20-THEORY'::text, 'N2-THEORY'::text, 'N3-PA40-01'::text, 'N3-PA40-02'::text, 'N3-PA40-03'::text, 'N3-PE60-01'::text, 'N3-PA60-01'::text, 'N3-PA60-02'::text, 'N3-PA40-THEORY'::text, 'N3-PE60-THEORY'::text, 'N3-PA60-THEORY'::text, 'N3-THEORY'::text])"
+          },
+          {
+            "name": "competency_label",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "status",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "check": "status = ANY (ARRAY['Acquis'::text, 'ECA'::text, 'NA'::text])"
+          },
+          {
+            "name": "comment",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "evaluator_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "evaluator_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "created_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          }
+        ],
+        "primary_keys": [
+          "id"
+        ],
+        "foreign_key_constraints": [
+          {
+            "name": "acro_n1_evaluations_diver_id_fkey",
+            "source_table": "public.acro_n1_evaluations",
+            "source_columns": [
+              "diver_id"
+            ],
+            "target_table": "public.acro_divers",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_n1_evaluations_evaluator_id_fkey",
+            "source_table": "public.acro_n1_evaluations",
+            "source_columns": [
+              "evaluator_id"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "public.acro_n1_validations",
+        "rls_enabled": true,
+        "rows": 3,
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "gen_random_uuid()"
+          },
+          {
+            "name": "diver_id",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "competency_code",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "check": "competency_code = ANY (ARRAY['N1-01'::text, 'N1-02'::text, 'N1-03'::text, 'N1-04'::text, 'N1-05'::text, 'N1-06'::text, 'N1-07'::text, 'N1-08'::text, 'N1-09'::text, 'N1-10'::text, 'N1-THEORY'::text, 'N2-PE40-01'::text, 'N2-PE40-02'::text, 'N2-PE40-03'::text, 'N2-PE40-04'::text, 'N2-COM-01'::text, 'N2-COM-02'::text, 'N2-COM-03'::text, 'N2-PA20-01'::text, 'N2-PA20-02'::text, 'N2-PA20-03'::text, 'N2-PA20-04'::text, 'N2-PE40-THEORY'::text, 'N2-PA20-THEORY'::text, 'N2-THEORY'::text, 'N3-PA40-01'::text, 'N3-PA40-02'::text, 'N3-PA40-03'::text, 'N3-PE60-01'::text, 'N3-PA60-01'::text, 'N3-PA60-02'::text, 'N3-PA40-THEORY'::text, 'N3-PE60-THEORY'::text, 'N3-PA60-THEORY'::text, 'N3-THEORY'::text])"
+          },
+          {
+            "name": "evaluator_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "evaluator_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "validated_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          }
+        ],
+        "primary_keys": [
+          "id"
+        ],
+        "foreign_key_constraints": [
+          {
+            "name": "acro_n1_validations_diver_id_fkey",
+            "source_table": "public.acro_n1_validations",
+            "source_columns": [
+              "diver_id"
+            ],
+            "target_table": "public.acro_divers",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_n1_validations_evaluator_id_fkey",
+            "source_table": "public.acro_n1_validations",
+            "source_columns": [
+              "evaluator_id"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "public.acro_login_audit",
+        "rls_enabled": true,
+        "rows": 96,
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "bigint",
+            "format": "int8",
+            "options": [
+              "identity",
+              "updatable"
+            ],
+            "identity_generation": "ALWAYS"
+          },
+          {
+            "name": "attempted_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "success",
+            "data_type": "boolean",
+            "format": "bool",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "reason",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "user_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "ip_address",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "user_agent",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "created_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          }
+        ],
+        "primary_keys": [
+          "id"
+        ]
+      },
+      {
+        "name": "public.acro_notifications",
+        "rls_enabled": true,
+        "rows": 10,
+        "columns": [
+          {
+            "name": "id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "gen_random_uuid()"
+          },
+          {
+            "name": "recipient_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "kind",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "check": "kind = ANY (ARRAY['event_created'::text, 'member_withdrawn'::text])"
+          },
+          {
+            "name": "title",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ]
+          },
+          {
+            "name": "message",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "event_id",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "event_type",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "event_date",
+            "data_type": "date",
+            "format": "date",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "actor_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "actor_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "subject_user_id",
+            "data_type": "uuid",
+            "format": "uuid",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          },
+          {
+            "name": "subject_name",
+            "data_type": "text",
+            "format": "text",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "''::text"
+          },
+          {
+            "name": "created_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "updatable"
+            ],
+            "default_value": "now()"
+          },
+          {
+            "name": "read_at",
+            "data_type": "timestamp with time zone",
+            "format": "timestamptz",
+            "options": [
+              "nullable",
+              "updatable"
+            ]
+          }
+        ],
+        "primary_keys": [
+          "id"
+        ],
+        "foreign_key_constraints": [
+          {
+            "name": "acro_notifications_recipient_id_fkey",
+            "source_table": "public.acro_notifications",
+            "source_columns": [
+              "recipient_id"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_notifications_subject_user_id_fkey",
+            "source_table": "public.acro_notifications",
+            "source_columns": [
+              "subject_user_id"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          },
+          {
+            "name": "acro_notifications_actor_id_fkey",
+            "source_table": "public.acro_notifications",
+            "source_columns": [
+              "actor_id"
+            ],
+            "target_table": "auth.users",
+            "target_columns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "migrations": [
+      {
+        "version": "20261101143913",
+        "name": "backup_before_acro_access_cleanup_20261101"
+      },
+      {
+        "version": "20261101144559",
+        "name": "link_acro_profiles_to_divers_and_permissions"
+      },
+      {
+        "version": "20261101144620",
+        "name": "add_diver_id_and_permissions_to_acro_profiles"
+      },
+      {
+        "version": "20261102202800",
+        "name": "add_n1_progress_tracking"
+      },
+      {
+        "version": "20261103015625",
+        "name": "add_acro_event_notifications"
+      },
+      {
+        "version": "20261103015706",
+        "name": "fanout_event_created_notifications"
+      }
+    ],
+    "edge_functions": [
+      {
+        "slug": "member-access",
+        "version": 10,
+        "status": "ACTIVE",
+        "verify_jwt": false,
+        "files": [
+          "index.ts"
+        ]
+      }
+    ]
+  },
+  "excluded": "Les données des adhérents, journaux de connexion, comptes Auth, mots de passe, clés API et secrets ne sont pas inclus dans ce dépôt public."
+}
