@@ -1987,8 +1987,9 @@ function openN1Evaluation(diverId,code,evaluations,validations){
 
 function wireFormation(){const mftDialog=document.getElementById("mftDialog");document.querySelectorAll("[data-open-mft]").forEach(btn=>btn.addEventListener("click",()=>openMftForDiver(btn.dataset.openMft)));document.getElementById("openMftBtn")?.addEventListener("click",()=>{if(mftDialog&&!mftDialog.open)mftDialog.showModal()});document.getElementById("closeMftBtn")?.addEventListener("click",()=>mftDialog?.close());mftDialog?.addEventListener("click",e=>{if(e.target===mftDialog)mftDialog.close()});["training","initiator"].forEach(prefix=>{const sel=document.getElementById(prefix+"DiverSelect");sel?.addEventListener("change",()=>{const id=sel.value;render("formation");const next=document.getElementById(prefix+"DiverSelect");if(next)next.value=id;if(prefix==="training"&&id){const d=trainingDiverList().find(x=>x.id===id);if(d&&isN1Diver(d))openN1Progress(id);else if(d&&(isPA40Diver(d)||isPE60Diver(d)||isPA60Diver(d)||isN3Diver(d)))openN3Progress(id);else if(d&&isAdvancedProgressDiver(d))openN2Progress(id)}})});const selected=document.getElementById("trainingDiverSelect")?.value;if(selected){const d=trainingDiverList().find(x=>x.id===selected);if(d&&isN1Diver(d))openN1Progress(selected);else if(d&&(isPA40Diver(d)||isPE60Diver(d)||isPA60Diver(d)||isN3Diver(d)))openN3Progress(selected);else if(d&&isAdvancedProgressDiver(d))openN2Progress(selected)}document.getElementById("n1EvaluationClose")?.addEventListener("click",()=>document.getElementById("n1EvaluationDialog")?.close())}
 function isDiveForecastEvent(ev){return !!ev}
-function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>String(ev.date||"").startsWith(prefix)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
-function diveAllEvents(){return (state.events||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function isDiveCalendarRelevantEvent(ev){return ["director_pool","director_dive","director_fosse","material_distribution","inflation"].includes(String(ev?.type||""))}
+function diveMonthEvents(){const prefix=planningMonth.getFullYear()+"-"+String(planningMonth.getMonth()+1).padStart(2,"0");return (state.events||[]).filter(ev=>isDiveCalendarRelevantEvent(ev)&&String(ev.date||"").startsWith(prefix)).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
+function diveAllEvents(){return (state.events||[]).filter(isDiveCalendarRelevantEvent).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||(a.time||"").localeCompare(b.time||""))}
 function diveResponseFor(ev,userId){
  const responses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
  const saved=responses.find(x=>x.userId===userId);
@@ -2072,7 +2073,7 @@ function saveDiveResponse(eventId,choice){
 }
 function openDiveDateDialog(date){
  const dialog=document.getElementById("diveDateDialog"),host=document.getElementById("diveDateDialogBody");
- const dayEvents=(state.events||[]).filter(ev=>ev.date===date).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+ const dayEvents=(state.events||[]).filter(ev=>isDiveCalendarRelevantEvent(ev)&&ev.date===date).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
  document.getElementById("diveDateDialogTitle").textContent="Événements du "+dateFR(date);
  host.innerHTML=dayEvents.length?dayEvents.map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return `<button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span>${diveStatusIcon(diveResponseFor(ev,current?.id||""))}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${typ.label}${ev.location?" · "+esc(ev.location):""}</small></span><span>›</span></button>`}).join(""):'<div class="empty">Aucun événement ce jour-là.</div>';
  host.querySelectorAll("[data-dive-open-event]").forEach(btn=>btn.addEventListener("click",()=>openDiveEventDialog(btn.dataset.diveOpenEvent)));
