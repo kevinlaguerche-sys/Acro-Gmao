@@ -675,27 +675,78 @@ dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1
 @media(max-width:600px){.acro-qr-btn-inner{gap:10px}.acro-qr-action-icon{width:27px;height:27px;flex-basis:27px}.scan-member-btn,.scan-equipment-btn,.scan-block-btn,.acro-qr-import-trigger{min-height:56px!important}}
 
 </style>
+<style>
+
+/* V125 — page de connexion ACRO, cohérente avec le tableau de bord */
+.login-v125{width:min(100%,760px);max-width:760px;min-height:calc(100dvh - 74px);margin:0 auto;padding:16px 18px 22px;display:flex;flex-direction:column;gap:14px;align-items:stretch}
+.login-v125 .login-hero{min-height:112px;padding:18px 22px;border-radius:22px;background:linear-gradient(110deg,#073653 0%,#07577b 55%,#078c9b 100%);display:flex;align-items:center;justify-content:space-between;box-shadow:0 12px 28px #064a6b25}
+.login-v125 .login-hero:after{width:210px;height:210px;right:-45px;bottom:-135px;border-color:#b4f8ff35;box-shadow:0 0 0 22px #b4f8ff10,0 0 0 48px #b4f8ff0a}
+.login-hero-brand{position:relative;z-index:1;display:flex;align-items:center;gap:13px;color:#fff}
+.login-hero-mask{display:grid;place-items:center;width:60px;height:60px;border:2px solid #9ceef4;border-radius:19px;background:linear-gradient(145deg,#35d7e7,#0789b9);font-size:31px;box-shadow:0 5px 15px #001e3740}
+.login-hero-brand b,.login-hero-brand small{display:block}.login-hero-brand b{font-size:clamp(18px,3vw,24px);letter-spacing:.04em}.login-hero-brand small{font-size:10px;letter-spacing:.16em;color:#c7f3f6;margin-top:3px}
+.login-hero-diver{position:relative;z-index:1;color:#d9fbff;font-size:30px;opacity:.9;transform:rotate(-12deg);padding-right:12px}
+.login-v125 .login-panel{padding:24px 26px;border:1px solid #c9e5f2;border-radius:25px;background:linear-gradient(145deg,#fff,#f8fcff);box-shadow:0 14px 34px #0a55751b}
+.login-v125 .login-panel>.eyebrow{font-size:12px;letter-spacing:.18em;color:#087e9e;font-weight:900}
+.login-v125 .login-panel h2{display:flex;align-items:center;gap:10px;font-size:clamp(21px,4vw,29px);color:#102d4e;margin:8px 0}
+.login-lock{font-size:25px}
+.login-v125 .login-panel>.muted{font-size:14px;margin:6px 0 15px;color:#60788c}
+.login-v125 .mft-link{min-height:54px;margin:12px 0 18px;border:1px solid #a9dff3;border-radius:15px;background:linear-gradient(110deg,#e5f6ff,#d5efff);color:#07527a;font-size:15px;box-shadow:0 5px 14px #0c74951a}
+.login-v125 .login-field{margin:10px 0 13px;gap:6px}
+.login-v125 .login-field label{font-size:14px;color:#23465d;display:flex;align-items:center;gap:8px}
+.login-v125 .login-field input{min-height:51px;padding:12px 15px;border:1px solid #c7dce8;border-radius:14px;background:#fbfdff;font-size:16px;color:#152f48}
+.login-v125 .login-field input:focus{border-color:#19a5c1;box-shadow:0 0 0 3px #19a5c122}
+.login-api-box{margin:14px 0;padding:14px 15px;border:1px solid #b9dfd2;border-radius:17px;background:linear-gradient(145deg,#f0fff8,#e7f7f1)}
+.login-api-heading{display:flex;align-items:center;gap:9px;color:#176b4a;font-weight:900;font-size:14px}
+.login-api-heading label{cursor:pointer}.login-api-box>p{font-size:11px;color:#55796b;margin:5px 0 8px}
+.login-api-box .login-field{margin:8px 0}.login-api-box .login-field input{min-height:46px;background:#fff}
+.login-save-key{min-height:42px;border:1px solid #a9ddc7!important;border-radius:12px!important;background:#ddf6e9!important;color:#176b4a!important;font-weight:850}
+.login-v125 .login-submit{min-height:60px;margin-top:8px;border-radius:17px;background:linear-gradient(105deg,#0787a7,#08a8aa 60%,#12b88b);font-size:19px;font-weight:900;box-shadow:0 9px 20px #078da32b}
+.login-security-note{font-size:10px;color:#718596;margin-top:12px}
+.login-ocean-footer{position:relative;isolation:isolate;overflow:hidden;min-height:142px;display:flex;align-items:center;justify-content:center;gap:15px;padding:28px 20px 18px;border-radius:22px;background:linear-gradient(180deg,#e5faff,#bdeef8 60%,#8bd9eb);color:#102d65;text-align:center}
+.login-ocean-footer:before,.login-ocean-footer:after{content:"";position:absolute;z-index:-1;left:-8%;width:116%;height:42px;border-radius:50%;border-top:10px solid #65d6ec;top:0;transform:rotate(2deg)}
+.login-ocean-footer:after{top:15px;border-top-color:#fff;opacity:.8;transform:rotate(-2deg)}
+.login-ocean-footer b,.login-ocean-footer small{display:block}.login-ocean-footer b{font-size:22px}.login-ocean-footer small{font-size:13px;font-style:italic;line-height:1.4;margin-top:4px}
+.login-coral{position:absolute;color:#0c9bb8;font-size:50px;bottom:7px;opacity:.75}.login-coral.left{left:14px}.login-coral.right{right:14px}.login-cylinder{font-size:40px;color:#087e9e;transform:rotate(90deg);opacity:.8}.login-fish{font-size:27px;color:#078eae;transform:rotate(180deg)}
+@media(max-width:650px){.login-v125{padding:10px 12px 18px;gap:11px;min-height:calc(100dvh - 60px)}.login-v125 .login-hero{min-height:96px;padding:14px 16px;border-radius:18px}.login-hero-mask{width:49px;height:49px;border-radius:15px;font-size:26px}.login-hero-brand{gap:10px}.login-hero-brand b{font-size:18px}.login-hero-brand small{font-size:8px}.login-hero-diver{font-size:22px;padding:0}.login-v125 .login-panel{padding:19px 17px;border-radius:21px}.login-v125 .login-panel>.muted{font-size:13px}.login-v125 .mft-link{min-height:49px;font-size:13px}.login-v125 .login-field input{min-height:49px;font-size:16px}.login-v125 .login-submit{min-height:56px;font-size:17px}.login-ocean-footer{min-height:112px;padding:24px 12px 13px;gap:8px}.login-ocean-footer b{font-size:18px}.login-ocean-footer small{font-size:11px}.login-cylinder{font-size:28px}.login-coral{font-size:35px}}
+@media(min-width:900px){.login-v125{padding-top:28px}.login-v125 .login-panel{padding:30px 34px}.login-v125 .login-hero{min-height:130px}}
+
+</style>
 </head>
 <body>
 <header class="topbar">
   <div class="top-left"><button id="menuToggle" class="btn menu-toggle" aria-label="Ouvrir ou fermer le menu" aria-expanded="false" type="button">☰</button><div class="brand"><div class="brand-mark">🤿</div><div><b>ACRO PLONGÉE</b><small>GESTION DU CLUB</small></div></div></div>
   <div class="top-right"><span class="status">Espace club</span><span id="userPill" class="user-pill hidden"></span><button id="logoutBtn" class="btn small soft hidden">Déconnexion</button></div>
 </header>
-<section id="loginView" class="login-layout">
-  <div class="hero">
-    <div class="eyebrow">Bienvenue dans ton club</div>
-    <h1>ACRO<br><em>Plongée</em></h1>
-    <p class="motto">Ambiance, Convivialité, Rigolade Obligatoire !</p>
-    <p class="hero-note">Le petit espace de gestion du club : matériel, formations, planning et plongées. Un seul endroit pour organiser la vie du club.</p>
-    <div class="bubbles">◌　◦　🤿　◦　◌</div>
+<section id="loginView" class="login-layout login-v125">
+  <div class="hero login-hero">
+    <div class="login-hero-brand"><span class="login-hero-mask">🤿</span><span><b>ACRO PLONGÉE</b><small>GESTION DU CLUB</small></span></div>
+    <div class="login-hero-diver" aria-hidden="true">🤿　◦　◌</div>
   </div>
-  <div class="panel">
-    <div class="eyebrow">Connexion membre</div><h2>Accéder à l'espace club</h2>
-    <p class="muted">Saisis le nom et le prénom enregistrés par le Master, puis le mot de passe qui t’a été donné.</p>
+  <div class="panel login-panel">
+    <div class="eyebrow">Espace membre</div>
+    <h2><span class="login-lock" aria-hidden="true">🔒</span> Accéder à l'espace club</h2>
+    <p class="muted">Saisis ton nom, ton prénom et le mot de passe qui t’a été donné par le Master.</p>
     <a class="btn soft full mft-link" href="https://mft.ffessm.fr/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">📘</span> Consulter le MFT — FFESSM ↗</a>
-    <form id="loginForm"><div class="field"><label for="loginLastName">Nom</label><input id="loginLastName" type="text" autocomplete="family-name" placeholder="Nom" required maxlength="80"></div><div class="field"><label for="loginFirstName">Prénom</label><input id="loginFirstName" type="text" autocomplete="given-name" placeholder="Prénom" required maxlength="80"></div><div class="field"><label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe donné par le Master" required maxlength="128"></div><button class="btn primary full" type="submit">Se connecter →</button><div id="loginMessage" class="message"></div></form>
-    <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Configuration initiale (clé publique)</summary><p class="hint">La clé publique Supabase peut être utilisée dans le navigateur. Ne saisis jamais de clé « secret » ici.</p><div class="field"><label for="supabasePublishableKey">Clé Publishable (sb_publishable_…)</label><input id="supabasePublishableKey" type="password" autocomplete="off" placeholder="Coller la clé publique copiée"></div><button id="saveSupabaseConfig" class="btn soft full" type="button">Enregistrer la configuration</button><div id="configMessage" class="message"></div></details>
-    <p class="hint">Les membres se connectent avec leur nom, leur prénom et le mot de passe remis par le Master. La création sécurisée des comptes nécessite la fonction serveur Supabase fournie dans le ZIP. Ne saisis jamais de clé secrète dans cette page.</p>
+    <form id="loginForm">
+      <div class="field login-field"><label for="loginLastName"><span aria-hidden="true">👤</span> Nom</label><input id="loginLastName" type="text" autocomplete="family-name" placeholder="Nom" required maxlength="80"></div>
+      <div class="field login-field"><label for="loginFirstName"><span aria-hidden="true">👤</span> Prénom</label><input id="loginFirstName" type="text" autocomplete="given-name" placeholder="Prénom" required maxlength="80"></div>
+      <div class="field login-field"><label for="loginPassword"><span aria-hidden="true">🔐</span> Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe donné par le Master" required maxlength="128"></div>
+      <div class="login-api-box">
+        <div class="login-api-heading"><span aria-hidden="true">🔑</span><label for="supabasePublishableKey">Clé API Supabase</label></div>
+        <p>Renseigne ici la clé publique de ton projet pour connecter l'application.</p>
+        <div class="field login-field"><input id="supabasePublishableKey" type="password" autocomplete="off" placeholder="Clé publique sb_publishable_…" aria-label="Clé API Supabase"></div>
+        <button id="saveSupabaseConfig" class="btn soft full login-save-key" type="button">Enregistrer la clé API</button>
+        <div id="configMessage" class="message" role="status"></div>
+      </div>
+      <button class="btn primary full login-submit" type="submit">⇥　Se connecter　→</button>
+      <div id="loginMessage" class="message"></div>
+    </form>
+    <p class="hint login-security-note">Utilise uniquement la clé publique Supabase (<code>sb_publishable_…</code>). Ne saisis jamais une clé secrète.</p>
+  </div>
+  <div class="login-ocean-footer" aria-label="ACRO Plongée, Ambiance, Convivialité, Rigolade Obligatoire">
+    <div class="login-wave"></div><span class="login-coral left">✺</span><span class="login-cylinder">▰</span>
+    <div><b>ACRO Plongée</b><small>Ambiance, Convivialité,<br>Rigolade Obligatoire !</small></div>
+    <span class="login-fish">➤</span><span class="login-coral right">✺</span>
   </div>
 </section>
 <div id="appView" class="app hidden">
