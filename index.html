@@ -997,6 +997,21 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 @media(max-width:900px){#mainContent[data-view="planning"] .acro-planning-layout{grid-template-columns:1fr}}
 @media(max-width:620px){#mainContent[data-view="planning"] .acro-calendar-panel{padding:9px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-day{min-height:76px;padding:4px 3px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-chip{width:26px;height:26px;min-width:26px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-event-icon{width:24px;height:24px;min-width:24px}#mainContent[data-view="planning"] .acro-calendar-panel .calendar-month{font-size:20px}}
 </style>
+
+<style id="acro-compact-planning-legend-fix">
+/* Légende du planning : pictogrammes compacts, jamais à leur taille SVG native */
+#mainContent[data-view="planning"] .acro-compact-legend-items{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+#mainContent[data-view="planning"] .acro-compact-legend-items>span{display:inline-flex;align-items:center;gap:5px;min-width:0;font-size:11px;line-height:1.2}
+#mainContent[data-view="planning"] .acro-compact-legend-items>span>svg{display:block;width:22px;height:22px;min-width:22px;max-width:22px;max-height:22px;flex:0 0 22px}
+@media(max-width:520px){
+ #mainContent[data-view="planning"] .acro-compact-legend{padding:7px 9px;margin-top:7px}
+ #mainContent[data-view="planning"] .acro-compact-legend-title{font-size:9px;margin-bottom:5px}
+ #mainContent[data-view="planning"] .acro-compact-legend-items{gap:6px 9px}
+ #mainContent[data-view="planning"] .acro-compact-legend-items>span{font-size:10px;gap:4px}
+ #mainContent[data-view="planning"] .acro-compact-legend-items>span>svg{width:20px;height:20px;min-width:20px;max-width:20px;max-height:20px;flex-basis:20px}
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
