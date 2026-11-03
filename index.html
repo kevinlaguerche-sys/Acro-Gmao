@@ -1394,6 +1394,17 @@ function renderNotificationDialog(){
  d.querySelector("#acroNotificationDone").textContent="J'ai pris connaissance";
  if(!d.open && acroPendingNotifications.length)d.showModal();
 }
+async function publishEventCreatedNotification(record){
+ if(!supabaseClient||!current?.id||!record)return false;
+ const {error}=await supabaseClient.from("acro_notifications").insert({
+  recipient_id:current.id,kind:"event_created",title:"Nouvel événement créé",
+  message:(record.title||"Nouvel événement")+(record.date?" · "+dateFR(record.date):""),
+  event_id:String(record.id),event_type:String(record.type||"event"),
+  event_date:record.date||null,actor_id:current.id,actor_name:current.name||"Un membre"
+ });
+ if(error){console.error("Notification de création non envoyée",error);return false}
+ return true;
+}
 async function showPendingNotifications(){
  if(!supabaseClient||!current?.id)return;
  try{
@@ -2313,7 +2324,7 @@ function wirePlanning(){
   updatePlanningLocations(type);
  });
  document.getElementById("planningEventTitle").addEventListener("input",e=>{e.target.dataset.custom="1"});
- form.onsubmit=e=>{
+ form.onsubmit=async e=>{
   e.preventDefault();
   if(form.dataset.submitting==="1")return;
   const id=document.getElementById("planningEventId").value;
@@ -2328,7 +2339,7 @@ function wirePlanning(){
   const submitButton=form.querySelector('button[type="submit"]');if(submitButton)submitButton.disabled=true;
   state.events ||= [];
   if(id)state.events=state.events.map(ev=>ev.id===id?record:ev);else state.events.push(record);
-  saveState();form.dataset.submitting="0";if(submitButton)submitButton.disabled=false;document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":"Événement créé");
+  saveState();let notificationSent=true;if(!id)notificationSent=await publishEventCreatedNotification(record);form.dataset.submitting="0";if(submitButton)submitButton.disabled=false;document.getElementById("planningDialog").close();planningMonth=new Date(record.date+"T12:00:00");render("planning");notify(id?"Événement modifié":(notificationSent?"Événement créé":"Événement créé, mais notification non envoyée"));
  };
 }
 function openPlanningDayDialog(date){
