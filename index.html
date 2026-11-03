@@ -856,10 +856,87 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 }
 </style>
 
+
+<style>
+/* ACRO login: reproduction fidèle de la maquette approuvée. Limité à l'écran de connexion. */
+body:has(#loginView:not(.hidden)){background:linear-gradient(145deg,#eaf7ff 0%,#f8fcff 52%,#e2f4ff 100%);color:#10204a}
+body:has(#loginView:not(.hidden)) .topbar{position:relative;top:auto;width:calc(100% - 24px);max-width:800px;height:74px;margin:8px auto 0;padding:0 12px;border-radius:22px;overflow:hidden;justify-content:flex-start;background:linear-gradient(105deg,#063653 0%,#075b83 57%,#087e9a 100%);box-shadow:0 8px 22px #063a5824}
+body:has(#loginView:not(.hidden)) .top-left{gap:10px}
+body:has(#loginView:not(.hidden)) #menuToggle{visibility:visible!important;display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;padding:0;border:1px solid #159bc5;border-radius:13px;background:linear-gradient(145deg,#087da5,#075579);font-size:24px;box-shadow:0 4px 10px #001c3738}
+body:has(#loginView:not(.hidden)) .brand{gap:9px}
+body:has(#loginView:not(.hidden)) .brand-mark{width:46px;height:46px;flex:0 0 46px;border-radius:50%;border:2px solid #8de8f1;background:linear-gradient(145deg,#31d4e6,#0788b9);font-size:25px;box-shadow:0 4px 12px #001c3740}
+body:has(#loginView:not(.hidden)) .brand b{font-size:17px;letter-spacing:.02em;white-space:nowrap}
+body:has(#loginView:not(.hidden)) .brand small{font-size:7px;letter-spacing:.15em;color:#d3f6fa}
+body:has(#loginView:not(.hidden)) .login-header-diver{display:block;position:absolute;right:13px;top:8px;width:104px;height:58px;opacity:.96}
+body:has(#loginView:not(.hidden)) .top-right{display:none}
+.login-v125{width:min(100%,800px);max-width:800px;min-height:0;margin:0 auto;padding:14px 12px 18px;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.login-v125 .login-hero{display:none}
+.login-v125 .login-panel{padding:18px 18px 17px;border:1.5px solid #c6e3f3;border-radius:25px;background:linear-gradient(145deg,#fff,#f8fcff);box-shadow:0 10px 25px #0b52771a}
+.login-v125 .login-panel>.eyebrow{font-size:15px;letter-spacing:.16em;color:#08749c;font-weight:900;margin-bottom:8px}
+.login-v125 .login-panel h2{display:flex;align-items:center;gap:9px;font-size:clamp(21px,5.4vw,29px);line-height:1.13;white-space:nowrap;color:#101e42;margin:0 0 8px}
+.login-lock{font-size:33px;flex:0 0 auto}
+.login-v125 .login-panel>.muted{font-size:15px;line-height:1.38;margin:0 0 15px;color:#586b87}
+.login-v125 .mft-link{min-height:48px;margin:0 0 15px;border:1.5px solid #8ed4f7;border-radius:18px;background:linear-gradient(110deg,#e2f5ff,#cdeeff);color:#09275b;font-size:16px;font-weight:850;box-shadow:0 4px 10px #0c749512}
+.login-v125 .login-field{display:grid;grid-template-columns:37% minmax(0,1fr);gap:0;margin:9px 0 10px;align-items:stretch}
+.login-v125 .login-field>label{min-height:39px;display:flex;align-items:center;gap:7px;padding:0 9px;border:1.5px solid #c6ddeb;border-right:0;border-radius:14px 0 0 14px;background:linear-gradient(110deg,#f2faff,#eaf6ff);font-size:13px;font-weight:850;white-space:nowrap;color:#102b55}
+.login-v125 .login-field input{min-width:0;min-height:39px;padding:7px 11px;border:1.5px solid #c6ddeb;border-radius:0 14px 14px 0;background:#fff;font-size:16px;color:#172f4a}
+.login-v125 .login-field input:focus{border-color:#1b9fca;box-shadow:0 0 0 3px #19a5c122}
+.password-login-wrap{position:relative;display:flex;min-width:0}
+.password-login-wrap input{width:100%;padding-right:43px!important}
+.password-login-wrap button{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;background:transparent;color:#075a7c;font-size:22px;font-weight:800;border-radius:9px}
+.login-v125 .login-submit{min-height:52px;margin-top:7px;border-radius:18px;background:linear-gradient(105deg,#0789a9,#08a9ac 60%,#12b98d);font-size:19px;font-weight:900;box-shadow:0 9px 20px #078da32b}
+.login-api-tab{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:11px;margin:10px 0 0;padding:10px 13px;min-height:45px;border:1.5px solid #8ed4f7;border-radius:16px;background:linear-gradient(110deg,#fafdff,#eef8ff);color:#10265f;font-weight:850;font-size:15px;box-shadow:0 4px 10px #0c749512}
+.login-api-tab .login-api-key-icon{font-size:22px}
+.login-api-tab strong{flex:1;text-align:left}
+.login-api-tab .login-api-plus{font-size:27px;line-height:1;color:#075a8c}
+.login-api-box{margin:9px 0 0;padding:13px;border:1px solid #b9dfed;border-radius:15px;background:linear-gradient(145deg,#f0faff,#e7f7ff)}
+.login-api-box .login-field{display:block;margin:8px 0}
+.login-api-box .login-field input{border-radius:12px;min-height:44px;font-size:14px}
+.login-v125 .login-api-box .login-save-key{min-height:42px}
+.login-ocean-footer{position:relative;isolation:isolate;overflow:hidden;min-height:126px;display:flex;align-items:center;justify-content:center;gap:15px;padding:28px 18px 12px;border-radius:23px;background:linear-gradient(180deg,#e6fbff,#c6f2fa 58%,#8bdced);color:#10265f;box-shadow:inset 0 1px 0 #fff;text-align:center}
+.login-ocean-footer:before,.login-ocean-footer:after{content:"";position:absolute;z-index:-1;left:-8%;width:116%;height:35px;border-radius:50%;border-top:9px solid #65d6ec;top:0;transform:rotate(2deg)}
+.login-ocean-footer:after{top:12px;border-top-color:#fff;opacity:.8;transform:rotate(-2deg)}
+.login-footer-copy b,.login-footer-copy small{display:block}.login-footer-copy b{font-size:22px;font-family:Manrope;font-weight:900}.login-footer-copy small{font-size:13px;font-style:italic;line-height:1.35;margin-top:3px}
+.login-footer-coral{position:absolute;color:#079bb8;width:65px;height:95px;bottom:0;opacity:.92}.login-footer-coral.coral-left{left:0}.login-footer-coral.coral-right{right:0;transform:scaleX(-1)}
+.login-footer-cylinder{width:47px;height:78px;flex:0 0 47px;align-self:flex-end;margin-bottom:4px;transform:rotate(8deg)}
+.login-footer-fish{width:32px;height:24px;flex:0 0 32px;margin-left:-4px}
+@media(max-width:420px){
+ body:has(#loginView:not(.hidden)) .topbar{height:70px;padding:0 9px}
+ body:has(#loginView:not(.hidden)) .top-left{gap:8px}
+ body:has(#loginView:not(.hidden)) #menuToggle{width:39px;height:39px;flex-basis:39px;font-size:22px}
+ body:has(#loginView:not(.hidden)) .brand{gap:7px}
+ body:has(#loginView:not(.hidden)) .brand-mark{width:43px;height:43px;flex-basis:43px;font-size:23px}
+ body:has(#loginView:not(.hidden)) .brand b{font-size:15px}
+ body:has(#loginView:not(.hidden)) .brand small{font-size:6.5px}
+ body:has(#loginView:not(.hidden)) .login-header-diver{right:7px;top:10px;width:75px;height:48px;opacity:.8}
+ .login-v125{padding:12px 10px 15px;gap:11px}
+ .login-v125 .login-panel{padding:16px 13px 15px}
+ .login-v125 .login-panel>.eyebrow{font-size:14px}
+ .login-v125 .login-panel h2{font-size:21px;gap:7px}
+ .login-lock{font-size:29px}
+ .login-v125 .login-panel>.muted{font-size:13.5px;margin-bottom:13px}
+ .login-v125 .mft-link{min-height:44px;font-size:14px;margin-bottom:13px}
+ .login-v125 .login-field{grid-template-columns:37% minmax(0,1fr);margin:8px 0 9px}
+ .login-v125 .login-field>label{min-height:36px;font-size:11.5px;padding:0 7px;gap:5px}
+ .login-v125 .login-field input{min-height:36px;font-size:15px;padding:6px 8px}
+ .password-login-wrap button{width:30px;height:30px;font-size:20px}
+ .login-v125 .login-submit{min-height:48px;font-size:18px}
+ .login-api-tab{min-height:42px;font-size:13px;margin-top:9px;padding:8px 11px}
+ .login-api-tab .login-api-key-icon{font-size:19px}
+ .login-api-tab .login-api-plus{font-size:24px}
+ .login-ocean-footer{min-height:112px;padding:25px 8px 10px;gap:9px}
+ .login-footer-copy b{font-size:19px}.login-footer-copy small{font-size:11px}
+ .login-footer-coral{width:49px;height:78px}
+ .login-footer-cylinder{width:35px;height:64px;flex-basis:35px}
+ .login-footer-fish{width:25px;height:18px;flex-basis:25px}
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
   <div class="top-left"><button id="menuToggle" class="btn menu-toggle" aria-label="Ouvrir ou fermer le menu" aria-expanded="false" type="button">☰</button><div class="brand"><div class="brand-mark">🤿</div><div><b>ACRO PLONGÉE</b><small>GESTION DU CLUB</small></div></div></div>
+  <svg class="login-header-diver" viewBox="0 0 220 100" aria-hidden="true"><g fill="none" stroke="#d8fbff" stroke-width="4" stroke-linecap="round"><circle cx="25" cy="23" r="7"/><circle cx="12" cy="43" r="5"/><path d="M42 39c18-3 27-17 43-19 15-2 20 10 35 8 13-2 19-14 34-13"/></g><g fill="#e3fbff"><circle cx="157" cy="23" r="12"/><path d="M148 35c-14 1-26 7-39 13l-23 9-16 19 8 5 25-16 22-5-12 18 8 5 23-20 17-11 15 2 12-9-22-8-5-8z"/><path d="M91 57 63 69 43 85l7 5 28-12 24-11z"/><path d="m132 58 21 9 18 19 7-4-10-25-20-15z"/></g><path d="m135 38 16-8 15 3-5 11-17 5z" fill="#65dff1"/></svg>
   <div class="top-right"><span class="status">Espace club</span><span id="userPill" class="user-pill hidden"></span><button id="logoutBtn" class="btn small soft hidden">Déconnexion</button></div>
 </header>
 <section id="loginView" class="login-layout login-v125">
@@ -873,7 +950,9 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
       <div class="field login-field"><label for="loginLastName"><span aria-hidden="true">👤</span> Nom</label><input id="loginLastName" type="text" autocomplete="family-name" placeholder="Nom" required maxlength="80"></div>
       <div class="field login-field"><label for="loginFirstName"><span aria-hidden="true">👤</span> Prénom</label><input id="loginFirstName" type="text" autocomplete="given-name" placeholder="Prénom" required maxlength="80"></div>
       <div class="field login-field password-login-field"><label for="loginPassword"><span aria-hidden="true">🔒</span> Mot de passe</label><div class="password-login-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required maxlength="128"><button id="toggleLoginPassword" type="button" aria-label="Afficher le mot de passe" aria-pressed="false">◉</button></div></div>
-      <button id="loginApiToggle" class="login-api-tab" type="button" aria-expanded="false">🔑　Clé API Supabase <span>＋</span></button>
+      <button class="btn primary full login-submit" type="submit"><span aria-hidden="true">⇥</span>　Se connecter　→</button>
+      <div id="loginMessage" class="message"></div>
+      <button id="loginApiToggle" class="login-api-tab" type="button" aria-expanded="false"><span class="login-api-key-icon" aria-hidden="true">🔑</span><strong>Clé API Supabase</strong><span class="login-api-plus">＋</span></button>
       <div class="login-api-box hidden" id="loginApiContent">
         <div class="login-api-heading"><span aria-hidden="true">🔑</span><label for="supabasePublishableKey">Clé API Supabase</label></div>
         <p>Renseigne ici la clé publique de ton projet pour connecter l'application.</p>
@@ -882,14 +961,14 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
         <div id="configMessage" class="message" role="status"></div>
         <p class="hint">Utilise uniquement la clé publique Supabase. Ne saisis jamais une clé secrète.</p>
       </div>
-      <button class="btn primary full login-submit" type="submit"><span aria-hidden="true">⇥</span>　Se connecter　→</button>
-      <div id="loginMessage" class="message"></div>
     </form>
   </div>
   <div class="login-ocean-footer" aria-label="ACRO Plongée, Ambiance, Convivialité, Rigolade Obligatoire">
-    <span class="login-coral left">🪸</span><span class="login-cylinder">🧯</span>
-    <div><b>ACRO Plongée</b><small>Ambiance, Convivialité,<br>Rigolade Obligatoire !</small></div>
-    <span class="login-fish">🐟</span><span class="login-coral right">🪸</span>
+    <svg class="login-footer-coral coral-left" viewBox="0 0 110 150" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M54 148V83M54 111 26 83V48M26 83 8 65M26 83 43 65M54 96 79 70V37M79 70l22-20M79 70 65 51M79 70l5-31M54 126 32 108"/></g></svg>
+    <svg class="login-footer-cylinder" viewBox="0 0 100 150" aria-hidden="true"><path d="M34 17h32v12H34zM42 7h16v10H42zM27 30h46v103H27z" fill="#08749b"/><path d="M73 42c22 5 18 28 15 48l-5 25" fill="none" stroke="#08749b" stroke-width="6" stroke-linecap="round"/><path d="M31 39h38" stroke="#d7f7ff" stroke-width="5"/><path d="M48 133v9h10v-9" fill="#075d86"/></svg>
+    <div class="login-footer-copy"><b>ACRO Plongée</b><small>Ambiance, Convivialité,<br>Rigolade Obligatoire !</small></div>
+    <svg class="login-footer-fish" viewBox="0 0 70 42" aria-hidden="true"><path d="M8 21C20 4 43 4 55 21 43 38 20 38 8 21Z" fill="#087eae"/><path d="m54 21 14-13v26z" fill="#087eae"/><circle cx="25" cy="17" r="2.5" fill="#fff"/></svg>
+    <svg class="login-footer-coral coral-right" viewBox="0 0 110 150" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M55 148V78M55 111 27 84V51M27 84 8 66M27 84 44 66M55 96 81 67V34M81 67l21-20M81 67 66 49M81 67l5-30M55 126 34 108"/></g></svg>
   </div>
 </section>
 <div id="appView" class="app hidden">
