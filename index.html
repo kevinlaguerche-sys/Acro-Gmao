@@ -1094,6 +1094,25 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 }
 </style>
 
+
+<style id="acro-notifications-ui">
+.acro-notification-dialog{width:min(560px,calc(100% - 28px));max-height:min(82dvh,760px);padding:0;border:1px solid #cfe2eb;border-radius:22px;background:#fff;color:#17334a;box-shadow:0 24px 90px #082b4050}
+.acro-notification-dialog::backdrop{background:#092b3c80;backdrop-filter:blur(3px)}
+.acro-notification-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;background:linear-gradient(110deg,#e8f7fb,#fff);border-bottom:1px solid #d9e9ef}
+.acro-notification-head h2{margin:4px 0 0;font-size:20px;color:#15364d}
+.acro-notification-list{display:grid;gap:10px;padding:14px 16px;max-height:55dvh;overflow:auto}
+.acro-notification-card{display:flex;gap:12px;padding:13px;border:1px solid #d7e7ed;border-radius:15px;background:#fbfdfe}
+.acro-notification-card.withdrawn{background:#fffaf2;border-color:#f1dfc1}
+.acro-notification-symbol{width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:#e4f5f9;display:grid;place-items:center;font-size:24px;font-weight:800}
+.acro-notification-card.withdrawn .acro-notification-symbol{background:#fff0d9}
+.acro-notification-content{display:grid;gap:4px;min-width:0}
+.acro-notification-content strong{font-size:15px}
+.acro-notification-content p{margin:0;color:#40596b;font-size:14px;line-height:1.4}
+.acro-notification-content small{color:#718392;font-size:11px;line-height:1.35}
+.acro-notification-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 16px;border-top:1px solid #e1edf1}
+@media(max-width:520px){.acro-notification-dialog{border-radius:18px}.acro-notification-head{padding:14px}.acro-notification-list{padding:10px}.acro-notification-foot{padding:10px;flex-wrap:wrap}.acro-notification-foot .btn{width:100%}}
+</style>
+
 </head>
 <body>
 <header class="topbar">
@@ -1342,12 +1361,65 @@ function loginLocal(code){
  if(!u)return false;
  current={...u};showApp();return true
 }
+
+let acroPendingNotifications=[];
+let acroNotificationDialog=null;
+function notificationDateLabel(value){
+ if(!value)return "";
+ const d=new Date(value);
+ return Number.isNaN(d.getTime())?"":d.toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
+}
+function ensureNotificationDialog(){
+ if(acroNotificationDialog)return acroNotificationDialog;
+ const d=document.createElement("dialog");
+ d.id="acroNotificationDialog";
+ d.className="acro-notification-dialog";
+ d.innerHTML='<div class="acro-notification-head"><div><div class="eyebrow">ACRO PLONGÉE · ACTUALITÉS DU CLUB</div><h2>Information du club</h2></div><button type="button" class="btn soft small" data-notification-close>Fermer</button></div><div class="acro-notification-list" id="acroNotificationList"></div><div class="acro-notification-foot"><span class="planning-hint" id="acroNotificationCount"></span><button type="button" class="btn primary" id="acroNotificationDone">J\'ai pris connaissance</button></div>';
+ document.body.appendChild(d);
+ d.querySelector("[data-notification-close]").addEventListener("click",()=>d.close());
+ d.querySelector("#acroNotificationDone").addEventListener("click",markVisibleNotificationsRead);
+ d.addEventListener("click",e=>{if(e.target===d)d.close()});
+ acroNotificationDialog=d;return d;
+}
+function renderNotificationDialog(){
+ const d=ensureNotificationDialog(),host=d.querySelector("#acroNotificationList");
+ host.innerHTML=acroPendingNotifications.map(n=>{
+  const isWithdraw=n.kind==="member_withdrawn";
+  const icon=isWithdraw?"user-round-x":"calendar-plus";
+  const color=isWithdraw?"#b7791f":"#087e91";
+  const eventDate=n.event_date?new Date(n.event_date+"T12:00:00").toLocaleDateString("fr-FR"):"";
+  return '<article class="acro-notification-card '+(isWithdraw?"withdrawn":"created")+'"><div class="acro-notification-symbol" style="color:'+color+'"><span class="acro-notification-lucide">'+(isWithdraw?"↘":"＋")+'</span></div><div class="acro-notification-content"><strong>'+esc(n.title)+'</strong><p>'+esc(n.message||"")+'</p><small>'+esc(n.event_type||"").replaceAll("_"," ") +(eventDate?" · "+eventDate:"")+'</small><small>Par '+esc(n.actor_name||"un membre")+' · '+esc(notificationDateLabel(n.created_at))+'</small>'+(isWithdraw&&n.subject_name?'<small>Personne concernée : '+esc(n.subject_name)+'</small>':'')+'</div></article>';
+ }).join("");
+ d.querySelector("#acroNotificationCount").textContent=acroPendingNotifications.length+" notification(s) à consulter";
+ d.querySelector("#acroNotificationDone").textContent="J'ai pris connaissance";
+ if(!d.open && acroPendingNotifications.length)d.showModal();
+}
+async function showPendingNotifications(){
+ if(!supabaseClient||!current?.id)return;
+ try{
+  const {data,error}=await supabaseClient.from("acro_notifications").select("id,kind,title,message,event_id,event_type,event_date,actor_name,subject_name,created_at").is("read_at",null).order("created_at",{ascending:true}).limit(30);
+  if(error)throw error;
+  acroPendingNotifications=Array.isArray(data)?data:[];
+  if(acroPendingNotifications.length)renderNotificationDialog();
+ }catch(e){console.error("Lecture des notifications impossible",e);notify("Les notifications ne sont pas disponibles pour le moment.");}
+}
+async function markVisibleNotificationsRead(){
+ if(!supabaseClient||!acroPendingNotifications.length){acroNotificationDialog?.close();return}
+ const ids=acroPendingNotifications.map(n=>n.id);
+ try{
+  const {error}=await supabaseClient.from("acro_notifications").update({read_at:new Date().toISOString()}).in("id",ids);
+  if(error)throw error;
+  acroPendingNotifications=[];acroNotificationDialog?.close();
+ }catch(e){console.error(e);notify("Impossible de marquer les notifications comme lues : "+(e.message||"réessaie"))}
+}
+
 function showApp(){
  document.getElementById("loginView").classList.add("hidden");document.getElementById("appView").classList.remove("hidden");const isSmallScreen=window.matchMedia("(max-width: 850px)").matches;document.getElementById("appView").classList.toggle("menu-closed",isSmallScreen);document.getElementById("menuToggle").setAttribute("aria-expanded",String(!isSmallScreen));
  document.getElementById("userPill").textContent=(isMaster()?"👑 ":"")+current.name;document.getElementById("userPill").classList.remove("hidden");document.getElementById("logoutBtn").classList.remove("hidden");
  document.getElementById("accessNav").classList.toggle("hidden",!isMaster());
  document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("hidden",!allowed(b.dataset.view)));
  render("dashboard");
+ showPendingNotifications();
 }
 async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
 function stopInflationScannerIfOpen(){try{if(typeof stopQR==="function")stopQR()}catch(e){}}
