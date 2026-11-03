@@ -1300,45 +1300,6 @@ function printQrCard(containerId){
  clone.querySelectorAll("button").forEach(b=>b.remove());
  clone.querySelectorAll("[id]").forEach(el=>el.removeAttribute("id"));
  const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Carte QR ACRO Plongée</title><style>body{font-family:Arial,sans-serif;margin:0;padding:24px;color:#10283c}main{max-width:420px;margin:0 auto}.section{border:1px solid #dce8ee;border-radius:16px;padding:20px;text-align:center;box-shadow:none}.section h3{font-size:20px;margin:0 0 16px}.section p{font-size:13px;color:#526778}.section img{width:200px;height:200px;object-fit:contain;margin:8px auto;display:block}@page{margin:12mm}@media print{body{padding:0}.section{break-inside:avoid;border:1px solid #999}}</style></head><body><main>${clone.outerHTML}</main><script>window.addEventListener('load',()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(resolve=>{i.onload=resolve;i.onerror=resolve}))).then(()=>setTimeout(()=>{window.focus();window.print()},300))});<\/script>
-<div id="acroFreeConfirm" hidden aria-hidden="true"></div>
-
-<script id="acro-audio-system-v126">
-(function(){
- "use strict";
- const CLICK_VOLUME=0.16;
- let audioContext=null,lastClickAt=0;
- function context(){
-  const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;
-  if(!audioContext)audioContext=new Ctx();
-  if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
-  return audioContext;
- }
- function tone(frequency,start,duration,volume,type){
-  const ctx=context();if(!ctx)return;
-  const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||"sine";
-  osc.frequency.setValueAtTime(frequency,ctx.currentTime+start);
-  gain.gain.setValueAtTime(0.0001,ctx.currentTime+start);
-  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002,volume),ctx.currentTime+start+0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+start+duration);
-  osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+duration+0.02);
- }
- function success(){tone(880,0,0.105,0.58,"sine");tone(1175,0.12,0.16,0.72,"sine")}
- function error(){tone(245,0,0.19,0.78,"triangle");tone(165,0.22,0.23,0.78,"triangle")}
- function click(){const now=Date.now();if(now-lastClickAt<65)return;lastClickAt=now;tone(690,0,0.025,CLICK_VOLUME,"sine")}
- function notify(message){
-  const text=String(message||"");
-  if(/(erreur|impossible|échec|echec|introuvable|inconnu|inconnue|aucun|aucune|refus|non disponible|obligatoire|indisponible|invalide|échoué|échouée|bloqué|bloquée|manquant|manquante|n'a pas été|n’a pas été)/i.test(text))error();
-  else success();
- }
- document.addEventListener("click",function(event){
-  const control=event.target&&event.target.closest&&event.target.closest("button,[role='button'],.nav-btn,.module-card");
-  if(!control||control.disabled||control.getAttribute("aria-disabled")==="true")return;
-  click();
- },true);
- window.ACROAudio={success,error,click,notify,settings:{volume:"fort",click:"discret"}};
-})();
-</script>
-
 </body></html>`;
  popup.document.open();popup.document.write(html);popup.document.close();
 }
@@ -3172,6 +3133,43 @@ function handleEquipmentRemoveConfirm(){
  e.active=false;saveState();closeEquipmentRemoveDialog(false);render("masterMateriel");notify("Équipement retiré de la liste disponible");
 }
 
+</script>
+
+<script id="acro-audio-system-v126">
+(function(){
+ "use strict";
+ const CLICK_VOLUME=0.16;
+ let audioContext=null,lastClickAt=0;
+ function context(){
+  const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;
+  if(!audioContext)audioContext=new Ctx();
+  if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
+  return audioContext;
+ }
+ function tone(frequency,start,duration,volume,type){
+  const ctx=context();if(!ctx)return;
+  const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||"sine";
+  osc.frequency.setValueAtTime(frequency,ctx.currentTime+start);
+  gain.gain.setValueAtTime(0.0001,ctx.currentTime+start);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002,volume),ctx.currentTime+start+0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+start+duration);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+duration+0.02);
+ }
+ function success(){tone(880,0,0.105,0.58,"sine");tone(1175,0.12,0.16,0.72,"sine")}
+ function error(){tone(245,0,0.19,0.78,"triangle");tone(165,0.22,0.23,0.78,"triangle")}
+ function click(){const now=Date.now();if(now-lastClickAt<65)return;lastClickAt=now;tone(690,0,0.025,CLICK_VOLUME,"sine")}
+ function notify(message){
+  const text=String(message||"");
+  if(/(erreur|impossible|échec|echec|introuvable|inconnu|inconnue|aucun|aucune|refus|non disponible|obligatoire|indisponible|invalide|échoué|échouée|bloqué|bloquée|manquant|manquante|n'a pas été|n’a pas été)/i.test(text))error();
+  else success();
+ }
+ document.addEventListener("click",function(event){
+  const control=event.target&&event.target.closest&&event.target.closest("button,[role='button'],.nav-btn,.module-card");
+  if(!control||control.disabled||control.getAttribute("aria-disabled")==="true")return;
+  click();
+ },true);
+ window.ACROAudio={success,error,click,notify,settings:{volume:"fort",click:"discret"}};
+})();
 </script>
 
 <div id="equipmentRemoveOverlay" class="equipment-remove-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="equipmentRemoveTitle">
