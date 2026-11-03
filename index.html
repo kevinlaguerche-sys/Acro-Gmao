@@ -1012,6 +1012,17 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 }
 </style>
 
+
+<style id="acro-legend-svg-hard-limit">
+/* Sécurité : les grands SVG de la légende sont forcés à la taille d'un pictogramme */
+#mainContent .acro-compact-legend{display:block!important;width:100%;max-width:100%;padding:7px 9px!important;margin-top:7px!important}
+#mainContent .acro-compact-legend-items{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:5px 9px!important}
+#mainContent .acro-compact-legend-items>span{display:inline-flex!important;flex:0 1 auto!important;align-items:center!important;gap:4px!important;max-width:100%;font-size:10px!important;line-height:1.2!important}
+#mainContent .acro-compact-legend-items svg,
+#mainContent .acro-compact-legend-items>span>svg{display:block!important;width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;max-width:20px!important;max-height:20px!important;flex:0 0 20px!important;overflow:hidden!important}
+#mainContent .acro-compact-legend-items b{font-size:10px!important;font-weight:700!important}
+</style>
+
 </head>
 <body>
 <header class="topbar">
