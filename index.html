@@ -2100,7 +2100,7 @@ function planningIconSVG(type){
 const acroOriginalPlanningHTML=planningHTML;
 function planningHTML(){
  let html=acroOriginalPlanningHTML();
- html=html.replace(/<span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span>/g,'<span class="calendar-event-icon" aria-hidden="true">'+planningIconSVG('director_pool')+'</span>');
+ html=html.replace(/<span class="calendar-event-chip ([^"]*)"[^>]*><span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span><\/span>/g,(m,cls)=>{const type=cls.indexOf("material")>=0?"material_distribution":cls.indexOf("dive-exploration")>=0?"dive_exploration":cls.indexOf("dive-teaching")>=0?"dive_teaching":cls.indexOf("dive-fosse")>=0?"dive_fosse":"director_pool";return m.replace(/<span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span>/,'<span class="calendar-event-icon" aria-hidden="true">'+planningIconSVG(type)+'</span>')});
  const date=window.acroPlanningSelectedDate||todayISO();
  const dayEvents=(state.events||[]).filter(ev=>ev.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
  const label=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
