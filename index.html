@@ -711,6 +711,77 @@ dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1
 @media(min-width:900px){.login-v125{padding-top:28px}.login-v125 .login-panel{padding:30px 34px}.login-v125 .login-hero{min-height:130px}}
 
 </style>
+
+<style>
+/* Maquette de connexion validée — inspiration exacte de la référence fournie */
+body:has(#loginView:not(.hidden)){background:linear-gradient(145deg,#eaf7ff 0%,#f8fcff 54%,#e1f3ff 100%);color:#102b55}
+body:has(#loginView:not(.hidden)) .topbar{height:112px;padding:0 24px;background:linear-gradient(105deg,#073653 0%,#075b83 58%,#087f9a 100%);box-shadow:0 8px 24px #063a5825}
+body:has(#loginView:not(.hidden)) .top-left{gap:18px}
+body:has(#loginView:not(.hidden)) #menuToggle{visibility:visible!important;width:68px;height:68px;border-radius:18px;border:1px solid #49b9d8;background:linear-gradient(145deg,#087da5,#075579);font-size:32px;box-shadow:0 5px 14px #001c3738}
+body:has(#loginView:not(.hidden)) .brand{gap:16px}
+body:has(#loginView:not(.hidden)) .brand-mark{width:76px;height:76px;border-radius:50%;border:2px solid #8de8f1;background:linear-gradient(145deg,#31d4e6,#0788b9);font-size:42px;box-shadow:0 5px 16px #001c3740}
+body:has(#loginView:not(.hidden)) .brand b{font-size:28px;letter-spacing:.025em}
+body:has(#loginView:not(.hidden)) .brand small{font-size:12px;letter-spacing:.16em;color:#d3f6fa}
+body:has(#loginView:not(.hidden)) .topbar:after{content:"🤿";font-size:66px;position:absolute;right:7%;top:16px;transform:rotate(-25deg);filter:drop-shadow(0 5px 4px #002a4540);opacity:.95}
+body:has(#loginView:not(.hidden)) .top-right{display:none}
+.login-v125{width:min(100%,800px);max-width:800px;min-height:0;margin:0 auto;padding:26px 18px 24px;display:flex;flex-direction:column;gap:18px;align-items:stretch}
+.login-v125 .login-hero{display:none}
+.login-v125 .login-panel{padding:26px 28px 24px;border:1.5px solid #c6e3f3;border-radius:30px;background:linear-gradient(145deg,#fff,#f8fcff);box-shadow:0 12px 30px #0b52721a}
+.login-v125 .login-panel>.eyebrow{font-size:18px;letter-spacing:.16em;color:#08749c;font-weight:900;margin-bottom:12px}
+.login-v125 .login-panel h2{display:flex;align-items:center;gap:14px;font-size:clamp(25px,4vw,36px);line-height:1.15;color:#101e42;margin:0 0 12px}
+.login-lock{font-size:42px}
+.login-v125 .login-panel>.muted{font-size:19px;line-height:1.4;margin:0 0 20px;color:#586b87}
+.login-v125 .mft-link{min-height:68px;margin:0 0 22px;border:1.5px solid #a9dcf5;border-radius:24px;background:linear-gradient(110deg,#e2f5ff,#cdeeff);color:#09275b;font-size:20px;font-weight:850;box-shadow:0 4px 10px #0c749512}
+.login-v125 .login-field{display:grid;grid-template-columns:minmax(145px,34%) minmax(0,1fr);gap:0;margin:12px 0 14px;align-items:stretch}
+.login-v125 .login-field>label{min-height:62px;display:flex;align-items:center;gap:12px;padding:0 16px;border:1.5px solid #c6ddeb;border-right:0;border-radius:18px 0 0 18px;background:linear-gradient(110deg,#f2faff,#eaf6ff);font-size:17px;font-weight:850;color:#102b55}
+.login-v125 .login-field input{min-width:0;min-height:62px;padding:12px 18px;border:1.5px solid #c6ddeb;border-radius:0 18px 18px 0;background:#fff;font-size:19px;color:#17243c}
+.login-v125 .login-field input:focus{border-color:#1b9fca;box-shadow:0 0 0 3px #19a5c122}
+.password-login-wrap{position:relative;display:flex;min-width:0}
+.password-login-wrap input{width:100%;padding-right:58px!important}
+.password-login-wrap button{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:42px;height:42px;border:0;background:transparent;color:#075a7c;font-size:26px;font-weight:800;border-radius:10px}
+.login-api-tab{width:100%;display:flex;align-items:center;justify-content:space-between;margin:7px 0 12px;padding:11px 14px;border:1px solid #c9dfed;border-radius:13px;background:#f5fbff;color:#165477;font-weight:800;font-size:13px}
+.login-api-tab span{font-size:20px}
+.login-api-box{margin:0 0 14px;padding:15px;border:1px solid #b9dfd2;border-radius:17px;background:linear-gradient(145deg,#f0fff8,#e7f7f1)}
+.login-api-box .login-field{display:block;margin:8px 0}
+.login-api-box .login-field input{border-radius:12px;min-height:48px;font-size:14px}
+.login-v125 .login-submit{min-height:76px;margin-top:8px;border-radius:26px;background:linear-gradient(105deg,#0789a9,#08a9ac 60%,#12b98d);font-size:25px;font-weight:900;box-shadow:0 10px 22px #078da32b}
+.login-ocean-footer{min-height:190px;padding:42px 24px 22px;border-radius:30px;background:linear-gradient(180deg,#e6fbff,#c6f2fa 58%,#8bdced);color:#10265f;box-shadow:inset 0 1px 0 #fff;gap:24px}
+.login-ocean-footer:before,.login-ocean-footer:after{height:46px;border-top-width:12px}
+.login-ocean-footer b{font-size:30px}.login-ocean-footer small{font-size:19px;line-height:1.35}
+.login-coral{font-size:68px;bottom:0}.login-cylinder{font-size:64px;transform:rotate(-12deg)}.login-fish{font-size:36px}
+@media(max-width:650px){
+ body:has(#loginView:not(.hidden)) .topbar{height:104px;padding:0 14px}
+ body:has(#loginView:not(.hidden)) #menuToggle{width:56px;height:56px;font-size:27px;border-radius:16px;padding:0}
+ body:has(#loginView:not(.hidden)) .top-left{gap:10px}
+ body:has(#loginView:not(.hidden)) .brand{gap:10px}
+ body:has(#loginView:not(.hidden)) .brand-mark{width:58px;height:58px;font-size:32px}
+ body:has(#loginView:not(.hidden)) .brand b{font-size:20px}
+ body:has(#loginView:not(.hidden)) .brand small{font-size:9px}
+ body:has(#loginView:not(.hidden)) .topbar:after{right:4%;top:20px;font-size:42px;opacity:.6}
+ .login-v125{padding:18px 12px 20px;gap:16px;min-height:0}
+ .login-v125 .login-panel{padding:21px 17px;border-radius:25px}
+ .login-v125 .login-panel>.eyebrow{font-size:15px;margin-bottom:10px}
+ .login-v125 .login-panel h2{font-size:26px;gap:9px}
+ .login-lock{font-size:34px}
+ .login-v125 .login-panel>.muted{font-size:16px;margin-bottom:17px}
+ .login-v125 .mft-link{min-height:58px;font-size:16px;border-radius:19px;margin-bottom:18px}
+ .login-v125 .login-field{grid-template-columns:minmax(112px,36%) minmax(0,1fr);margin:10px 0 12px}
+ .login-v125 .login-field>label{min-height:56px;padding:0 10px;gap:7px;font-size:14px;border-radius:15px 0 0 15px}
+ .login-v125 .login-field input{min-height:56px;padding:10px 12px;font-size:17px;border-radius:0 15px 15px 0}
+ .password-login-wrap button{right:5px;font-size:23px}
+ .login-v125 .login-submit{min-height:66px;font-size:21px;border-radius:22px}
+ .login-ocean-footer{min-height:155px;padding:35px 10px 18px;gap:8px;border-radius:23px}
+ .login-ocean-footer b{font-size:22px}.login-ocean-footer small{font-size:14px}
+ .login-cylinder{font-size:37px}.login-coral{font-size:44px}.login-fish{font-size:25px}
+}
+@media(max-width:390px){
+ body:has(#loginView:not(.hidden)) .topbar:after{display:none}
+ .login-v125 .login-field{grid-template-columns:105px minmax(0,1fr)}
+ .login-v125 .login-field>label{font-size:12px;padding:0 7px}
+ .login-v125 .login-field input{font-size:15px;padding:8px}
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
@@ -718,35 +789,33 @@ dialog,.mft-dialog,#planningDialog,#planningDayDialog,#n1ProgressDialog{border:1
   <div class="top-right"><span class="status">Espace club</span><span id="userPill" class="user-pill hidden"></span><button id="logoutBtn" class="btn small soft hidden">Déconnexion</button></div>
 </header>
 <section id="loginView" class="login-layout login-v125">
-  <div class="hero login-hero">
-    <div class="login-hero-brand"><span class="login-hero-mask">🤿</span><span><b>ACRO PLONGÉE</b><small>GESTION DU CLUB</small></span></div>
-    <div class="login-hero-diver" aria-hidden="true">🤿　◦　◌</div>
-  </div>
+  <div class="hero login-hero" aria-hidden="true"></div>
   <div class="panel login-panel">
     <div class="eyebrow">Espace membre</div>
     <h2><span class="login-lock" aria-hidden="true">🔒</span> Accéder à l'espace club</h2>
     <p class="muted">Saisis ton nom, ton prénom et le mot de passe qui t’a été donné par le Master.</p>
-    <a class="btn soft full mft-link" href="https://mft.ffessm.fr/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">📘</span> Consulter le MFT — FFESSM ↗</a>
+    <a class="btn soft full mft-link" href="https://mft.ffessm.fr/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">📖</span> Consulter le MFT — FFESSM ↗</a>
     <form id="loginForm">
       <div class="field login-field"><label for="loginLastName"><span aria-hidden="true">👤</span> Nom</label><input id="loginLastName" type="text" autocomplete="family-name" placeholder="Nom" required maxlength="80"></div>
       <div class="field login-field"><label for="loginFirstName"><span aria-hidden="true">👤</span> Prénom</label><input id="loginFirstName" type="text" autocomplete="given-name" placeholder="Prénom" required maxlength="80"></div>
-      <div class="field login-field"><label for="loginPassword"><span aria-hidden="true">🔐</span> Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe donné par le Master" required maxlength="128"></div>
-      <div class="login-api-box">
+      <div class="field login-field password-login-field"><label for="loginPassword"><span aria-hidden="true">🔒</span> Mot de passe</label><div class="password-login-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Mot de passe" required maxlength="128"><button id="toggleLoginPassword" type="button" aria-label="Afficher le mot de passe" aria-pressed="false">◉</button></div></div>
+      <button id="loginApiToggle" class="login-api-tab" type="button" aria-expanded="false">🔑　Clé API Supabase <span>＋</span></button>
+      <div class="login-api-box hidden" id="loginApiContent">
         <div class="login-api-heading"><span aria-hidden="true">🔑</span><label for="supabasePublishableKey">Clé API Supabase</label></div>
         <p>Renseigne ici la clé publique de ton projet pour connecter l'application.</p>
         <div class="field login-field"><input id="supabasePublishableKey" type="password" autocomplete="off" placeholder="Clé publique sb_publishable_…" aria-label="Clé API Supabase"></div>
         <button id="saveSupabaseConfig" class="btn soft full login-save-key" type="button">Enregistrer la clé API</button>
         <div id="configMessage" class="message" role="status"></div>
+        <p class="hint">Utilise uniquement la clé publique Supabase. Ne saisis jamais une clé secrète.</p>
       </div>
-      <button class="btn primary full login-submit" type="submit">⇥　Se connecter　→</button>
+      <button class="btn primary full login-submit" type="submit"><span aria-hidden="true">⇥</span>　Se connecter　→</button>
       <div id="loginMessage" class="message"></div>
     </form>
-    <p class="hint login-security-note">Utilise uniquement la clé publique Supabase (<code>sb_publishable_…</code>). Ne saisis jamais une clé secrète.</p>
   </div>
   <div class="login-ocean-footer" aria-label="ACRO Plongée, Ambiance, Convivialité, Rigolade Obligatoire">
-    <div class="login-wave"></div><span class="login-coral left">✺</span><span class="login-cylinder">▰</span>
+    <span class="login-coral left">🪸</span><span class="login-cylinder">🧯</span>
     <div><b>ACRO Plongée</b><small>Ambiance, Convivialité,<br>Rigolade Obligatoire !</small></div>
-    <span class="login-fish">➤</span><span class="login-coral right">✺</span>
+    <span class="login-fish">🐟</span><span class="login-coral right">🪸</span>
   </div>
 </section>
 <div id="appView" class="app hidden">
@@ -2519,7 +2588,9 @@ function closeUserDialog(){document.getElementById("userDialog").close()}
 function toggleUser(id){if(!isMaster())return;const u=state.users.find(x=>x.id===id);if(!u)return;u.active=u.active===false;saveState();render("acces");notify(u.active?"Compte activé":"Compte désactivé")}
 function deleteUser(id){if(!isMaster())return;const u=state.users.find(x=>x.id===id);if(!u)return;if(!confirm("Effacer le compte de "+(u.name||"ce plongeur")+" de la liste locale des accès ? Attention : cela ne supprime pas le compte Auth côté serveur Supabase."))return;state.users=state.users.filter(x=>x.id!==id);saveState();render("acces");notify("Compte retiré de la liste locale des accès")}
 document.getElementById("saveSupabaseConfig").addEventListener("click",()=>{const key=document.getElementById("supabasePublishableKey").value.trim();const msg=document.getElementById("configMessage");if(!key.startsWith("sb_publishable_")){msg.textContent="La clé doit commencer par sb_publishable_. Ne mets jamais une clé Secret ici.";return}localStorage.setItem(SUPABASE_KEY_STORAGE,key);supabaseClient=null;msg.textContent="Clé publique enregistrée sur cet appareil. Tu peux te connecter.";document.getElementById("supabasePublishableKey").value=""});
-document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;btn.textContent="Connexion…";document.getElementById("loginMessage").textContent="";try{await loginByName(document.getElementById("loginLastName").value,document.getElementById("loginFirstName").value,document.getElementById("loginPassword").value)}catch(err){console.error(err);document.getElementById("loginMessage").textContent="Erreur inattendue : "+(err.message||err)}finally{btn.disabled=false;btn.textContent="Se connecter →"}});
+document.getElementById("loginApiToggle").addEventListener("click",()=>{const box=document.getElementById("loginApiContent"),btn=document.getElementById("loginApiToggle"),open=box.classList.contains("hidden");box.classList.toggle("hidden",!open);btn.setAttribute("aria-expanded",String(open));btn.querySelector("span").textContent=open?"−":"＋"});
+document.getElementById("toggleLoginPassword").addEventListener("click",()=>{const input=document.getElementById("loginPassword"),btn=document.getElementById("toggleLoginPassword"),show=input.type==="password";input.type=show?"text":"password";btn.setAttribute("aria-pressed",String(show));btn.setAttribute("aria-label",show?"Masquer le mot de passe":"Afficher le mot de passe");btn.textContent=show?"◎":"◉"});
+document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;btn.textContent="Connexion…";document.getElementById("loginMessage").textContent="";try{await loginByName(document.getElementById("loginLastName").value,document.getElementById("loginFirstName").value,document.getElementById("loginPassword").value)}catch(err){console.error(err);document.getElementById("loginMessage").textContent="Erreur inattendue : "+(err.message||err)}finally{btn.disabled=false;btn.innerHTML='<span aria-hidden="true">⇥</span>　Se connecter　→'}});
 document.getElementById("logoutBtn").addEventListener("click",logout);
 document.getElementById("menuToggle").addEventListener("click",()=>{const app=document.getElementById("appView");const closed=app.classList.toggle("menu-closed");document.getElementById("menuToggle").setAttribute("aria-expanded",String(!closed));document.getElementById("menuToggle").textContent="☰";});
 
