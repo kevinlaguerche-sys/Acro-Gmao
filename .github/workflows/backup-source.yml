@@ -1,0 +1,33 @@
+name: Build ACRO Plongee source backup
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Add backup metadata
+        run: |
+          mkdir -p _backup/supabase/functions/member-access
+          cp supabase/functions/member-access/index.ts _backup/supabase/functions/member-access/index.ts
+          cp BACKUP_README.md _backup/README_RESTAURATION.md
+          printf 'Repository: %s\nCommit: %s\nBackup date (UTC): %s\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$(date -u +%F)" > _backup/BUILD_INFO.txt
+      - name: Create ZIP
+        run: |
+          zip -r ACRO_Plongee_Sauvegarde_Code_2026-11-03.zip . -x '.git/*' '.github/*' '_backup/*' 'ACRO_Plongee_Sauvegarde_Code_2026-11-03.zip'
+          zip -r ACRO_Plongee_Sauvegarde_Code_2026-11-03.zip _backup
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ACRO_Plongee_Sauvegarde_Code_2026-11-03
+          path: ACRO_Plongee_Sauvegarde_Code_2026-11-03.zip
+          if-no-files-found: error
+          retention-days: 30
