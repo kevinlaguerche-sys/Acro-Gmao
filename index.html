@@ -953,7 +953,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 #mainContent[data-view="planning"] .acro-calendar-panel{padding:16px;background:linear-gradient(145deg,#f8fdff,#e8f7fc);border-color:#c9e5f1}
 #mainContent[data-view="planning"] .acro-calendar-panel>.calendar-toolbar{padding:16px;border-radius:16px;background:linear-gradient(110deg,#f8fdff,#dff5fb);border-color:#c9e5f1;position:relative;overflow:hidden}
 #mainContent[data-view="planning"] .acro-calendar-panel .calendar-month{font-size:25px;color:#102d49}
-#mainContent[data-view="planning"] .acro-calendar-panel .calendar-grid{gap:5px}
+#mainContent[data-view="planning"] .acro-calendar-panel .calendar-grid{gap:5px}\n#mainContent[data-view="planning"] .acro-calendar-panel .calendar-legend{display:none!important}
 #mainContent[data-view="planning"] .acro-calendar-panel .calendar-day{min-height:92px;border-radius:12px;padding:6px;background:#fff;border-color:#cbdfea}
 #mainContent[data-view="planning"] .acro-calendar-panel .calendar-day.selected{border:2px solid #168c3e;background:#effbf1}
 #mainContent[data-view="planning"] .acro-calendar-panel .calendar-events{display:flex;flex-direction:row;flex-wrap:wrap;gap:3px;margin-top:3px}
@@ -2074,7 +2074,7 @@ function planningHTML(){
   const iso=isoLocal(d),outside=d.getMonth()!==month,dayEvents=(state.events||[]).filter(ev=>ev.date===iso);
   cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""}" data-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} événement(s)">
    <span class="calendar-day-number">${d.getDate()}</span>
-   <span class="calendar-events">${dayEvents.slice(0,3).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;const names=Array.isArray(ev.diveParticipants)?ev.diveParticipants.map(x=>x.name).filter(Boolean):[];const interested=isDiveForecastEvent(ev)&&names.length?` · Intéressés : ${names.join(", ")}`:"";return `<span class="calendar-event-chip ${typ.className}" title="${esc((ev.title||typ.label)+" — "+(ev.responsible||""))}"><span class="calendar-event-icon" aria-hidden="true">${typ.icon}</span></span>`}).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
+   <span class="calendar-events">${dayEvents.slice(0,3).map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;const names=Array.isArray(ev.diveParticipants)?ev.diveParticipants.map(x=>x.name).filter(Boolean):[];const interested=isDiveForecastEvent(ev)&&names.length?` · Intéressés : ${names.join(", ")}`:"";return `<span class="calendar-event-chip ${typ.className}" data-event-type="${ev.type}" title="${esc((ev.title||typ.label)+" — "+(ev.responsible||""))}"><span class="calendar-event-icon" aria-hidden="true">${typ.icon}</span></span>`}).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
   </button>`);
  }
  const weekdays=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -2100,7 +2100,7 @@ function planningIconSVG(type){
 const acroOriginalPlanningHTML=planningHTML;
 function planningHTML(){
  let html=acroOriginalPlanningHTML();
- html=html.replace(/<span class="calendar-event-chip ([^"]*)"[^>]*><span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span><\/span>/g,(m,cls)=>{const type=cls.indexOf("material")>=0?"material_distribution":cls.indexOf("dive-exploration")>=0?"dive_exploration":cls.indexOf("dive-teaching")>=0?"dive_teaching":cls.indexOf("dive-fosse")>=0?"dive_fosse":"director_pool";return m.replace(/<span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span>/,'<span class="calendar-event-icon" aria-hidden="true">'+planningIconSVG(type)+'</span>')});
+ html=html.replace(/<span class="calendar-event-chip ([^"]*)" data-event-type="([^"]*)"[^>]*><span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span><\/span>/g,(m,cls,type)=>m.replace(/<span class="calendar-event-icon" aria-hidden="true">[^<]*<\/span>/,'<span class="calendar-event-icon" aria-hidden="true">'+planningIconSVG(type)+'</span>'));
  const date=window.acroPlanningSelectedDate||todayISO();
  const dayEvents=(state.events||[]).filter(ev=>ev.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
  const label=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
@@ -2117,9 +2117,9 @@ function planningAllowedTypes(){if(isMaster())return ["director_pool","director_
 function canCreatePlanningType(type){return isMaster()||planningAllowedTypes().includes(type)}
 function refreshPlanningTypeOptions(){const select=document.getElementById("planningEventType");if(!select)return;const allowedTypes=planningAllowedTypes();[...select.options].forEach(o=>{o.hidden=!allowedTypes.includes(o.value)});if(!allowedTypes.includes(select.value))select.value=allowedTypes[0]||"";const submit=document.querySelector("#planningEventForm button[type=submit]");if(submit)submit.disabled=!allowedTypes.length;const msg=document.getElementById("planningEventMessage");if(msg)msg.textContent=allowedTypes.length?"":"Ton compte ne dispose d’aucune autorisation pour créer un événement du planning."}
 function wirePlanning(){
- document.getElementById("planningPrev").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("planning")});
- document.getElementById("planningNext").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("planning")});
- document.getElementById("planningToday").addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);render("planning")});
+ document.getElementById("planningPrev").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);window.acroPlanningSelectedDate=isoLocal(planningMonth);render("planning")});
+ document.getElementById("planningNext").addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);window.acroPlanningSelectedDate=isoLocal(planningMonth);render("planning")});
+ document.getElementById("planningToday").addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);window.acroPlanningSelectedDate=todayISO();render("planning")});
  document.querySelectorAll("[data-calendar-date]").forEach(b=>b.addEventListener("click",()=>{window.acroPlanningSelectedDate=b.dataset.calendarDate;render("planning")}));
   document.getElementById("openSelectedPlanningDay")?.addEventListener("click",()=>openPlanningDayDialog(window.acroPlanningSelectedDate||todayISO()));
   document.getElementById("addSelectedPlanningEvent")?.addEventListener("click",()=>openPlanningDialog(window.acroPlanningSelectedDate||todayISO()));
