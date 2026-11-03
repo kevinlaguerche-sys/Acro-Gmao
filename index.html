@@ -2922,6 +2922,7 @@ function closeEquipmentRemoveDialog(restorePage=true){
 // Delegation sur document : le HTML de la fenêtre est placé après ce script.
 // Attacher les événements directement aux boutons ici échouait car ils n'existaient pas encore.
 document.addEventListener("click",ev=>{
+ const shortcut=ev.target?.closest?.(".module-card[data-open-view]");if(shortcut){const destination=shortcut.dataset.openView;if(destination){render(destination);return;}}
  const nav=ev.target?.closest?.(".nav-btn[data-view]");if(nav&&!nav.classList.contains("hidden")){render(nav.dataset.view);if(window.matchMedia&&window.matchMedia("(max-width: 850px)").matches){document.getElementById("appView")?.classList.add("menu-closed");document.getElementById("menuToggle")?.setAttribute("aria-expanded","false");}}
  const target=ev.target;
  if(target && target.closest && target.closest("#equipmentRemoveNo")){ev.preventDefault();ev.stopPropagation();closeEquipmentRemoveDialog(false);return}
