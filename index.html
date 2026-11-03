@@ -1023,6 +1023,17 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 #mainContent .acro-compact-legend-items b{font-size:10px!important;font-weight:700!important}
 </style>
 
+
+<style id="acro-dive-calendar-event-icons">
+/* Dans Plongée : pictogramme du type d'événement + case de réponse du membre */
+#mainContent[data-view="plongee"] .calendar-event-chip,
+#mainContent[data-view="dive"] .calendar-event-chip{display:flex;align-items:center;gap:3px;min-width:0}
+#mainContent .dive-calendar-event-icon{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;min-width:19px;max-width:19px;flex:0 0 19px}
+#mainContent .dive-calendar-event-icon svg{display:block!important;width:19px!important;height:19px!important;min-width:19px!important;max-width:19px!important;max-height:19px!important}
+#mainContent .calendar-event-chip .dive-status{width:16px;height:16px;min-width:16px;font-size:9px;border-width:1.25px;flex:0 0 16px}
+#mainContent .calendar-event-chip .dive-event-chip-label{font-size:9px;line-height:1.15}
+</style>
+
 </head>
 <body>
 <header class="topbar">
@@ -1998,7 +2009,7 @@ function diveForecastHTML(){
   const d=new Date(start);d.setDate(start.getDate()+i);
   const iso=isoLocal(d),dayEvents=byDate[iso]||[],outside=d.getMonth()!==month;
   cells.push(`<button type="button" class="calendar-day ${outside?"outside":""} ${iso===today?"today":""} ${dayEvents.length?"has-dive-events":""}" data-dive-calendar-date="${iso}" aria-label="${esc(dateFR(iso))}, ${dayEvents.length} événement(s)">
-   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>`<span class="calendar-event-chip ${(EVENT_TYPES[ev.type]||EVENT_TYPES.event).className||""}">${diveStatusIcon(diveResponseFor(ev,current?.id||""))}<span class="dive-event-chip-label">${esc(diveEventLabel(ev))}</span></span>`).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
+   <span class="calendar-day-number">${d.getDate()}</span><span class="calendar-events">${dayEvents.slice(0,3).map(ev=>`<span class="calendar-event-chip ${(EVENT_TYPES[ev.type]||EVENT_TYPES.event).className||""}" title="${esc(diveEventLabel(ev))}"><span class="dive-calendar-event-icon" aria-hidden="true">${planningIconSVG(ev.type)}</span>${diveStatusIcon(diveResponseFor(ev,current?.id||""))}<span class="dive-event-chip-label">${esc(diveEventLabel(ev))}</span></span>`).join("")}${dayEvents.length>3?`<span class="planning-hint">+${dayEvents.length-3} autre(s)</span>`:""}</span>
   </button>`);
  }
  const cards=allEvents.map(ev=>{
