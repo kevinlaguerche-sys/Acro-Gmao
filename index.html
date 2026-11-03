@@ -1082,6 +1082,18 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 }
 </style>
 
+
+<style id="acro-dive-event-list-type-icons">
+#mainContent .dive-event-type-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;padding:5px;border-radius:12px;background:#e1f4fa;box-sizing:border-box}
+#mainContent .dive-event-type-icon svg{display:block;width:100%;height:100%;max-width:32px;max-height:32px}
+#mainContent .dive-event-open .dive-status-wrap{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px}
+#mainContent .dive-event-open{gap:10px}
+@media(max-width:700px){
+ #mainContent .dive-event-type-icon{flex-basis:34px;width:34px;height:34px;padding:4px;border-radius:10px}
+ #mainContent .dive-event-open{gap:8px}
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
@@ -2066,7 +2078,7 @@ function diveForecastHTML(){
   const yesCount=(Array.isArray(ev.diveParticipants)?ev.diveParticipants:[]).length;
   const noCount=(Array.isArray(ev.diveResponses)?ev.diveResponses:[]).filter(x=>x.choice==="no").length;
   return `<article class="section dive-forecast-card" style="margin:10px 0;border:1px solid var(--line)">
-   <button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span>${diveStatusIcon(choice)}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${dateFR(ev.date)} · ${typ.label}${ev.location?" · "+esc(ev.location):""} · Responsable : ${esc(ev.responsible||"—")}</small></span><span class="dive-event-counts">${yesCount} oui · ${noCount} non</span><span>›</span></button>
+   <button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span class="dive-event-type-icon" aria-hidden="true">${planningIconSVG(ev.type)}</span><span class="dive-status-wrap">${diveStatusIcon(choice)}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${dateFR(ev.date)} · ${typ.label}${ev.location?" · "+esc(ev.location):""} · Responsable : ${esc(ev.responsible||"—")}</small></span><span class="dive-event-counts">${yesCount} oui · ${noCount} non</span><span>›</span></button>
   </article>`;
  }).join("");
  return `<div class="section">
@@ -2123,7 +2135,7 @@ function openDiveDateDialog(date){
  const dialog=document.getElementById("diveDateDialog"),host=document.getElementById("diveDateDialogBody");
  const dayEvents=(state.events||[]).filter(ev=>isDiveCalendarRelevantEvent(ev)&&ev.date===date).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
  document.getElementById("diveDateDialogTitle").textContent="Événements du "+dateFR(date);
- host.innerHTML=dayEvents.length?dayEvents.map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return `<button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span>${diveStatusIcon(diveResponseFor(ev,current?.id||""))}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${typ.label}${ev.location?" · "+esc(ev.location):""}</small></span><span>›</span></button>`}).join(""):'<div class="empty">Aucun événement ce jour-là.</div>';
+ host.innerHTML=dayEvents.length?dayEvents.map(ev=>{const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return `<button type="button" class="dive-event-open" data-dive-open-event="${esc(ev.id)}"><span class="dive-event-type-icon" aria-hidden="true">${planningIconSVG(ev.type)}</span><span class="dive-status-wrap">${diveStatusIcon(diveResponseFor(ev,current?.id||""))}</span><span class="dive-event-open-main"><strong>${esc(ev.title||typ.label)}</strong><small>${typ.label}${ev.location?" · "+esc(ev.location):""}</small></span><span>›</span></button>`}).join(""):'<div class="empty">Aucun événement ce jour-là.</div>';
  host.querySelectorAll("[data-dive-open-event]").forEach(btn=>btn.addEventListener("click",()=>openDiveEventDialog(btn.dataset.diveOpenEvent)));
  if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
 }
