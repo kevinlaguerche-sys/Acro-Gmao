@@ -1168,7 +1168,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
         <p class="hint">Utilise uniquement la clé publique Supabase. Ne saisis jamais une clé secrète.</p>
       </div>
     </form>
-    <div style="display:flex;justify-content:flex-end;margin-top:10px;font-size:11px;color:#8295a4;letter-spacing:.02em">ACRO Plongée · ${APP_VERSION} · Build ${APP_BUILD}</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;font-size:11px;color:#8295a4;letter-spacing:.02em">ACRO Plongée · V129 · Build 20261104.01</div>
   </div>
   <div class="login-ocean-footer" aria-label="ACRO Plongée, Ambiance, Convivialité, Rigolade Obligatoire">
     <svg class="login-footer-coral coral-left" viewBox="0 0 110 150" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M54 148V83M54 111 26 83V48M26 83 8 65M26 83 43 65M54 96 79 70V37M79 70l22-20M79 70 65 51M79 70l5-31M54 126 32 108"/></g></svg>
@@ -3053,7 +3053,7 @@ function securityHTML(){
   <div class="stat"><span class="stat-ico">📋</span><small>Événements affichés</small><strong id="securityTotal">—</strong></div>
  </div>
  <div class="section">
-  <div class="section-head"><div><h2>Historique des connexions</h2><p class="muted">Les 250 dernières tentatives enregistrées à partir de la mise en service.</p></div><button class="btn soft small" id="refreshSecurity">↻ Actualiser</button></div>
+  <div class="section-head"><div><h2>Historique des connexions</h2><p class="muted">Les 250 dernières tentatives enregistrées à partir de la mise en service.</p><p class="muted" style="font-size:12px">Version de référence sur cette page : <strong>${APP_VERSION}</strong> · Build <strong>${APP_BUILD}</strong></p></div><button class="btn soft small" id="refreshSecurity">↻ Actualiser</button></div>
   <div id="securityMessage" class="muted">Chargement de l’historique…</div>
   <div class="table-wrap"><table><thead><tr><th>Identifiant saisi</th><th>Date / heure</th><th>Résultat</th><th>Détail</th><th>Adresse IP</th><th>Appareil / navigateur</th><th>Version / Build</th></tr></thead><tbody id="securityRows"><tr><td colspan="7" class="empty">Chargement…</td></tr></tbody></table></div>
  </div>
