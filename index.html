@@ -1168,6 +1168,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
         <p class="hint">Utilise uniquement la clé publique Supabase. Ne saisis jamais une clé secrète.</p>
       </div>
     </form>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;font-size:11px;color:#8295a4;letter-spacing:.02em">ACRO Plongée · ${APP_VERSION} · Build ${APP_BUILD}</div>
   </div>
   <div class="login-ocean-footer" aria-label="ACRO Plongée, Ambiance, Convivialité, Rigolade Obligatoire">
     <svg class="login-footer-coral coral-left" viewBox="0 0 110 150" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M54 148V83M54 111 26 83V48M26 83 8 65M26 83 43 65M54 96 79 70V37M79 70l22-20M79 70 65 51M79 70l5-31M54 126 32 108"/></g></svg>
@@ -1285,6 +1286,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
+const APP_VERSION="V129";
+const APP_BUILD="20261104.01";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
 const ENCADREMENT_LEVELS=["E1","E2","E3","E4","TSI"];
@@ -1383,7 +1386,7 @@ async function loadRemoteState(){const localUsers=state.users||[];const {data,er
 async function loginByName(lastName,firstName,password){
  const client=initSupabase();
  if(!client){document.getElementById("loginMessage").textContent="Configuration manquante : ajoute la clé publique dans Configuration initiale.";return false}
- const {data,error}=await client.functions.invoke("member-access",{body:{action:"login",lastName:lastName.trim(),firstName:firstName.trim(),password}});
+ const {data,error}=await client.functions.invoke("member-access",{body:{action:"login",lastName:lastName.trim(),firstName:firstName.trim(),password,app_version:APP_VERSION,app_build:APP_BUILD}});
  if(error||!data?.session){document.getElementById("loginMessage").textContent="Connexion impossible : "+(data?.error||(error?.message||"Vérifie le nom, le prénom et le mot de passe."));return false}
  const {data:sessionData,error:sessionError}=await client.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});
  if(sessionError||!sessionData?.user){document.getElementById("loginMessage").textContent="Session impossible à ouvrir. Réessaie.";return false}
@@ -3052,7 +3055,7 @@ function securityHTML(){
  <div class="section">
   <div class="section-head"><div><h2>Historique des connexions</h2><p class="muted">Les 250 dernières tentatives enregistrées à partir de la mise en service.</p></div><button class="btn soft small" id="refreshSecurity">↻ Actualiser</button></div>
   <div id="securityMessage" class="muted">Chargement de l’historique…</div>
-  <div class="table-wrap"><table><thead><tr><th>Identifiant saisi</th><th>Date / heure</th><th>Résultat</th><th>Détail</th><th>Adresse IP</th><th>Appareil / navigateur</th></tr></thead><tbody id="securityRows"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody></table></div>
+  <div class="table-wrap"><table><thead><tr><th>Identifiant saisi</th><th>Date / heure</th><th>Résultat</th><th>Détail</th><th>Adresse IP</th><th>Appareil / navigateur</th><th>Version / Build</th></tr></thead><tbody id="securityRows"><tr><td colspan="7" class="empty">Chargement…</td></tr></tbody></table></div>
  </div>
  <div class="section" style="background:#eaf5ff"><strong>Protection des données</strong><p class="muted">Les mots de passe ne sont jamais enregistrés. L’historique conserve uniquement l’identifiant saisi, le résultat, l’heure, l’adresse IP lorsqu’elle est transmise et le navigateur.</p></div>`;
 }
@@ -3070,8 +3073,11 @@ async function loadSecurityLogs(){
   document.getElementById("securityTotal").textContent=logs.length;
   rows.innerHTML=logs.length?logs.map(x=>{
    const date=x.created_at?new Date(x.created_at).toLocaleString("fr-FR"):"—";
-   return `<tr><td><strong>${esc(x.attempted_name||"Identifiant non renseigné")}</strong></td><td>${esc(date)}</td><td><span class="badge ${x.success?"green":"orange"}">${x.success?"Réussie":"Échec"}</span></td><td>${esc(x.reason||"—")}</td><td>${esc(x.ip_address||"Non disponible")}</td><td>${esc(x.user_agent||"Non disponible")}</td></tr>`;
-  }).join(""):'<tr><td colspan="6" class="empty">Aucune tentative enregistrée pour le moment.</td></tr>';
+   const version=x.app_version||"Non renseignée",build=x.app_build||"—";
+   const versionState=!x.app_version?"Non connue":x.app_version!==APP_VERSION?"Version différente":x.app_build===APP_BUILD?"À jour":"Build différent";
+   const versionClass=versionState==="À jour"?"green":versionState==="Non connue"?"":"orange";
+   return `<tr><td><strong>${esc(x.attempted_name||"Identifiant non renseigné")}</strong></td><td>${esc(date)}</td><td><span class="badge ${x.success?"green":"orange"}">${x.success?"Réussie":"Échec"}</span></td><td>${esc(x.reason||"—")}</td><td>${esc(x.ip_address||"Non disponible")}</td><td>${esc(x.user_agent||"Non disponible")}</td><td><span class="badge ${versionClass}">${esc(versionState)}</span><br><strong>${esc(version)}</strong><br><small>${esc(build)}</small></td></tr>`;
+  }).join(""):'<tr><td colspan="7" class="empty">Aucune tentative enregistrée pour le moment.</td></tr>';
   message.textContent="Historique actualisé · "+logs.length+" événement(s).";
  }catch(err){message.textContent="Impossible de charger l’historique : "+(err.message||err);rows.innerHTML='<tr><td colspan="6" class="empty">Vérifie la connexion et les droits Master.</td></tr>';}
  finally{if(button)button.disabled=false;}
