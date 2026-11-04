@@ -20,7 +20,9 @@ Deno.serve(async(req)=>{
  const auditLogin=async(success:boolean,reason:string,userId:string|null=null)=>{
   const ip=req.headers.get("cf-connecting-ip")||req.headers.get("x-real-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||null;
   const userAgent=(req.headers.get("user-agent")||"").slice(0,500)||null;
-  const {error}=await admin.from("acro_login_audit").insert({attempted_name:attemptedName,success,reason:reason.slice(0,240),user_id:userId,ip_address:ip,user_agent:userAgent});
+  const appVersion=String(body.app_version||"").trim().slice(0,32)||null;
+  const appBuild=String(body.app_build||"").trim().slice(0,48)||null;
+  const {error}=await admin.from("acro_login_audit").insert({attempted_name:attemptedName,success,reason:reason.slice(0,240),user_id:userId,ip_address:ip,user_agent:userAgent,app_version:appVersion,app_build:appBuild});
   if(error)console.error("login audit insert failed",error.message);
  };
  if(action!=="set_active"&&action!=="list_logs"&&action!=="list_users"&&(!firstName||!lastName||firstName.length>80||lastName.length>80)){if(action==="login")await auditLogin(false,"Identifiant incomplet ou invalide.");return json({error:"Renseigne un nom et un prénom valides."},400);}
@@ -39,7 +41,7 @@ Deno.serve(async(req)=>{
   if(masterError||!masterProfile||masterProfile.role!=="master"||masterProfile.is_active!==true)return json({error:"Seul un Master actif peut gérer les comptes."},403);
  }
  if(action==="list_logs"){
-  const {data:logs,error:logsError}=await admin.from("acro_login_audit").select("id,attempted_name,success,reason,user_id,ip_address,user_agent,created_at").order("created_at",{ascending:false}).limit(250);
+  const {data:logs,error:logsError}=await admin.from("acro_login_audit").select("id,attempted_name,success,reason,user_id,ip_address,user_agent,app_version,app_build,created_at").order("created_at",{ascending:false}).limit(250);
   if(logsError)return json({error:"Lecture de l’historique impossible : "+logsError.message},500);
   return json({ok:true,logs:logs||[]});
  }
