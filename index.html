@@ -3019,22 +3019,7 @@ function wireReturnButtons(){
 }
 function renderInflationPanel(){
  const panel=document.getElementById("materialPanel");
- // Recherche souple : casse, accents, ponctuation et espaces ignorés.
- // Essai Nom + Prénom, puis Prénom + Nom ; l’identifiant est le dernier recours.
- const findInflationOwner=(block,displayedName)=>{
-  const compactName=value=>normalizeAccessName(value).replace(/\s/g,"");
-  const entered=compactName(displayedName);
-  if(entered){
-   const divers=state.divers||[];
-   const byLastFirst=divers.find(d=>compactName((d.lastName||"")+" "+(d.firstName||""))===entered);
-   if(byLastFirst)return byLastFirst;
-   const byFirstLast=divers.find(d=>compactName((d.firstName||"")+" "+(d.lastName||""))===entered);
-   if(byFirstLast)return byFirstLast;
-  }
-  const ownerId=String(block?.ownerId??"").trim();
-  if(ownerId)return (state.divers||[]).find(d=>String(d.id??"").trim()===ownerId)||null;
-  return null;
- };
+ // Utilise le résolveur global : il vérifie aussi ownerName si ownerId est ancien ou invalide.
  panel.innerHTML=`<div class="section"><div class="section-head"><h2>💨 Gonflage</h2><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="badge">Registre des gonflages</span></div></div><form id="inflationForm">
  <button type="button" class="free-mode-button" id="inflationFreeToggle" aria-pressed="false">🎁 ACTIVER LA GRATUITÉ <span class="free-mode-caption">Gonflage à 0 Bitacro · aucun débit</span></button>
  <div class="field"><label>Date de gonflage</label><input id="inflationDate" type="date" value="${todayISO()}" required></div>
