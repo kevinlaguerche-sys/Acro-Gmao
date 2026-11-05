@@ -1187,6 +1187,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
     <button class="nav-btn" data-view="planning"><span class="ico">🗓️</span>Planning</button>
     <button class="nav-btn" data-view="plongee"><span class="ico">🤿</span>Plongée</button>
     <button class="nav-btn" data-view="plansCarrieres"><span class="ico">🗺️</span>Plans des carrières</button>
+    <button class="nav-btn" data-view="documentsClub"><span class="ico">📁</span>Dossiers du club</button>
     <div class="side-label">Préférences</div>
     <button class="nav-btn" data-view="settings"><span class="ico">⚙️</span>Paramètres application</button>
     <div class="sidebar-bottom"><div class="side-label">Administration Master</div>
@@ -1306,6 +1307,7 @@ const views={
  planning:{title:"Planning",subtitle:"Retrouve les séances et les prochains rendez-vous du club.",icon:"🗓️"},
  plongee:{title:"Plongée",subtitle:"Espace dédié à l'organisation des sorties et activités de plongée.",icon:"🤿"},
  plansCarrieres:{title:"Plans des carrières",subtitle:"Cartes et repères des sites de plongée.",icon:"🗺️"},
+ documentsClub:{title:"Dossiers du club",subtitle:"Les documents utiles à télécharger pour les activités ACRO Plongée.",icon:"📁"},
  settings:{title:"Paramètres application",subtitle:"Personnalise les sons et les vibrations de ton application.",icon:"⚙️"},
  acces:{title:"Gestion des accès",subtitle:"Crée les comptes et choisis les écrans visibles pour chaque membre.",icon:"🛡️"},
  plongeurs:{title:"Gestion des plongeurs",subtitle:"Crée les comptes des plongeurs et attribue à chacun les modules auxquels il peut accéder.",icon:"🤿"},
@@ -1373,8 +1375,9 @@ function loadMemberQRGenerator(cb){if(window.QRCode){cb&&cb();return}if(window._
 const SUPABASE_URL="https://qaxqnfwjfllxulewdxvs.supabase.co";
 const SUPABASE_KEY_STORAGE="acro_supabase_publishable_key_v1";
 const CLUB_STATE_ID="acro-plongee";
+const CLUB_DOCS_BUCKET="acro-documents";
 let supabaseClient=null, remoteSaveTimer=null, remoteReady=false;
-let state=loadState(), current=null, toastTimer;
+let state=loadState(), current=null, toastTimer, clubDocuments=[];
 function defaultState(){return {users:[],equipment:[],loans:[],inflations:[],divers:[],trainingComments:[],events:[],diveSitePlans:[],eventLocations:{director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]},walletTransactions:[],prices:{stab:2,detendeur:2,bloc:2,inflation:1}}}
 function normalizeState(x){x=x&&typeof x==="object"?x:defaultState();x.users=Array.isArray(x.users)?x.users:[];x.equipment ||= [];x.loans ||= [];x.inflations ||= [];x.divers ||= [];x.trainingComments ||= [];x.events ||= [];x.diveSitePlans=Array.isArray(x.diveSitePlans)?x.diveSitePlans:[];x.eventLocations ||= {director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]};x.walletTransactions ||= [];x.prices ||= {stab:2,detendeur:2,bloc:1,inflation:1};(x.divers||[]).forEach(d=>{if(!Number.isFinite(Number(d.balance)))d.balance=0;if(!Number.isFinite(Number(d.bitacrosEarned)))d.bitacrosEarned=0});return x}
 function loadState(){try{const x=JSON.parse(localStorage.getItem(STORE_KEY)||"null");if(x)return normalizeState(x)}catch(e){}return defaultState()}
@@ -1432,7 +1435,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add("hidden"),2600)}
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
-function allowed(view){if(view==="settings"||view==="plansCarrieres")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
+function allowed(view){if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
 function loginLocal(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
@@ -1530,6 +1533,7 @@ function render(view,skipAccessSync=false){
  if(view==="formation") body=formationHTML();
  if(view==="plongee") body=diveForecastHTML();
  if(view==="plansCarrieres") body=diveSitePlansHTML();
+ if(view==="documentsClub") body=clubDocumentsHTML();
  if(view==="settings") body=appSettingsHTML();
  main.innerHTML=`<div class="page-head"><div><div class="eyebrow">${isMaster()?"ESPACE MASTER":(isMasterSection(view)?"CONSULTATION SEULE":"ESPACE MEMBRE")}</div><h1>${v.icon} ${v.title}${view==="masterMateriel"?` <button type="button" class="title-back-button" id="titleBackToMaterial" aria-label="Retour à la page Matériel" title="Retour à Matériel">←</button>`:""}</h1>${v.subtitle?`<p>${v.subtitle}</p>`:""}</div>${view==="plongeurs"&&isMaster()?'<button class="btn primary" id="createDiverBtn">＋ Ajouter un plongeur</button>':view==="acces"&&isMaster()?'<button class="btn primary" id="createUserBtn">＋ Créer un utilisateur</button>':view==="masterMateriel"&&isMaster()?'<div class="header-actions"><button class="btn primary" id="newEquipmentBtn">＋ Créer un équipement</button></div>':""}</div>${body}`;
  const readOnlyMasterView=!isMaster()&&isMasterSection(view);
@@ -1553,6 +1557,7 @@ function render(view,skipAccessSync=false){
  if(view==="formation") wireFormation();
  if(view==="plongee") wireDiveForecast();
  if(view==="plansCarrieres") wireDiveSitePlans();
+ if(view==="documentsClub") wireClubDocuments();
 }
 function analysisEncadrantsHTML(){
  const year=new Date().getFullYear();
@@ -2241,6 +2246,83 @@ async function compressDivePlanImage(file){
  if(!file||!/^image\/(jpeg|png|webp)$/i.test(file.type))throw new Error("Choisis une image JPG, PNG ou WEBP.");
  const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await new Promise((ok,no)=>{img.onload=ok;img.onerror=()=>no(new Error("Image illisible."))});const scale=Math.min(1,1800/img.naturalWidth,1400/img.naturalHeight),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);c.getContext("2d").drawImage(img,0,0,c.width,c.height);const data=c.toDataURL("image/jpeg",.76);if(data.length>2_000_000)throw new Error("Image trop volumineuse après optimisation.");return data;}finally{URL.revokeObjectURL(url)}
 }
+
+const DEFAULT_CLUB_DOCUMENT_FOLDERS=[
+ {name:"Fiches de palanquée",icon:"🤿"},
+ {name:"Fiches d’évacuation",icon:"🚑"},
+ {name:"Documents du club",icon:"📚"}
+];
+function clubDocumentsHTML(){
+ const docs=Array.isArray(clubDocuments)?clubDocuments:[];
+ const categories=[...new Set([...DEFAULT_CLUB_DOCUMENT_FOLDERS.map(x=>x.name),...docs.map(x=>String(x.category||"").trim()).filter(Boolean)])];
+ const icons=name=>(DEFAULT_CLUB_DOCUMENT_FOLDERS.find(x=>x.name===name)||{}).icon||"📂";
+ const counts=name=>docs.filter(x=>x.category===name).length;
+ const folderCards=categories.map(c=>'<button type="button" class="module-card" data-open-club-folder="'+esc(c)+'" style="align-items:center;min-height:104px"><span class="module-icon" style="font-size:27px">'+icons(c)+'</span><span style="min-width:0;flex:1"><strong style="display:block">'+esc(c)+'</strong><small class="muted">'+counts(c)+' fichier(s)</small></span><span aria-hidden="true">›</span></button>').join("");
+ const adminForm=isMaster()?'<details class="master-locations-details" open style="margin-bottom:16px"><summary class="master-locations-summary">＋ Ajouter un document <span class="badge">Master uniquement</span></summary><div class="master-locations-content"><form id="clubDocumentForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px"><div class="field"><label for="clubDocTitle">Nom du document *</label><input id="clubDocTitle" name="title" required maxlength="120" placeholder="Ex. Fiche de palanquée"></div><div class="field"><label for="clubDocCategory">Dossier *</label><input id="clubDocCategory" name="category" list="clubDocCategories" required maxlength="70" placeholder="Choisir ou créer un dossier"><datalist id="clubDocCategories">'+categories.map(c=>'<option value="'+esc(c)+'"></option>').join("")+'</datalist></div><div class="field"><label for="clubDocFile">Fichier à déposer *</label><input id="clubDocFile" name="file" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"></div><div class="field" style="grid-column:1/-1"><label for="clubDocDescription">Description (facultatif)</label><textarea id="clubDocDescription" name="description" rows="2" maxlength="400" placeholder="Précisions sur l’utilisation du document…"></textarea></div><div style="grid-column:1/-1"><button class="btn primary" type="submit">Téléverser le document</button><p class="planning-hint">PDF, Word, Excel, PowerPoint, JPG ou PNG · 25 Mo maximum. Le fichier sera stocké dans Supabase et accessible aux membres connectés.</p></div></form></div></details>':'';
+ return '<section class="section"><div class="section-head"><div><h2>📁 Les dossiers du club</h2><p class="muted">Retrouve ici les documents partagés par le club. Appuie sur un dossier pour consulter et télécharger ses fichiers.</p></div><span class="badge">'+docs.length+' document(s)</span></div>'+adminForm+'<div id="clubDocumentFolders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">'+folderCards+'</div>'+(docs.length?'<p class="planning-hint" style="margin-top:14px">Les dossiers sont synchronisés en ligne : les ajouts du Master apparaissent pour les autres membres après actualisation.</p>':'<div class="empty">Aucun document déposé pour le moment. Les dossiers sont prêts à recevoir les fiches du club.</div>')+'</section><dialog id="clubFolderDialog" style="border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:85vh;box-shadow:0 24px 80px #061b3240"><div class="panel" style="box-shadow:none;max-height:85vh;overflow:auto"><div class="section-head"><div><div class="eyebrow">DOCUMENTS ACRO PLONGÉE</div><h2 id="clubFolderDialogTitle">Dossier</h2></div><button type="button" class="btn soft small" id="closeClubFolderDialog">Fermer ✕</button></div><div id="clubFolderDialogContent"></div></div></dialog>';
+}
+async function loadClubDocuments(){
+ if(!supabaseClient||!remoteReady)throw new Error("Connexion Supabase indisponible.");
+ const {data,error}=await supabaseClient.from("acro_documents").select("id,title,category,description,storage_path,original_name,content_type,size_bytes,created_at,created_by").order("category",{ascending:true}).order("title",{ascending:true});
+ if(error)throw error;clubDocuments=Array.isArray(data)?data:[];return clubDocuments;
+}
+function formatClubDocSize(bytes){
+ const n=Number(bytes)||0;return n>=1048576?(n/1048576).toLocaleString("fr-FR",{maximumFractionDigits:1})+" Mo":Math.max(1,Math.round(n/1024))+" Ko";
+}
+function renderClubFolderContents(category){
+ const host=document.getElementById("clubFolderDialogContent");if(!host)return;
+ const docs=clubDocuments.filter(d=>d.category===category);
+ document.getElementById("clubFolderDialogTitle").textContent="📂 "+category;
+ host.innerHTML=docs.length?'<div style="display:grid;gap:10px">'+docs.map(d=>'<article class="section" style="margin:0;padding:13px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="module-icon" style="font-size:23px">📄</span><div style="flex:1;min-width:150px"><strong>'+esc(d.title)+'</strong><div class="muted" style="font-size:12px">'+esc(d.description||d.original_name||"Document du club")+' · '+formatClubDocSize(d.size_bytes)+'</div></div><button type="button" class="btn primary small" data-download-club-doc="'+esc(d.id)+'">⬇ Télécharger</button>' +(isMaster()?'<button type="button" class="btn danger small" data-delete-club-doc="'+esc(d.id)+'">Supprimer</button>':'')+'</article>').join("")+'</div>':'<div class="empty">Ce dossier ne contient pas encore de fichier.</div>';
+}
+async function downloadClubDocument(id){
+ const doc=clubDocuments.find(d=>d.id===id);if(!doc)throw new Error("Document introuvable.");
+ const {data,error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).download(doc.storage_path);if(error)throw error;
+ const url=URL.createObjectURL(data),a=document.createElement("a");a.href=url;a.download=doc.original_name||doc.title||"document-club";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+function clubDocSlug(value){
+ return String(value||"dossier").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,55)||"dossier";
+}
+async function wireClubDocuments(){
+ const main=document.getElementById("mainContent");
+ main.querySelectorAll("[data-open-club-folder]").forEach(b=>b.addEventListener("click",()=>{renderClubFolderContents(b.dataset.openClubFolder);document.getElementById("clubFolderDialog")?.showModal()}));
+ document.getElementById("closeClubFolderDialog")?.addEventListener("click",()=>document.getElementById("clubFolderDialog")?.close());
+ document.getElementById("clubFolderDialog")?.addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+ document.getElementById("clubFolderDialogContent")?.addEventListener("click",async e=>{
+  const down=e.target.closest("[data-download-club-doc]");
+  if(down){down.disabled=true;try{await downloadClubDocument(down.dataset.downloadClubDoc)}catch(err){notify("Téléchargement impossible : "+(err.message||"erreur inconnue"))}finally{down.disabled=false}return}
+  const del=e.target.closest("[data-delete-club-doc]");
+  if(del){if(!isMaster())return;const doc=clubDocuments.find(d=>d.id===del.dataset.deleteClubDoc);if(!doc||!confirm("Supprimer « "+doc.title+" » ?"))return;del.disabled=true;
+   try{const {error:storageError}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([doc.storage_path]);if(storageError)throw storageError;const {error:rowError}=await supabaseClient.from("acro_documents").delete().eq("id",doc.id);if(rowError)throw rowError;await loadClubDocuments();render("documentsClub");notify("Document supprimé")}
+   catch(err){notify("Suppression impossible : "+(err.message||"erreur inconnue"));del.disabled=false}
+  }
+ });
+ const form=document.getElementById("clubDocumentForm");
+ form?.addEventListener("submit",async e=>{
+  e.preventDefault();if(!isMaster()){notify("Ajout réservé au Master.");return}
+  const file=form.elements.file.files?.[0],title=form.elements.title.value.trim(),category=form.elements.category.value.trim(),description=form.elements.description.value.trim(),btn=form.querySelector('button[type="submit"]');
+  if(!file||!title||!category)return;
+  if(file.size>25*1024*1024){notify("Le fichier dépasse la limite de 25 Mo.");return}
+  const allowedTypes=["application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation","image/jpeg","image/png"];
+  if(!allowedTypes.includes(file.type)){notify("Format non accepté. Utilise PDF, Office, JPG ou PNG.");return}
+  btn.disabled=true;btn.textContent="Envoi dans Supabase…";
+  const ext=(file.name.split(".").pop()||"file").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8)||"file";
+  const path=clubDocSlug(category)+"/"+crypto.randomUUID()+"-"+clubDocSlug(title)+"."+ext;let uploaded=false;
+  try{
+   const {error:uploadError}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).upload(path,file,{contentType:file.type,upsert:false,cacheControl:"3600"});
+   if(uploadError)throw uploadError;uploaded=true;
+   const {error:insertError}=await supabaseClient.from("acro_documents").insert({title,category,description,storage_path:path,original_name:file.name,content_type:file.type,size_bytes:file.size,created_by:current.id});
+   if(insertError)throw insertError;
+   await loadClubDocuments();render("documentsClub");notify("Document ajouté au dossier du club.");
+  }catch(err){
+   if(uploaded){try{await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([path])}catch(cleanupError){console.warn("Nettoyage du fichier incomplet",cleanupError)}}
+   notify("Ajout impossible : "+(err.message||"vérifie les droits Supabase"));btn.disabled=false;btn.textContent="Téléverser le document";
+  }
+ });
+ try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")render("documentsClub")}
+ catch(err){console.error("Chargement des documents du club impossible",err);notify("Impossible de charger les dossiers : "+(err.message||"erreur Supabase"))}
+}
+
 function diveForecastHTML(){
  if(!isDiveEncadrant())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants.</div></div>';
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
