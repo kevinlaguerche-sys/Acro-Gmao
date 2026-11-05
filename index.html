@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V139</title>
+<title>ACRO Plongée — V140</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -1316,8 +1316,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
-const APP_VERSION="V138";
-const APP_BUILD="20261105.08";
+const APP_VERSION="V140";
+const APP_BUILD="20261105.09";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
 const ENCADREMENT_LEVELS=["E1","E2","E3","E4","TSI"];
@@ -1481,7 +1481,8 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add("hidden"),2600)}
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
-function allowed(view){if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
+function canAccessDiveResponses(){return isDiveEncadrant()||(current?.permissions||[]).includes("materiel")}
+function allowed(view){if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return canAccessDiveResponses();return isMaster() || (current?.permissions||[]).includes(view)}
 function loginLocal(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
@@ -2408,7 +2409,7 @@ async function wireClubDocuments(skipLoad=false){
 }
 
 function diveForecastHTML(){
- if(!isDiveEncadrant())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants.</div></div>';
+ if(!canAccessDiveResponses())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants et aux membres autorisés au matériel.</div></div>';
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
  const first=new Date(year,month,1),offset=(first.getDay()+6)%7,start=new Date(year,month,1-offset);
  const total=Math.ceil((offset+new Date(year,month+1,0).getDate())/7)*7;
@@ -2470,7 +2471,7 @@ function openDiveEventDialog(eventId){
  if(typeof dialog.showModal==="function"){if(!dialog.open)dialog.showModal();}else dialog.setAttribute("open","");
 }
 async function saveDiveResponse(eventId,choice){
- if(!isDiveEncadrant())return;
+ if(!canAccessDiveResponses())return;
  const ev=(state.events||[]).find(x=>String(x.id)===String(eventId));if(!ev||!["yes","no"].includes(choice))return;
  const userId=current?.id||"",name=current?.name||"Encadrant";if(!userId)return;
  if(diveResponseFor(ev,userId)){notify("Ta réponse est déjà enregistrée. Seul le Master peut la retirer.");return}
