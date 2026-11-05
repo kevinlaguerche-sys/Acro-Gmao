@@ -3060,10 +3060,16 @@ function renderInflationPanel(){
  for(let n=1;n<=4;n++){
   document.getElementById("inflationBlock"+n)?.addEventListener("input",()=>{const f=document.getElementById("inflationForm");f.dataset["force"+n]="false";updateOutlet(n)});
   document.getElementById("inflationPressure"+n)?.addEventListener("input",()=>updateOutlet(n));
-  document.getElementById("forceInflationBtn"+n)?.addEventListener("click",()=>{
+  document.getElementById("forceInflationBtn"+n)?.addEventListener("click",async()=>{
    const row=getOutlet(n),price=Number((state.prices||{}).inflation??1),balance=Number(row.diver?.balance)||0,actor=String(current?.name||currentMasterPersonName()||"").trim();
    if(!row.diver||!actor)return;
-   if(!window.confirm("Confirmer le forçage pour "+row.diver.firstName+" "+row.diver.lastName+" ?\nSolde actuel : "+balance.toFixed(2)+" Bitacros.\nCoût : "+price.toFixed(2)+" Bitacros.\nLe solde peut devenir négatif.\nForçage par : "+actor))return;
+   const confirmed=await acroInflationConfirm({
+    kind:"force",kicker:"⚠️ AUTORISATION EXCEPTIONNELLE",title:"Confirmer le forçage ?",
+    message:"Le solde de "+row.diver.firstName+" "+row.diver.lastName+" est insuffisant pour ce gonflage.",
+    details:"Sortie compresseur : "+n+"\nBloc n° "+row.number+"\nSolde actuel : "+balance.toFixed(2)+" Bitacros\nCoût du gonflage : "+price.toFixed(2)+" Bitacros\nLe solde pourra devenir négatif.\nAutorisation demandée par : "+actor,
+    cancelLabel:"Annuler",confirmLabel:"Confirmer le forçage",force:true
+   });
+   if(!confirmed)return;
    document.getElementById("inflationForm").dataset["force"+n]="true";updateOutlet(n);notify("Forçage autorisé pour la sortie "+n);
   });
   updateOutlet(n);
