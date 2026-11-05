@@ -1186,6 +1186,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
     <button class="nav-btn" data-view="formation"><span class="ico">🎓</span>Formation</button>
     <button class="nav-btn" data-view="planning"><span class="ico">🗓️</span>Planning</button>
     <button class="nav-btn" data-view="plongee"><span class="ico">🤿</span>Plongée</button>
+    <button class="nav-btn" data-view="plansCarrieres"><span class="ico">🗺️</span>Plans des carrières</button>
     <div class="side-label">Préférences</div>
     <button class="nav-btn" data-view="settings"><span class="ico">⚙️</span>Paramètres application</button>
     <div class="sidebar-bottom"><div class="side-label">Administration Master</div>
@@ -1304,6 +1305,7 @@ const views={
  formation:{title:"Formation",subtitle:"Organisation des cursus, formations et progression des membres.",icon:"🎓"},
  planning:{title:"Planning",subtitle:"Retrouve les séances et les prochains rendez-vous du club.",icon:"🗓️"},
  plongee:{title:"Plongée",subtitle:"Espace dédié à l'organisation des sorties et activités de plongée.",icon:"🤿"},
+ plansCarrieres:{title:"Plans des carrières",subtitle:"Cartes et repères des sites de plongée.",icon:"🗺️"},
  settings:{title:"Paramètres application",subtitle:"Personnalise les sons et les vibrations de ton application.",icon:"⚙️"},
  acces:{title:"Gestion des accès",subtitle:"Crée les comptes et choisis les écrans visibles pour chaque membre.",icon:"🛡️"},
  plongeurs:{title:"Gestion des plongeurs",subtitle:"Crée les comptes des plongeurs et attribue à chacun les modules auxquels il peut accéder.",icon:"🤿"},
@@ -1430,7 +1432,7 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=document.getElementById("toast");t.textContent=msg;t.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add("hidden"),2600)}
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
-function allowed(view){if(view==="settings")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
+function allowed(view){if(view==="settings"||view==="plansCarrieres")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
 function loginLocal(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
@@ -1527,6 +1529,7 @@ function render(view,skipAccessSync=false){
  if(view==="planning") body=planningHTML();
  if(view==="formation") body=formationHTML();
  if(view==="plongee") body=diveForecastHTML();
+ if(view==="plansCarrieres") body=diveSitePlansHTML();
  if(view==="settings") body=appSettingsHTML();
  main.innerHTML=`<div class="page-head"><div><div class="eyebrow">${isMaster()?"ESPACE MASTER":(isMasterSection(view)?"CONSULTATION SEULE":"ESPACE MEMBRE")}</div><h1>${v.icon} ${v.title}${view==="masterMateriel"?` <button type="button" class="title-back-button" id="titleBackToMaterial" aria-label="Retour à la page Matériel" title="Retour à Matériel">←</button>`:""}</h1>${v.subtitle?`<p>${v.subtitle}</p>`:""}</div>${view==="plongeurs"&&isMaster()?'<button class="btn primary" id="createDiverBtn">＋ Ajouter un plongeur</button>':view==="acces"&&isMaster()?'<button class="btn primary" id="createUserBtn">＋ Créer un utilisateur</button>':view==="masterMateriel"&&isMaster()?'<div class="header-actions"><button class="btn primary" id="newEquipmentBtn">＋ Créer un équipement</button></div>':""}</div>${body}`;
  const readOnlyMasterView=!isMaster()&&isMasterSection(view);
@@ -1549,6 +1552,7 @@ function render(view,skipAccessSync=false){
  if(view==="planning") wirePlanning();
  if(view==="formation") wireFormation();
  if(view==="plongee") wireDiveForecast();
+ if(view==="plansCarrieres") wireDiveSitePlans();
 }
 function analysisEncadrantsHTML(){
  const year=new Date().getFullYear();
@@ -2261,7 +2265,7 @@ function diveForecastHTML(){
   </article>`;
  }).join("");
  return `<div class="section">
-  ${diveSitePlansHTML()}\n  <div class="calendar-toolbar"><div><div class="eyebrow">RÉPONSES AUX ÉVÉNEMENTS DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
+  <div class="calendar-toolbar"><div><div class="eyebrow">RÉPONSES AUX ÉVÉNEMENTS DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
   <p class="muted">Tous les événements du Planning sont affichés ici : plongées, fosse, directeur de bassin, matériel et gonflage. Appuie sur une date ou un événement pour répondre.</p>
   <div class="calendar-grid">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells.join("")}</div>
   <div class="acro-compact-legend" aria-label="Légende des événements"><div class="acro-compact-legend-title">Légende</div><div class="acro-compact-legend-items"><span>${planningIconSVG('director_pool')}<b>Directeur de bassin</b></span><span>${planningIconSVG('director_dive')}<b>Directeur de plongée</b></span><span>${planningIconSVG('director_fosse')}<b>Directeur de fosse</b></span><span>${planningIconSVG('material_distribution')}<b>Matériel / Gonflage</b></span></div></div>
