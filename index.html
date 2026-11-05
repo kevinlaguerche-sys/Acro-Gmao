@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V136</title>
+<title>ACRO Plongée — V139</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -403,6 +403,25 @@
 .inflation-outlet input{width:100%;min-width:0}
 .inflation-outlet .planning-hint{font-size:13px;min-height:34px}
 @media(max-width:640px){.inflation-four-grid{grid-template-columns:1fr;gap:10px}.inflation-outlet{padding:12px}}
+/* V139 — confirmations ACRO adaptées au mobile */
+.acro-confirm-overlay{position:fixed;inset:0;z-index:1000000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,19,34,.68);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.acro-confirm-card{width:min(100%,540px);max-height:88vh;overflow:auto;background:linear-gradient(155deg,#fff 0%,#f4fbff 62%,#e8f8fb 100%);border:1px solid #cceaf2;border-radius:26px;box-shadow:0 24px 70px #00182b66;padding:26px 24px 22px;color:#10283c}
+.acro-confirm-wave{height:7px;border-radius:20px;background:linear-gradient(90deg,#087eaa,#40e0d0,#a6e9f3);margin:-26px -24px 22px}
+.acro-confirm-brand{display:flex;align-items:center;gap:10px;color:#0b5273;font-weight:900;letter-spacing:.04em;font-size:.82rem;margin-bottom:18px}
+.acro-confirm-brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,#dff8ff,#bdeef2);font-size:24px}
+.acro-confirm-kicker{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#fff1d8;color:#96510b;font-weight:900;font-size:.78rem;margin-bottom:12px}
+.acro-confirm-title{font:800 clamp(1.25rem,4vw,1.7rem)/1.2 Manrope,'DM Sans',sans-serif;color:#102b45;margin:0 0 14px}
+.acro-confirm-message{font-size:1rem;line-height:1.55;color:#40576b;margin:0 0 16px;white-space:pre-line}
+.acro-confirm-details{padding:15px 16px;border:1px solid #f2d99e;border-radius:16px;background:linear-gradient(135deg,#fff8e8,#fff0c8);color:#583d17;font-weight:700;line-height:1.55;white-space:pre-line;margin:0 0 18px}
+.acro-confirm-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.acro-confirm-btn{min-height:48px;border-radius:14px;padding:11px 18px;font:800 .96rem 'DM Sans',sans-serif;cursor:pointer;border:2px solid transparent}
+.acro-confirm-btn:focus-visible{outline:3px solid #69c9e1;outline-offset:3px}
+.acro-confirm-cancel{background:#fff;border-color:#cbdce6;color:#31516a}
+.acro-confirm-accept{background:linear-gradient(135deg,#087eaa,#075b91);color:#fff;box-shadow:0 5px 14px #075b9133}
+.acro-confirm-force{background:linear-gradient(135deg,#f3a43b,#df741b);color:#fff;box-shadow:0 5px 14px #df741b33}
+.acro-confirm-overlay[data-kind="pressure"] .acro-confirm-kicker{background:#ffeadf;color:#a33b1c}
+.acro-confirm-overlay[data-kind="pressure"] .acro-confirm-details{border-color:#f2b9a6;background:linear-gradient(135deg,#fff3ec,#ffe4d7);color:#8d321d}
+@media(max-width:480px){.acro-confirm-overlay{padding:12px;align-items:flex-end}.acro-confirm-card{border-radius:23px;padding:22px 18px 18px}.acro-confirm-wave{margin:-22px -18px 18px}.acro-confirm-actions{display:grid;grid-template-columns:1fr 1fr}.acro-confirm-btn{padding:10px 9px;font-size:.9rem}.acro-confirm-actions .acro-confirm-accept,.acro-confirm-actions .acro-confirm-force{grid-column:2}}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3214,7 +3233,25 @@ function renderInflationPanel(){
  document.querySelector('[data-qr-import-trigger="block"]')?.addEventListener("click",()=>blockImportInput?.click());
  blockImportInput?.addEventListener("change",async()=>{const file=blockImportInput.files?.[0];if(!file)return;blockImportStatus.className="acro-qr-import-status active";blockImportStatus.textContent="Lecture de la photo en cours…";try{const raw=await decodeQrImageFile(file),block=parseBlockCode(raw);if(!block)throw new Error("Ce QR Code ne correspond pas à un bloc reconnu.");const assigned=assignScannedInflationBlock(block);if(!assigned.ok)throw new Error(assigned.message);blockImportStatus.className="acro-qr-import-status active success";blockImportStatus.textContent="✓ QR Code lu : bloc "+block+" affecté à la sortie "+assigned.row+". Vérifie le propriétaire avant de poursuivre.";}catch(err){blockImportStatus.className="acro-qr-import-status active error";blockImportStatus.textContent=err.message||"Lecture impossible."}finally{blockImportInput.value=""}});
  document.getElementById("stopBlockQR").addEventListener("click",stopQR);
- document.getElementById("inflationForm").addEventListener("submit",e=>{
+function acroInflationConfirm(options={}){
+ return new Promise(resolve=>{
+  const overlay=document.createElement("div");overlay.className="acro-confirm-overlay";overlay.dataset.kind=options.kind||"default";
+  overlay.innerHTML='<section class="acro-confirm-card" role="dialog" aria-modal="true" aria-labelledby="acroConfirmTitle"><div class="acro-confirm-wave"></div><div class="acro-confirm-brand"><span class="acro-confirm-brand-mark">🤿</span><span>ACRO PLONGÉE · GESTION DU CLUB</span></div><div class="acro-confirm-kicker" id="acroConfirmKicker">ℹ️ CONFIRMATION</div><h2 class="acro-confirm-title" id="acroConfirmTitle"></h2><p class="acro-confirm-message" id="acroConfirmMessage"></p><div class="acro-confirm-details" id="acroConfirmDetails"></div><div class="acro-confirm-actions"><button type="button" class="acro-confirm-btn acro-confirm-cancel" id="acroConfirmCancel"></button><button type="button" class="acro-confirm-btn acro-confirm-accept" id="acroConfirmAccept"></button></div></section>';
+  overlay.querySelector("#acroConfirmKicker").textContent=options.kicker||"ℹ️ CONFIRMATION";
+  overlay.querySelector("#acroConfirmTitle").textContent=options.title||"Confirmer ?";
+  overlay.querySelector("#acroConfirmMessage").textContent=options.message||"";
+  const details=overlay.querySelector("#acroConfirmDetails");details.textContent=options.details||"";details.hidden=!options.details;
+  const cancel=overlay.querySelector("#acroConfirmCancel"),accept=overlay.querySelector("#acroConfirmAccept");
+  cancel.textContent=options.cancelLabel||"Annuler";accept.textContent=options.confirmLabel||"Confirmer";
+  if(options.force){accept.classList.remove("acro-confirm-accept");accept.classList.add("acro-confirm-force")}
+  const finish=value=>{document.removeEventListener("keydown",onKey);overlay.remove();resolve(value)};
+  const onKey=event=>{if(event.key==="Escape")finish(false)};
+  cancel.addEventListener("click",()=>finish(false));accept.addEventListener("click",()=>finish(true));
+  overlay.addEventListener("click",event=>{if(event.target===overlay)finish(false)});
+  document.addEventListener("keydown",onKey);document.body.appendChild(overlay);accept.focus();
+ });
+}
+ document.getElementById("inflationForm").addEventListener("submit",async e=>{
  e.preventDefault();stopQR();
  const form=document.getElementById("inflationForm"),manualFree=form.dataset.manualFree==="true";
  const operator=isMaster()?String(document.getElementById("inflationBy").value||"").trim():currentMasterPersonName();
@@ -3241,10 +3278,10 @@ function renderInflationPanel(){
  if(!rows.length){notify("Saisis au moins un numéro de bloc.");return}
  const seen=new Set();for(const row of rows){const key=row.number.toLocaleLowerCase("fr");if(seen.has(key)){notify("Le bloc "+row.number+" est sélectionné plusieurs fois.");return}seen.add(key)}
  const over=rows.filter(r=>Number(r.block.servicePressure)===200&&r.pressure>200);
- if(over.length&&!window.confirm("⚠️ ATTENTION — PRESSION DE SERVICE DÉPASSÉE\n\n"+over.map(r=>"Bloc "+r.number+" : "+r.pressure+" bar (service 200 bar)").join("\n")+"\n\nConfirmer ces gonflages ?"))return;
+ if(over.length){const pressureOk=await acroInflationConfirm({kind:"pressure",kicker:"⚠️ ATTENTION · SÉCURITÉ",title:"Pression de service dépassée",message:"Un ou plusieurs blocs dépassent leur pression de service autorisée.",details:over.map(r=>"Bloc "+r.number+" : "+r.pressure+" bar (service "+(Number(r.block.servicePressure)||200)+" bar)").join("\\n"),confirmLabel:"Confirmer les gonflages",cancelLabel:"Annuler"});if(!pressureOk)return;}
  const debitTotals=new Map();
  for(const r of rows){if(!manualFree&&!r.club&&!r.encadrant&&!r.manager){const id=r.diver.id;debitTotals.set(id,(debitTotals.get(id)||0)+price)}if(r.forced&&!r.forceActor){notify("Sortie "+r.n+" : impossible d’identifier le compte ayant autorisé le forçage.");return}}
- for(const [id,total] of debitTotals){const d=rows.find(r=>r.diver?.id===id)?.diver;if((Number(d?.balance)||0)+0.0001<total){const relevant=rows.filter(r=>r.diver?.id===id).map(r=>r.number).join(", ");const forcedAll=rows.filter(r=>r.diver?.id===id).every(r=>r.forced);if(!forcedAll){notify("Solde insuffisant pour "+(d.firstName+" "+d.lastName)+". Blocs : "+relevant+". Utilise le forçage sur chaque sortie concernée.");return}}}
+ for(const [id,total] of debitTotals){const d=rows.find(r=>r.diver?.id===id)?.diver;if((Number(d?.balance)||0)+0.0001<total){const personRows=rows.filter(r=>r.diver?.id===id),relevant=personRows.map(r=>r.number).join(", "),forcedAll=personRows.every(r=>r.forced);if(!forcedAll){const forceOk=await acroInflationConfirm({kind:"force",force:true,kicker:"⚠️ AUTORISATION DE FORÇAGE",title:"Bitacros insuffisants",message:(d.firstName+" "+d.lastName)+" ne possède pas assez de Bitacros pour ce gonflage.",details:"Bloc(s) concerné(s) : "+relevant+"\\nSolde actuel : "+(Number(d.balance)||0).toFixed(2)+" Bitacros\\nCoût total : "+total.toFixed(2)+" Bitacros\\nLe solde pourra devenir négatif. Le forçage sera enregistré avec le nom de l’opérateur.",confirmLabel:"Oui, forcer et enregistrer",cancelLabel:"Non, annuler"});if(!forceOk)return;const actor=String(current?.name||currentMasterPersonName()||operator||"").trim();if(!actor){notify("Impossible d’identifier la personne qui autorise le forçage.");return}personRows.forEach(r=>{r.forced=true;r.forceActor=actor;form.dataset["force"+r.n]="true"});}}}
  state.walletTransactions||=[];const timestamp=Date.now();
 
  for(const r of rows){
