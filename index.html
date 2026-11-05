@@ -2298,6 +2298,26 @@ function clubDocSlug(value){
 async function wireClubDocuments(skipLoad=false){
  const main=document.getElementById("mainContent");
  main.querySelectorAll("[data-open-club-folder]").forEach(b=>b.addEventListener("click",()=>{renderClubFolderContents(b.dataset.openClubFolder);document.getElementById("clubFolderDialog")?.showModal()}));
+ main.querySelectorAll("[data-delete-club-folder]").forEach(b=>b.addEventListener("click",async()=>{
+  if(!isMaster())return;
+  const folder=clubDocumentFolders.find(x=>x.id===b.dataset.deleteClubFolder);if(!folder)return;
+  if(clubDocuments.some(d=>d.category===folder.name)){notify("Impossible de supprimer ce dossier : il contient encore des documents. Supprime ou déplace d’abord ses fichiers.");return}
+  if(!confirm("Supprimer le dossier « "+folder.name+" » ?"))return;
+  b.disabled=true;
+  try{const {error}=await supabaseClient.from("acro_document_folders").delete().eq("id",folder.id);if(error)throw error;await loadClubDocumentFolders();refreshClubDocumentFolders();notify("Dossier supprimé")}
+  catch(err){notify("Suppression du dossier impossible : "+(err.message||"erreur Supabase"));b.disabled=false}
+ }));
+ const folderForm=document.getElementById("clubFolderCreateForm");
+ folderForm?.addEventListener("submit",async e=>{
+  e.preventDefault();if(!isMaster()){notify("Création réservée au Master.");return}
+  const name=String(folderForm.elements.name.value||"").trim();if(!name)return;
+  if(clubDocumentFolders.some(x=>x.name.toLocaleLowerCase("fr")===name.toLocaleLowerCase("fr"))){notify("Ce dossier existe déjà.");return}
+  const btn=folderForm.querySelector('button[type="submit"]');btn.disabled=true;
+  try{const {error}=await supabaseClient.from("acro_document_folders").insert({name,icon:"📂",created_by:current.id});if(error)throw error;await loadClubDocumentFolders();refreshClubDocumentFolders();folderForm.reset();notify("Dossier créé")}
+  catch(err){notify("Création du dossier impossible : "+(err.message||"erreur Supabase"))}
+  finally{btn.disabled=false}
+ });
+
  document.getElementById("closeClubFolderDialog")?.addEventListener("click",()=>document.getElementById("clubFolderDialog")?.close());
  document.getElementById("clubFolderDialog")?.addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
  document.getElementById("clubFolderDialogContent")?.addEventListener("click",async e=>{
@@ -2332,7 +2352,7 @@ async function wireClubDocuments(skipLoad=false){
    console.error("Erreur dépôt document club",err);notify("Ajout impossible : "+(err.message||"vérifie les droits Supabase"));
   }finally{btn.disabled=false;btn.textContent="Téléverser le document";}
  });
- if(!skipLoad){try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")refreshClubDocumentFolders()}
+ if(!skipLoad){try{await Promise.all([loadClubDocuments(),loadClubDocumentFolders()]);if(document.getElementById("mainContent")?.dataset.view==="documentsClub")refreshClubDocumentFolders()}
  catch(err){console.error("Chargement des documents du club impossible",err);notify("Impossible de charger les dossiers : "+(err.message||"erreur Supabase"))}}
 }
 
