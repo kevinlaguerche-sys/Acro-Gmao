@@ -1288,8 +1288,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
-const APP_VERSION="V132";
-const APP_BUILD="20261105.02";
+const APP_VERSION="V133";
+const APP_BUILD="20261105.03";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
 const ENCADREMENT_LEVELS=["E1","E2","E3","E4","TSI"];
@@ -2315,21 +2315,22 @@ async function wireClubDocuments(skipLoad=false){
   const file=form.elements.file.files?.[0],title=form.elements.title.value.trim(),category=form.elements.category.value.trim(),description=form.elements.description.value.trim(),btn=form.querySelector('button[type="submit"]');
   if(!file||!title||!category)return;
   if(file.size>25*1024*1024){notify("Le fichier dépasse la limite de 25 Mo.");return}
-  const allowedTypes=["application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation","image/jpeg","image/png"];
-  if(!allowedTypes.includes(file.type)){notify("Format non accepté. Utilise PDF, Office, JPG ou PNG.");return}
+  const ext=(file.name.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const mimeByExt={pdf:"application/pdf",doc:"application/msword",docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",xls:"application/vnd.ms-excel",xlsx:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",ppt:"application/vnd.ms-powerpoint",pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation",jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png"};
+  const contentType=mimeByExt[ext];
+  if(!contentType){notify("Format non accepté. Utilise PDF, Word, Excel, PowerPoint, JPG ou PNG.");return}
   btn.disabled=true;btn.textContent="Envoi dans Supabase…";
-  const ext=(file.name.split(".").pop()||"file").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8)||"file";
   const path=clubDocSlug(category)+"/"+crypto.randomUUID()+"-"+clubDocSlug(title)+"."+ext;let uploaded=false;
   try{
-   const {error:uploadError}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).upload(path,file,{contentType:file.type,upsert:false,cacheControl:"3600"});
+   const {error:uploadError}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).upload(path,file,{contentType,upsert:false,cacheControl:"3600"});
    if(uploadError)throw uploadError;uploaded=true;
-   const {error:insertError}=await supabaseClient.from("acro_documents").insert({title,category,description,storage_path:path,original_name:file.name,content_type:file.type,size_bytes:file.size,created_by:current.id});
+   const {error:insertError}=await supabaseClient.from("acro_documents").insert({title,category,description,storage_path:path,original_name:file.name,content_type:contentType,size_bytes:file.size,created_by:current.id});
    if(insertError)throw insertError;
    await loadClubDocuments();refreshClubDocumentFolders();form.reset();notify("Document ajouté au dossier du club.");
   }catch(err){
    if(uploaded){try{await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([path])}catch(cleanupError){console.warn("Nettoyage du fichier incomplet",cleanupError)}}
-   notify("Ajout impossible : "+(err.message||"vérifie les droits Supabase"));btn.disabled=false;btn.textContent="Téléverser le document";
-  }
+   console.error("Erreur dépôt document club",err);notify("Ajout impossible : "+(err.message||"vérifie les droits Supabase"));
+  }finally{btn.disabled=false;btn.textContent="Téléverser le document";}
  });
  if(!skipLoad){try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")refreshClubDocumentFolders()}
  catch(err){console.error("Chargement des documents du club impossible",err);notify("Impossible de charger les dossiers : "+(err.message||"erreur Supabase"))}}
