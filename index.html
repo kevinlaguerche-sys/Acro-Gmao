@@ -2283,7 +2283,7 @@ async function downloadClubDocument(id){
 function clubDocSlug(value){
  return String(value||"dossier").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,55)||"dossier";
 }
-async function wireClubDocuments(){
+async function wireClubDocuments(skipLoad=false){
  const main=document.getElementById("mainContent");
  main.querySelectorAll("[data-open-club-folder]").forEach(b=>b.addEventListener("click",()=>{renderClubFolderContents(b.dataset.openClubFolder);document.getElementById("clubFolderDialog")?.showModal()}));
  document.getElementById("closeClubFolderDialog")?.addEventListener("click",()=>document.getElementById("clubFolderDialog")?.close());
@@ -2319,8 +2319,8 @@ async function wireClubDocuments(){
    notify("Ajout impossible : "+(err.message||"vérifie les droits Supabase"));btn.disabled=false;btn.textContent="Téléverser le document";
   }
  });
- try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")render("documentsClub")}
- catch(err){console.error("Chargement des documents du club impossible",err);notify("Impossible de charger les dossiers : "+(err.message||"erreur Supabase"))}
+ if(!skipLoad){try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")render("documentsClub")}
+ catch(err){console.error("Chargement des documents du club impossible",err);notify("Impossible de charger les dossiers : "+(err.message||"erreur Supabase"))}}
 }
 
 function diveForecastHTML(){
