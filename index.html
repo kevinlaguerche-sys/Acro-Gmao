@@ -395,6 +395,14 @@
 
 /* Lecteur MFT FFESSM intégré */
 .mft-open-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:1px solid #a9d8dc;border-radius:18px;background:linear-gradient(135deg,#e8f7f7,#d9eff4);color:#087e87;font-weight:900;box-shadow:0 5px 14px rgba(8,126,135,.12);cursor:pointer;white-space:nowrap}.mft-dialog{width:min(96vw,1100px);height:min(92dvh,900px);max-width:none;max-height:none;padding:0;border:0;border-radius:22px;overflow:hidden;background:#f7fbff;box-shadow:0 24px 80px #001b35aa}.mft-dialog::backdrop{background:rgba(3,20,37,.78);backdrop-filter:blur(5px)}.mft-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 17px;background:linear-gradient(120deg,#0877b9,#07518e);color:white}.mft-dialog-head strong{font-size:17px}.mft-dialog-close{width:40px;height:40px;border:0;border-radius:50%;background:white;color:#17334d;font-size:24px;font-weight:900}.mft-dialog-frame{display:block;width:100%;height:calc(100% - 66px);border:0;background:#e9eff4}.mft-dialog-fallback{padding:8px 14px;background:#e8f3fc;color:#174d82;font-size:12px;text-align:center}.mft-dialog-body{height:calc(100% - 66px);display:flex;flex-direction:column}
+
+.inflation-four-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+.inflation-outlet{border:1px solid var(--line,#d7e2e8);border-radius:16px;padding:14px;background:var(--card,#fff);min-width:0}
+.inflation-outlet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.inflation-outlet .field{margin:9px 0}
+.inflation-outlet input{width:100%;min-width:0}
+.inflation-outlet .planning-hint{font-size:13px;min-height:34px}
+@media(max-width:640px){.inflation-four-grid{grid-template-columns:1fr;gap:10px}.inflation-outlet{padding:12px}}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3029,16 +3037,34 @@ function renderInflationPanel(){
 </form></div><div class="section inflation-history-section"><details class="inflation-history-details"><summary><span>Historique des gonflages</span><span class="history-arrow" aria-hidden="true">⌄</span></summary>${state.inflations.length?`<div class="table-wrap"><table><thead><tr><th>Bloc</th><th>Personne</th><th>Date</th><th>Pression</th><th>Compresseur (h)</th><th>Tarification</th><th>Gonflé par</th></tr></thead><tbody>${state.inflations.map(x=>`<tr class="${x.pressureWarning?"inflation-danger-row":""}"><td>${esc(x.block)}</td><td>${esc(x.person)}</td><td>${dateFR(x.date)}</td><td>${esc(x.pressure||"—")} bar ${x.pressureWarning?`<span class="inflation-danger-badge">⚠️ ATTENTION</span><span class="inflation-danger-note">Pression finale supérieure aux 200 bar de service</span>`:""}</td><td>${esc(x.compressorHours??"—")}</td><td>${x.manualFree?"GRATUIT":x.encadrantFree||x.materialManagerFree||x.clubFree?"Gratuit":(Number(x.priceCharged)||0).toFixed(2)+" Bitacros"}</td><td>${esc(x.by)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">Aucun gonflage enregistré.</div>'}</details></div>`;
  
  wireFreeModeToggle("inflationFreeToggle","inflationForm","Gonflage à 0 Bitacro");
- const balanceWarning=document.getElementById("inflationBalanceWarning"),balanceInfo=document.getElementById("inflationBalanceInfo"),pressureInfo=document.getElementById("blockPressureInfo"),pressureDangerWarning=document.getElementById("pressureDangerWarning");
- const checkFinalPressure=()=>{const number=document.getElementById("inflationBlock")?.value.trim()||"";const block=(state.equipment||[]).find(e=>e.type==="bloc"&&String(e.number).toLowerCase()===number.toLowerCase());const finalPressure=Number(document.getElementById("inflationPressure")?.value||0);const danger=!!number&&!!block&&Number(block.servicePressure)===200&&finalPressure>200;if(pressureDangerWarning)pressureDangerWarning.classList.toggle("hidden",!danger);};
- const checkInflationBalance=()=>{const manualFree=document.getElementById("inflationForm")?.dataset.manualFree==="true",name=document.getElementById("inflationPerson").value,blockNumber=document.getElementById("inflationBlock")?.value.trim()||"",block=(state.equipment||[]).find(e=>e.type==="bloc"&&String(e.number).toLowerCase()===blockNumber.toLowerCase()),diver=findInflationOwner(block,name),price=Number((state.prices||{}).inflation??1),balance=Number(diver?.balance)||0,encadrant=isEncadrantDiver(diver),materialManager=hasMaterialManagementAccess(diver),freeAccess=encadrant||materialManager,clubFree=isAcroClubBlock(block),freeInflation=manualFree||freeAccess||clubFree,insufficient=!!diver&&!freeInflation&&balance+0.0001<price,forceBtn=document.getElementById("forceInflationBtn"),forceInfo=document.getElementById("inflationForceInfo"),warning=document.getElementById("inflationBalanceWarning"),forced=document.getElementById("inflationForm")?.dataset.forceApproved==="true";warning?.classList.toggle("hidden",freeInflation||!insufficient);if(forceBtn)forceBtn.classList.toggle("hidden",freeInflation||!insufficient||forced);if(forceInfo)forceInfo.classList.toggle("hidden",freeInflation||!forced);if(balanceInfo){balanceInfo.textContent=clubFree?"":diver?(encadrant?`Encadrant · gonflage gratuit · ${(bitacroTotal(diver)).toFixed(2).replace(".",",")} Bitacros cumulés`:materialManager?"Gestion accès matériel · équipement et gonflage gratuits":`Solde : ${balance.toFixed(2).replace(".",",")} Bitacros · Gonflage : ${price.toFixed(2).replace(".",",")} Bitacros`):"Le propriétaire et son solde s’afficheront après saisie du numéro de bloc.";balanceInfo.classList.toggle("hidden",clubFree);}const submit=document.querySelector("#inflationForm button[type=submit]");if(submit)submit.disabled=!freeInflation&&insufficient&&!forced;};
- const checkBlockPressure=()=>{if(!pressureInfo)return;const number=document.getElementById("inflationBlock").value.trim();const block=(state.equipment||[]).find(e=>e.type==="bloc"&&String(e.number).toLowerCase()===number.toLowerCase());const personInput=document.getElementById("inflationPerson");if(personInput){const ownerName=block?(block.ownerName||masterPeople().find(p=>p.id===block.ownerId)?.name||""):"";personInput.value=ownerName;personInput.dataset.ownerId=block?.ownerId||"";}pressureInfo.className="block-pressure-info";if(!number){pressureInfo.classList.add("hidden");pressureInfo.textContent="";checkInflationBalance();checkFinalPressure();return}if(!block){pressureInfo.classList.remove("hidden");pressureInfo.textContent="Bloc introuvable dans l’inventaire : vérifie le numéro ou crée d’abord le bloc dans Master matériel.";checkInflationBalance();checkFinalPressure();return}const pressure=Number(block.servicePressure);pressureInfo.classList.remove("hidden");if(pressure===230){pressureInfo.classList.add("pressure-230");pressureInfo.innerHTML="🟢 BLOC 230 BAR — pression de service 230 bar";}else if(pressure===200){pressureInfo.classList.add("pressure-200");pressureInfo.innerHTML="🟠 BLOC 200 BAR — pression de service 200 bar";}else{pressureInfo.textContent="Pression de service non renseignée pour ce bloc.";}checkInflationBalance();checkFinalPressure();}; 
- document.getElementById("inflationPerson")?.addEventListener("change",checkInflationBalance);
- document.getElementById("inflationBlock")?.addEventListener("input",()=>{const f=document.getElementById("inflationForm");if(f)f.dataset.forceApproved="false";checkBlockPressure();});
- document.getElementById("forceInflationBtn")?.addEventListener("click",()=>{const name=document.getElementById("inflationPerson")?.value||"ce plongeur",blockNumber=document.getElementById("inflationBlock")?.value.trim()||"",block=(state.equipment||[]).find(e=>e.type==="bloc"&&String(e.number).toLowerCase()===blockNumber.toLowerCase()),diver=findInflationOwner(block,name),price=Number((state.prices||{}).inflation??1),balance=Number(diver?.balance)||0,actor=String(current?.name||currentMasterPersonName()||"").trim();if(!actor){notify("Impossible d’identifier le compte connecté pour enregistrer le forçage.");return}if(!window.confirm(`Confirmer le forçage du gonflage pour ${name} ?\nSolde actuel : ${balance.toFixed(2)} Bitacros.\nCoût : ${price.toFixed(2)} Bitacros.\nLe solde peut devenir négatif.\nForçage enregistré par : ${actor}`))return;document.getElementById("inflationForm").dataset.forceApproved="true";checkInflationBalance();notify("Forçage autorisé par "+actor);});
- document.getElementById("inflationPressure")?.addEventListener("input",checkFinalPressure);
- checkInflationBalance();document.getElementById("inflationForm")?.addEventListener("acro-free-mode-change",checkInflationBalance);checkBlockPressure();checkFinalPressure();
- document.getElementById("backFromInflation")?.addEventListener("click",()=>render("materiel"));
+ const getOutlet=(n)=>{
+  const number=String(document.getElementById("inflationBlock"+n)?.value||"").trim();
+  const block=(state.equipment||[]).find(e=>e.type==="bloc"&&String(e.number).trim().toLowerCase()===number.toLowerCase());
+  const diver=findInflationOwner(block,document.getElementById("inflationPerson"+n)?.value||"");
+  return {number,block,diver,club:isAcroClubBlock(block)};
+ };
+ const updateOutlet=(n)=>{
+  const row=getOutlet(n),person=document.getElementById("inflationPerson"+n),info=document.getElementById("inflationInfo"+n),warning=document.getElementById("inflationWarning"+n),force=document.getElementById("forceInflationBtn"+n),pressureWarning=document.getElementById("inflationPressureWarning"+n);
+  const form=document.getElementById("inflationForm"),manualFree=form?.dataset.manualFree==="true",price=Number((state.prices||{}).inflation??1),balance=Number(row.diver?.balance)||0,encadrant=isEncadrantDiver(row.diver),manager=hasMaterialManagementAccess(row.diver),free=manualFree||row.club||encadrant||manager,insufficient=!!row.diver&&!free&&balance+0.0001<price,forced=form?.dataset["force"+n]==="true";
+  if(person)person.value=row.block?(row.diver?(row.diver.firstName+" "+row.diver.lastName).trim():(row.block.ownerName||"")):"";
+  if(info){info.classList.remove("hidden");if(!row.number)info.textContent="Saisis un numéro de bloc.";else if(!row.block)info.textContent="Bloc introuvable dans l’inventaire.";else if(!row.diver&&!row.club)info.textContent="Propriétaire introuvable : vérifie l’affectation du bloc.";else if(row.club)info.textContent="ACRO Club · Gonflage gratuit";else if(encadrant)info.textContent="Encadrant · gratuit · +1 Bitacro crédité";else if(manager)info.textContent="Gestionnaire matériel · gratuit";else info.textContent="Solde : "+balance.toFixed(2)+" Bitacros · Coût : "+price.toFixed(2)+" Bitacros";}
+  warning?.classList.toggle("hidden",!insufficient||forced);
+  if(force)force.classList.toggle("hidden",!insufficient||forced||!row.diver);
+  if(pressureWarning){const pressure=Number(document.getElementById("inflationPressure"+n)?.value||0),danger=!!row.block&&Number(row.block.servicePressure)===200&&pressure>200;pressureWarning.classList.toggle("hidden",!danger);pressureWarning.textContent=danger?"⚠️ Pression supérieure aux 200 bar de service.":"";
+  }
+ };
+ for(let n=1;n<=4;n++){
+  document.getElementById("inflationBlock"+n)?.addEventListener("input",()=>{const f=document.getElementById("inflationForm");f.dataset["force"+n]="false";updateOutlet(n)});
+  document.getElementById("inflationPressure"+n)?.addEventListener("input",()=>updateOutlet(n));
+  document.getElementById("forceInflationBtn"+n)?.addEventListener("click",()=>{
+   const row=getOutlet(n),price=Number((state.prices||{}).inflation??1),balance=Number(row.diver?.balance)||0,actor=String(current?.name||currentMasterPersonName()||"").trim();
+   if(!row.diver||!actor)return;
+   if(!window.confirm("Confirmer le forçage pour "+row.diver.firstName+" "+row.diver.lastName+" ?\nSolde actuel : "+balance.toFixed(2)+" Bitacros.\nCoût : "+price.toFixed(2)+" Bitacros.\nLe solde peut devenir négatif.\nForçage par : "+actor))return;
+   document.getElementById("inflationForm").dataset["force"+n]="true";updateOutlet(n);notify("Forçage autorisé pour la sortie "+n);
+  });
+  updateOutlet(n);
+ }
+ document.getElementById("inflationForm")?.addEventListener("acro-free-mode-change",()=>{for(let n=1;n<=4;n++)updateOutlet(n)});
  let qrStream=null,qrActive=false,qrLoopTimer=null;
  const qrBox=document.getElementById("qrCameraBox"),qrVideo=document.getElementById("qrVideo"),qrStatus=document.getElementById("qrStatus");
  const stopQR=()=>{
@@ -3139,7 +3165,7 @@ function renderInflationPanel(){
       if(raw){
        const block=parseBlockCode(raw);
        if(block){
-        document.getElementById("inflationBlock").value=block;document.getElementById("inflationBlock").dispatchEvent(new Event("input",{bubbles:true}));
+        document.getElementById("inflationBlock1").value=block;document.getElementById("inflationBlock1").dispatchEvent(new Event("input",{bubbles:true}));
         qrStatus.textContent="QR code lu : bloc "+block;
         window.ACROAudio?.success();stopQR();notify("QR code lu : bloc "+block);return;
        }
