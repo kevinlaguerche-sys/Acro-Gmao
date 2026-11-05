@@ -1373,8 +1373,8 @@ const SUPABASE_KEY_STORAGE="acro_supabase_publishable_key_v1";
 const CLUB_STATE_ID="acro-plongee";
 let supabaseClient=null, remoteSaveTimer=null, remoteReady=false;
 let state=loadState(), current=null, toastTimer;
-function defaultState(){return {users:[],equipment:[],loans:[],inflations:[],divers:[],trainingComments:[],events:[],eventLocations:{director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]},walletTransactions:[],prices:{stab:2,detendeur:2,bloc:2,inflation:1}}}
-function normalizeState(x){x=x&&typeof x==="object"?x:defaultState();x.users=Array.isArray(x.users)?x.users:[];x.equipment ||= [];x.loans ||= [];x.inflations ||= [];x.divers ||= [];x.trainingComments ||= [];x.events ||= [];x.eventLocations ||= {director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]};x.walletTransactions ||= [];x.prices ||= {stab:2,detendeur:2,bloc:1,inflation:1};(x.divers||[]).forEach(d=>{if(!Number.isFinite(Number(d.balance)))d.balance=0;if(!Number.isFinite(Number(d.bitacrosEarned)))d.bitacrosEarned=0});return x}
+function defaultState(){return {users:[],equipment:[],loans:[],inflations:[],divers:[],trainingComments:[],events:[],diveSitePlans:[],eventLocations:{director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]},walletTransactions:[],prices:{stab:2,detendeur:2,bloc:2,inflation:1}}}
+function normalizeState(x){x=x&&typeof x==="object"?x:defaultState();x.users=Array.isArray(x.users)?x.users:[];x.equipment ||= [];x.loans ||= [];x.inflations ||= [];x.divers ||= [];x.trainingComments ||= [];x.events ||= [];x.diveSitePlans=Array.isArray(x.diveSitePlans)?x.diveSitePlans:[];x.eventLocations ||= {director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]};x.walletTransactions ||= [];x.prices ||= {stab:2,detendeur:2,bloc:1,inflation:1};(x.divers||[]).forEach(d=>{if(!Number.isFinite(Number(d.balance)))d.balance=0;if(!Number.isFinite(Number(d.bitacrosEarned)))d.bitacrosEarned=0});return x}
 function loadState(){try{const x=JSON.parse(localStorage.getItem(STORE_KEY)||"null");if(x)return normalizeState(x)}catch(e){}return defaultState()}
 function remotePayload(){const copy=JSON.parse(JSON.stringify(state));delete copy.users;return copy}
 function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}if(remoteReady&&supabaseClient&&isMaster()){clearTimeout(remoteSaveTimer);remoteSaveTimer=setTimeout(async()=>{try{const {error}=await supabaseClient.from("acro_app_state").upsert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id,updated_at:new Date().toISOString()},{onConflict:"club_id"});if(error)throw error;notify("Sauvegarde serveur effectuée")}catch(e){console.error(e);notify("Erreur de sauvegarde serveur : "+(e.message||"vérifie les politiques Supabase"))}},700)}}
@@ -2217,6 +2217,26 @@ function diveResponseFor(ev,userId){
 }
 function diveStatusIcon(choice){return choice==="yes"?"<span class='dive-status yes' title='Participation confirmée'>✓</span>":choice==="no"?"<span class='dive-status no' title='Ne participe pas'>✕</span>":"<span class='dive-status pending' title='Pas encore de réponse'>?</span>"}
 function diveEventLabel(ev){const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return typ.icon+" "+(ev.title||typ.label)}
+function diveSitePlansHTML(){
+ const plans=state.diveSitePlans||[],admin=isMaster();
+ const cards=plans.map((p,i)=>`<article class="section" style="padding:12px;margin:0;overflow:hidden">
+  <button type="button" data-open-dive-plan="${i}" style="display:block;width:100%;padding:0;border:0;background:transparent;text-align:left;cursor:zoom-in">
+   <img src="${p.image}" alt="Plan de ${esc(p.site)}" loading="lazy" style="width:100%;max-height:260px;object-fit:contain;background:#f4f7fa;border-radius:10px">
+   <div style="padding:10px 2px 2px"><strong>${esc(p.site)}</strong>${p.depth?`<div class="muted">Profondeur : ${esc(p.depth)}</div>`:""}${p.notes?`<p class="muted">${esc(p.notes)}</p>`:""}</div>
+  </button>${admin?`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn danger small" data-delete-dive-plan="${i}">Supprimer</button></div>`:""}
+ </article>`).join("");
+ return `<section class="section"><div class="section-head"><div><h2>🗺️ Plans des carrières</h2><p class="muted">Plans et repères des sites de plongée.</p></div><span class="badge">${plans.length} plan(s)</span></div>
+ ${admin?`<details class="master-locations-details" style="margin-bottom:14px"><summary class="master-locations-summary">＋ Ajouter un plan de carrière <span class="badge">Master uniquement</span></summary><div class="master-locations-content"><form id="diveSitePlanForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px">
+ <div class="field"><label>Nom du site *</label><input name="site" required maxlength="80" placeholder="Ex. Vodelée"></div><div class="field"><label>Profondeur principale</label><input name="depth" maxlength="40" placeholder="Ex. 40 m"></div>
+ <div class="field"><label>Image du plan *</label><input name="image" type="file" accept="image/jpeg,image/png,image/webp" required></div><div class="field" style="grid-column:1/-1"><label>Informations complémentaires</label><textarea name="notes" rows="2" maxlength="500" placeholder="Repères, consignes, particularités…"></textarea></div>
+ <div style="grid-column:1/-1"><button class="btn primary" type="submit">Enregistrer le plan</button><p class="planning-hint">JPG, PNG ou WEBP. Image optimisée avant enregistrement.</p></div></form></div></details>`:""}
+ ${cards?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px">${cards}</div>`:'<div class="empty">Aucun plan enregistré pour le moment.</div>'}
+ <dialog id="divePlanPreviewDialog" style="border:0;border-radius:16px;padding:12px;width:min(1100px,96vw);max-width:1100px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong id="divePlanPreviewTitle">Plan</strong><button type="button" class="btn soft small" id="closeDivePlanPreview">Fermer</button></div><img id="divePlanPreviewImage" alt="Plan agrandi" style="display:block;width:100%;max-height:80vh;object-fit:contain"></dialog></section>`;
+}
+async function compressDivePlanImage(file){
+ if(!file||!/^image\\/(jpeg|png|webp)$/i.test(file.type))throw new Error("Choisis une image JPG, PNG ou WEBP.");
+ const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await new Promise((ok,no)=>{img.onload=ok;img.onerror=()=>no(new Error("Image illisible."))});const scale=Math.min(1,1800/img.naturalWidth,1400/img.naturalHeight),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);c.getContext("2d").drawImage(img,0,0,c.width,c.height);const data=c.toDataURL("image/jpeg",.76);if(data.length>2_000_000)throw new Error("Image trop volumineuse après optimisation.");return data;}finally{URL.revokeObjectURL(url)}
+}
 function diveForecastHTML(){
  if(!isDiveEncadrant())return '<div class="section"><div class="empty">Ce module est réservé aux encadrants.</div></div>';
  const year=planningMonth.getFullYear(),month=planningMonth.getMonth();
@@ -2241,7 +2261,7 @@ function diveForecastHTML(){
   </article>`;
  }).join("");
  return `<div class="section">
-  <div class="calendar-toolbar"><div><div class="eyebrow">RÉPONSES AUX ÉVÉNEMENTS DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
+  ${diveSitePlansHTML()}\n  <div class="calendar-toolbar"><div><div class="eyebrow">RÉPONSES AUX ÉVÉNEMENTS DU CLUB</div><div class="calendar-month">${monthLabel(planningMonth)}</div></div><div style="display:flex;gap:7px"><button class="btn soft" type="button" id="divePrev" aria-label="Mois précédent">←</button><button class="btn soft" type="button" id="diveToday">Aujourd’hui</button><button class="btn soft" type="button" id="diveNext" aria-label="Mois suivant">→</button></div></div>
   <p class="muted">Tous les événements du Planning sont affichés ici : plongées, fosse, directeur de bassin, matériel et gonflage. Appuie sur une date ou un événement pour répondre.</p>
   <div class="calendar-grid">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells.join("")}</div>
   <div class="acro-compact-legend" aria-label="Légende des événements"><div class="acro-compact-legend-title">Légende</div><div class="acro-compact-legend-items"><span>${planningIconSVG('director_pool')}<b>Directeur de bassin</b></span><span>${planningIconSVG('director_dive')}<b>Directeur de plongée</b></span><span>${planningIconSVG('director_fosse')}<b>Directeur de fosse</b></span><span>${planningIconSVG('material_distribution')}<b>Matériel / Gonflage</b></span></div></div>
@@ -2299,7 +2319,7 @@ function openDiveDateDialog(date){
  host.querySelectorAll("[data-dive-open-event]").forEach(btn=>btn.addEventListener("click",()=>openDiveEventDialog(btn.dataset.diveOpenEvent)));
  if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
 }
-function wireDiveForecast(){
+function wireDiveForecast(){\n wireDiveSitePlans();
  document.getElementById("divePrev")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("plongee")});
  document.getElementById("diveNext")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("plongee")});
  document.getElementById("diveToday")?.addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);render("plongee")});
