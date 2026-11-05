@@ -2297,16 +2297,21 @@ function clubDocSlug(value){
 }
 async function wireClubDocuments(skipLoad=false){
  const main=document.getElementById("mainContent");
- main.querySelectorAll("[data-open-club-folder]").forEach(b=>b.addEventListener("click",()=>{renderClubFolderContents(b.dataset.openClubFolder);document.getElementById("clubFolderDialog")?.showModal()}));
- main.querySelectorAll("[data-delete-club-folder]").forEach(b=>b.addEventListener("click",async()=>{
-  if(!isMaster())return;
-  const folder=clubDocumentFolders.find(x=>x.id===b.dataset.deleteClubFolder);if(!folder)return;
+ const folderHost=document.getElementById("clubDocumentFolders");
+ folderHost?.addEventListener("click",async e=>{
+  const open=e.target.closest("[data-open-club-folder]");
+  if(open){renderClubFolderContents(open.dataset.openClubFolder);document.getElementById("clubFolderDialog")?.showModal();return}
+  const del=e.target.closest("[data-delete-club-folder]");
+  if(!del||!isMaster())return;
+  const folder=clubDocumentFolders.find(x=>x.id===del.dataset.deleteClubFolder);if(!folder)return;
   if(clubDocuments.some(d=>d.category===folder.name)){notify("Impossible de supprimer ce dossier : il contient encore des documents. Supprime ou déplace d’abord ses fichiers.");return}
   if(!confirm("Supprimer le dossier « "+folder.name+" » ?"))return;
-  b.disabled=true;
+  del.disabled=true;
   try{const {error}=await supabaseClient.from("acro_document_folders").delete().eq("id",folder.id);if(error)throw error;await loadClubDocumentFolders();refreshClubDocumentFolders();notify("Dossier supprimé")}
-  catch(err){notify("Suppression du dossier impossible : "+(err.message||"erreur Supabase"));b.disabled=false}
- }));
+  catch(err){notify("Suppression du dossier impossible : "+(err.message||"erreur Supabase"));del.disabled=false}
+ });
+ 
+ 
  const folderForm=document.getElementById("clubFolderCreateForm");
  folderForm?.addEventListener("submit",async e=>{
   e.preventDefault();if(!isMaster()){notify("Création réservée au Master.");return}
