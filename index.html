@@ -3065,6 +3065,25 @@ function renderInflationPanel(){
   updateOutlet(n);
  }
  document.getElementById("inflationForm")?.addEventListener("acro-free-mode-change",()=>{for(let n=1;n<=4;n++)updateOutlet(n)});
+ const assignScannedInflationBlock=(blockNumber)=>{
+  const value=String(blockNumber||"").trim();
+  if(!value)return {ok:false,message:"Numéro de bloc vide."};
+  for(let n=1;n<=4;n++){
+   const existing=String(document.getElementById("inflationBlock"+n)?.value||"").trim();
+   if(existing&&existing.toLocaleLowerCase("fr")===value.toLocaleLowerCase("fr")){
+    return {ok:false,message:"Le bloc "+value+" est déjà affecté à la sortie "+n+"."};
+   }
+  }
+  for(let n=1;n<=4;n++){
+   const input=document.getElementById("inflationBlock"+n);
+   if(input&&!String(input.value||"").trim()){
+    input.value=value;
+    input.dispatchEvent(new Event("input",{bubbles:true}));
+    return {ok:true,row:n};
+   }
+  }
+  return {ok:false,message:"Les quatre sorties sont déjà renseignées. Enregistre les gonflages avant de scanner d’autres blocs."};
+ };
  let qrStream=null,qrActive=false,qrLoopTimer=null;
  const qrBox=document.getElementById("qrCameraBox"),qrVideo=document.getElementById("qrVideo"),qrStatus=document.getElementById("qrStatus");
  const stopQR=()=>{
@@ -3165,9 +3184,10 @@ function renderInflationPanel(){
       if(raw){
        const block=parseBlockCode(raw);
        if(block){
-        document.getElementById("inflationBlock1").value=block;document.getElementById("inflationBlock1").dispatchEvent(new Event("input",{bubbles:true}));
-        qrStatus.textContent="QR code lu : bloc "+block;
-        window.ACROAudio?.success();stopQR();notify("QR code lu : bloc "+block);return;
+        const assigned=assignScannedInflationBlock(block);
+        if(!assigned.ok){qrStatus.textContent=assigned.message;stopQR();notify(assigned.message);return;}
+        qrStatus.textContent="QR code lu : bloc "+block+" affecté à la sortie "+assigned.row+". Tu peux scanner le bloc suivant.";
+        window.ACROAudio?.success();stopQR();notify("Bloc "+block+" affecté à la sortie "+assigned.row);return;
        }
       }
      }
@@ -3192,7 +3212,7 @@ function renderInflationPanel(){
  document.getElementById("scanBlockQR").addEventListener("click",startQR);
  const blockImportInput=document.getElementById("blockQRImport"),blockImportStatus=document.getElementById("blockQRImportStatus");
  document.querySelector('[data-qr-import-trigger="block"]')?.addEventListener("click",()=>blockImportInput?.click());
- blockImportInput?.addEventListener("change",async()=>{const file=blockImportInput.files?.[0];if(!file)return;blockImportStatus.className="acro-qr-import-status active";blockImportStatus.textContent="Lecture de la photo en cours…";try{const raw=await decodeQrImageFile(file),block=parseBlockCode(raw);if(!block)throw new Error("Ce QR Code ne correspond pas à un bloc reconnu.");const input=document.getElementById("inflationBlock1");input.value=block;input.dispatchEvent(new Event("input",{bubbles:true}));blockImportStatus.className="acro-qr-import-status active success";blockImportStatus.textContent="✓ QR Code lu : bloc "+block+". Vérifie le propriétaire avant de poursuivre.";}catch(err){blockImportStatus.className="acro-qr-import-status active error";blockImportStatus.textContent=err.message||"Lecture impossible."}finally{blockImportInput.value=""}});
+ blockImportInput?.addEventListener("change",async()=>{const file=blockImportInput.files?.[0];if(!file)return;blockImportStatus.className="acro-qr-import-status active";blockImportStatus.textContent="Lecture de la photo en cours…";try{const raw=await decodeQrImageFile(file),block=parseBlockCode(raw);if(!block)throw new Error("Ce QR Code ne correspond pas à un bloc reconnu.");const assigned=assignScannedInflationBlock(block);if(!assigned.ok)throw new Error(assigned.message);blockImportStatus.className="acro-qr-import-status active success";blockImportStatus.textContent="✓ QR Code lu : bloc "+block+" affecté à la sortie "+assigned.row+". Vérifie le propriétaire avant de poursuivre.";}catch(err){blockImportStatus.className="acro-qr-import-status active error";blockImportStatus.textContent=err.message||"Lecture impossible."}finally{blockImportInput.value=""}});
  document.getElementById("stopBlockQR").addEventListener("click",stopQR);
  document.getElementById("inflationForm").addEventListener("submit",e=>{
  e.preventDefault();stopQR();
