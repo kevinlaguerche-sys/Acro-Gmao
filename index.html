@@ -2234,7 +2234,7 @@ function diveSitePlansHTML(){
  <dialog id="divePlanPreviewDialog" style="border:0;border-radius:16px;padding:12px;width:min(1100px,96vw);max-width:1100px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong id="divePlanPreviewTitle">Plan</strong><button type="button" class="btn soft small" id="closeDivePlanPreview">Fermer</button></div><img id="divePlanPreviewImage" alt="Plan agrandi" style="display:block;width:100%;max-height:80vh;object-fit:contain"></dialog></section>`;
 }
 async function compressDivePlanImage(file){
- if(!file||!/^image\\/(jpeg|png|webp)$/i.test(file.type))throw new Error("Choisis une image JPG, PNG ou WEBP.");
+ if(!file||!/^image\/(jpeg|png|webp)$/i.test(file.type))throw new Error("Choisis une image JPG, PNG ou WEBP.");
  const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await new Promise((ok,no)=>{img.onload=ok;img.onerror=()=>no(new Error("Image illisible."))});const scale=Math.min(1,1800/img.naturalWidth,1400/img.naturalHeight),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);c.getContext("2d").drawImage(img,0,0,c.width,c.height);const data=c.toDataURL("image/jpeg",.76);if(data.length>2_000_000)throw new Error("Image trop volumineuse après optimisation.");return data;}finally{URL.revokeObjectURL(url)}
 }
 function diveForecastHTML(){
@@ -2319,7 +2319,22 @@ function openDiveDateDialog(date){
  host.querySelectorAll("[data-dive-open-event]").forEach(btn=>btn.addEventListener("click",()=>openDiveEventDialog(btn.dataset.diveOpenEvent)));
  if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
 }
-function wireDiveForecast(){\n wireDiveSitePlans();
+function wireDiveSitePlans(){
+ document.getElementById("diveSitePlanForm")?.addEventListener("submit",async e=>{
+  e.preventDefault();if(!isMaster()){notify("Ajout réservé au Master.");return}
+  const form=e.currentTarget,b=form.querySelector('button[type="submit"]'),file=form.elements.image.files?.[0];if(!file)return;
+  b.disabled=true;b.textContent="Enregistrement…";
+  try{const image=await compressDivePlanImage(file),site=form.elements.site.value.trim();if(!site)throw new Error("Indique le nom du site.");
+   state.diveSitePlans||=[];state.diveSitePlans.push({id:"plan-"+Date.now(),site,depth:form.elements.depth.value.trim(),notes:form.elements.notes.value.trim(),image,createdAt:new Date().toISOString(),createdBy:current?.id||""});
+   saveState();render("plongee");notify("Plan ajouté");
+  }catch(err){notify(err.message||"Erreur d’enregistrement");b.disabled=false;b.textContent="Enregistrer le plan"}
+ });
+ document.querySelectorAll("[data-delete-dive-plan]").forEach(b=>b.addEventListener("click",()=>{if(!isMaster())return;const i=Number(b.dataset.deleteDivePlan),p=state.diveSitePlans?.[i];if(!p||!confirm("Supprimer le plan de "+p.site+" ?"))return;state.diveSitePlans.splice(i,1);saveState();render("plongee");notify("Plan supprimé")}));
+ document.querySelectorAll("[data-open-dive-plan]").forEach(b=>b.addEventListener("click",()=>{const p=state.diveSitePlans?.[Number(b.dataset.openDivePlan)];if(!p)return;document.getElementById("divePlanPreviewTitle").textContent="Plan — "+p.site;document.getElementById("divePlanPreviewImage").src=p.image;document.getElementById("divePlanPreviewDialog").showModal()}));
+ document.getElementById("closeDivePlanPreview")?.addEventListener("click",()=>document.getElementById("divePlanPreviewDialog").close());
+}
+function wireDiveForecast(){
+ wireDiveSitePlans();
  document.getElementById("divePrev")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()-1,1);render("plongee")});
  document.getElementById("diveNext")?.addEventListener("click",()=>{planningMonth=new Date(planningMonth.getFullYear(),planningMonth.getMonth()+1,1);render("plongee")});
  document.getElementById("diveToday")?.addEventListener("click",()=>{const n=new Date();planningMonth=new Date(n.getFullYear(),n.getMonth(),1);render("plongee")});
