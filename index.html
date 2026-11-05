@@ -2258,9 +2258,21 @@ function clubDocumentsHTML(){
  const icons=name=>(DEFAULT_CLUB_DOCUMENT_FOLDERS.find(x=>x.name===name)||{}).icon||"📂";
  const counts=name=>docs.filter(x=>x.category===name).length;
  const folderCards=categories.map(c=>'<button type="button" class="module-card" data-open-club-folder="'+esc(c)+'" style="align-items:center;min-height:104px"><span class="module-icon" style="font-size:27px">'+icons(c)+'</span><span style="min-width:0;flex:1"><strong style="display:block">'+esc(c)+'</strong><small class="muted">'+counts(c)+' fichier(s)</small></span><span aria-hidden="true">›</span></button>').join("");
- const adminForm=isMaster()?'<details class="master-locations-details" open style="margin-bottom:16px"><summary class="master-locations-summary">＋ Ajouter un document <span class="badge">Master uniquement</span></summary><div class="master-locations-content"><form id="clubDocumentForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px"><div class="field"><label for="clubDocTitle">Nom du document *</label><input id="clubDocTitle" name="title" required maxlength="120" placeholder="Ex. Fiche de palanquée"></div><div class="field"><label for="clubDocCategory">Dossier *</label><input id="clubDocCategory" name="category" list="clubDocCategories" required maxlength="70" placeholder="Choisir ou créer un dossier"><datalist id="clubDocCategories">'+categories.map(c=>'<option value="'+esc(c)+'"></option>').join("")+'</datalist></div><div class="field"><label for="clubDocFile">Fichier à déposer *</label><input id="clubDocFile" name="file" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"></div><div class="field" style="grid-column:1/-1"><label for="clubDocDescription">Description (facultatif)</label><textarea id="clubDocDescription" name="description" rows="2" maxlength="400" placeholder="Précisions sur l’utilisation du document…"></textarea></div><div style="grid-column:1/-1"><button class="btn primary" type="submit">Téléverser le document</button><p class="planning-hint">PDF, Word, Excel, PowerPoint, JPG ou PNG · 25 Mo maximum. Le fichier sera stocké dans Supabase et accessible aux membres connectés.</p></div></form></div></details>':'';
+ const adminForm=isMaster()?'<details class="master-locations-details" open style="margin-bottom:16px"><summary class="master-locations-summary">＋ Ajouter un document <span class="badge">Master uniquement</span></summary><div class="master-locations-content"><form id="clubDocumentForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px"><div class="field"><label for="clubDocTitle">Nom du document *</label><input id="clubDocTitle" name="title" required maxlength="120" placeholder="Ex. Fiche de palanquée"></div><div class="field"><label for="clubDocCategory">Dossier *</label><input id="clubDocCategory" name="category" required maxlength="70" placeholder="Ex. Fiches de palanquée"><datalist id="clubDocCategories">'+categories.map(c=>'<option value="'+esc(c)+'"></option>').join("")+'</datalist></div><div class="field"><label for="clubDocFile">Fichier à déposer *</label><input id="clubDocFile" name="file" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png"></div><div class="field" style="grid-column:1/-1"><label for="clubDocDescription">Description (facultatif)</label><textarea id="clubDocDescription" name="description" rows="2" maxlength="400" placeholder="Précisions sur l’utilisation du document…"></textarea></div><div style="grid-column:1/-1"><button class="btn primary" type="submit">Téléverser le document</button><p class="planning-hint">PDF, Word, Excel, PowerPoint, JPG ou PNG · 25 Mo maximum. Le fichier sera stocké dans Supabase et accessible aux membres connectés.</p></div></form></div></details>':'';
  return '<section class="section"><div class="section-head"><div><h2>📁 Les dossiers du club</h2><p class="muted">Retrouve ici les documents partagés par le club. Appuie sur un dossier pour consulter et télécharger ses fichiers.</p></div><span class="badge">'+docs.length+' document(s)</span></div>'+adminForm+'<div id="clubDocumentFolders" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">'+folderCards+'</div>'+(docs.length?'<p class="planning-hint" style="margin-top:14px">Les dossiers sont synchronisés en ligne : les ajouts du Master apparaissent pour les autres membres après actualisation.</p>':'<div class="empty">Aucun document déposé pour le moment. Les dossiers sont prêts à recevoir les fiches du club.</div>')+'</section><dialog id="clubFolderDialog" style="border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:85vh;box-shadow:0 24px 80px #061b3240"><div class="panel" style="box-shadow:none;max-height:85vh;overflow:auto"><div class="section-head"><div><div class="eyebrow">DOCUMENTS ACRO PLONGÉE</div><h2 id="clubFolderDialogTitle">Dossier</h2></div><button type="button" class="btn soft small" id="closeClubFolderDialog">Fermer ✕</button></div><div id="clubFolderDialogContent"></div></div></dialog>';
 }
+
+function refreshClubDocumentFolders(){
+ const host=document.getElementById("clubDocumentFolders");if(!host)return;
+ const categories=[...new Set([...DEFAULT_CLUB_DOCUMENT_FOLDERS.map(x=>x.name),...clubDocuments.map(x=>String(x.category||"").trim()).filter(Boolean)])];
+ const icons=name=>(DEFAULT_CLUB_DOCUMENT_FOLDERS.find(x=>x.name===name)||{}).icon||"📂";
+ const count=name=>clubDocuments.filter(x=>x.category===name).length;
+ host.innerHTML=categories.map(c=>'<button type="button" class="module-card" data-open-club-folder="'+esc(c)+'" style="align-items:center;min-height:104px"><span class="module-icon" style="font-size:27px">'+icons(c)+'</span><span style="min-width:0;flex:1"><strong style="display:block">'+esc(c)+'</strong><small class="muted">'+count(c)+' fichier(s)</small></span><span aria-hidden="true">›</span></button>').join("");
+ const total=document.getElementById("clubDocumentsCount");if(total)total.textContent=clubDocuments.length+" document(s)";
+ const empty=document.getElementById("clubDocumentsEmpty");if(empty)empty.style.display=clubDocuments.length?"none":"";
+ const dl=document.getElementById("clubDocCategories");if(dl)dl.innerHTML=categories.map(c=>'<option value="'+esc(c)+'"></option>').join("");
+}
+
 async function loadClubDocuments(){
  if(!supabaseClient||!remoteReady)throw new Error("Connexion Supabase indisponible.");
  const {data,error}=await supabaseClient.from("acro_documents").select("id,title,category,description,storage_path,original_name,content_type,size_bytes,created_at,created_by").order("category",{ascending:true}).order("title",{ascending:true});
@@ -2293,7 +2305,7 @@ async function wireClubDocuments(skipLoad=false){
   if(down){down.disabled=true;try{await downloadClubDocument(down.dataset.downloadClubDoc)}catch(err){notify("Téléchargement impossible : "+(err.message||"erreur inconnue"))}finally{down.disabled=false}return}
   const del=e.target.closest("[data-delete-club-doc]");
   if(del){if(!isMaster())return;const doc=clubDocuments.find(d=>d.id===del.dataset.deleteClubDoc);if(!doc||!confirm("Supprimer « "+doc.title+" » ?"))return;del.disabled=true;
-   try{const {error:storageError}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([doc.storage_path]);if(storageError)throw storageError;const {error:rowError}=await supabaseClient.from("acro_documents").delete().eq("id",doc.id);if(rowError)throw rowError;await loadClubDocuments();render("documentsClub");notify("Document supprimé")}
+   try{const {error:storageError}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([doc.storage_path]);if(storageError)throw storageError;const {error:rowError}=await supabaseClient.from("acro_documents").delete().eq("id",doc.id);if(rowError)throw rowError;await loadClubDocuments();refreshClubDocumentFolders();document.getElementById("clubFolderDialog")?.close();notify("Document supprimé")}
    catch(err){notify("Suppression impossible : "+(err.message||"erreur inconnue"));del.disabled=false}
   }
  });
@@ -2313,13 +2325,13 @@ async function wireClubDocuments(skipLoad=false){
    if(uploadError)throw uploadError;uploaded=true;
    const {error:insertError}=await supabaseClient.from("acro_documents").insert({title,category,description,storage_path:path,original_name:file.name,content_type:file.type,size_bytes:file.size,created_by:current.id});
    if(insertError)throw insertError;
-   await loadClubDocuments();render("documentsClub");notify("Document ajouté au dossier du club.");
+   await loadClubDocuments();refreshClubDocumentFolders();form.reset();notify("Document ajouté au dossier du club.");
   }catch(err){
    if(uploaded){try{await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([path])}catch(cleanupError){console.warn("Nettoyage du fichier incomplet",cleanupError)}}
    notify("Ajout impossible : "+(err.message||"vérifie les droits Supabase"));btn.disabled=false;btn.textContent="Téléverser le document";
   }
  });
- if(!skipLoad){try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")render("documentsClub")}
+ if(!skipLoad){try{await loadClubDocuments();if(document.getElementById("mainContent")?.dataset.view==="documentsClub")refreshClubDocumentFolders()}
  catch(err){console.error("Chargement des documents du club impossible",err);notify("Impossible de charger les dossiers : "+(err.message||"erreur Supabase"))}}
 }
 
