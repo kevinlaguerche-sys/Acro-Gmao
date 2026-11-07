@@ -2144,9 +2144,9 @@ const N1_PREREQUISITES=[
  {code:"N1-PREREQ-BAPTEME",label:"Baptême de plongée",icon:"🤿"},
  {code:"N1-PREREQ-BAPTEME-PLUS",label:"Baptême Plus",icon:"🌊"}
 ];
-function n1PrerequisitePanelHTML(diverId,evaluations){
+function n1PrerequisitePanelHTML(diverId,prerequisites){
  const rows=N1_PREREQUISITES.map(item=>{
-  const latest=evaluations.filter(e=>e.competency_code===item.code).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
+  const latest=prerequisites.filter(e=>e.prerequisite_code===item.code).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
   const status=latest?.status||"NA";
   const statusLabel=status==="Acquis"?"Validé":status==="ECA"?"À réaliser":"Non renseigné";
   const color=status==="Acquis"?"#168b4b":status==="ECA"?"#b7791f":"#74869a";
@@ -2166,7 +2166,7 @@ async function saveN1Prerequisite(diverId,code,button,body){
  const item=N1_PREREQUISITES.find(x=>x.code===code);if(!item||!supabaseClient)return;
  button.disabled=true;
  try{
-  const {error}=await supabaseClient.from("acro_n1_evaluations").insert({diver_id:diverId,competency_code:code,competency_label:item.label,status,comment,evaluator_id:current.id,evaluator_name:current.name||"Encadrant"});
+  const {error}=await supabaseClient.from("acro_n1_prerequisites").insert({diver_id:diverId,prerequisite_code:code,prerequisite_label:item.label,status,comment,evaluator_id:current.id,evaluator_name:current.name||"Encadrant"});
   if(error)throw error;
   notify("Prérequis enregistré : "+item.label);
   await openN1Progress(diverId);
@@ -2179,10 +2179,10 @@ async function openN1Progress(diverId){
  const body=document.getElementById("n1ProgressInline");if(!body)return;
  body.innerHTML='<div class="empty">Chargement de la progression…</div>';
  try{
-  const [evRes,valRes]=await Promise.all([supabaseClient.from("acro_n1_evaluations").select("*").eq("diver_id",diverId).order("created_at",{ascending:false}),supabaseClient.from("acro_n1_validations").select("*").eq("diver_id",diverId).order("validated_at",{ascending:true})]);
-  if(evRes.error)throw evRes.error;if(valRes.error)throw valRes.error;
-  const evaluations=evRes.data||[],validations=valRes.data||[],acquired=N1_COMPETENCIES.filter(c=>validations.some(v=>v.competency_code===c.code)).length;
-  body.innerHTML=`<div class="n1-progress-heading"><div><h2>📘 Fiche de suivi des compétences N1</h2><p>Clique directement sur une compétence pour ajouter une observation</p></div><span class="badge">${(d.firstName||"")+" "+(d.lastName||"")}</span></div><div class="n1-progress-summary"><div><small>Compétences N1 acquises</small><div><strong>${acquired} / 10</strong></div><div class="n1-progress-track"><span style="width:${acquired*10}%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>${(()=>{const latest=evaluations.filter(e=>N1_COMPETENCIES.some(c=>c.code===e.competency_code)).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);return latest.length?latest.map(e=>`<div class="n1-recent-work-item"><span>${esc(e.competency_label||N1_COMPETENCIES.find(c=>c.code===e.competency_code)?.label||e.competency_code)}</span><time>${new Date(e.created_at).toLocaleDateString("fr-FR")}</time></div>`).join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'})()}</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>${evaluations.filter(e=>N1_COMPETENCIES.some(c=>c.code===e.competency_code)).length}</strong></div></div></div><div class="n1-progress-grid">${N1_COMPETENCIES.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div>${n1PrerequisitePanelHTML(diverId,evaluations)}`;
+  const [evRes,valRes,preRes]=await Promise.all([supabaseClient.from("acro_n1_evaluations").select("*").eq("diver_id",diverId).order("created_at",{ascending:false}),supabaseClient.from("acro_n1_validations").select("*").eq("diver_id",diverId).order("validated_at",{ascending:true}),supabaseClient.from("acro_n1_prerequisites").select("*").eq("diver_id",diverId).order("created_at",{ascending:false})]);
+  if(evRes.error)throw evRes.error;if(valRes.error)throw valRes.error;if(preRes.error)throw preRes.error;
+  const evaluations=evRes.data||[],validations=valRes.data||[],prerequisites=preRes.data||[],acquired=N1_COMPETENCIES.filter(c=>validations.some(v=>v.competency_code===c.code)).length;
+  body.innerHTML=`<div class="n1-progress-heading"><div><h2>📘 Fiche de suivi des compétences N1</h2><p>Clique directement sur une compétence pour ajouter une observation</p></div><span class="badge">${(d.firstName||"")+" "+(d.lastName||"")}</span></div><div class="n1-progress-summary"><div><small>Compétences N1 acquises</small><div><strong>${acquired} / 10</strong></div><div class="n1-progress-track"><span style="width:${acquired*10}%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>${(()=>{const latest=evaluations.filter(e=>N1_COMPETENCIES.some(c=>c.code===e.competency_code)).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at))).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);return latest.length?latest.map(e=>`<div class="n1-recent-work-item"><span>${esc(e.competency_label||N1_COMPETENCIES.find(c=>c.code===e.competency_code)?.label||e.competency_code)}</span><time>${new Date(e.created_at).toLocaleDateString("fr-FR")}</time></div>`).join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'})()}</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>${evaluations.filter(e=>N1_COMPETENCIES.some(c=>c.code===e.competency_code)).length}</strong></div></div></div><div class="n1-progress-grid">${N1_COMPETENCIES.map(c=>n1ProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")}</div>${n1PrerequisitePanelHTML(diverId,prerequisites)}`;
   await wireProgressCards(body,diverId,evaluations,validations,openN1Evaluation,openN1Progress);body.querySelectorAll("[data-save-n1-prereq]").forEach(btn=>btn.addEventListener("click",()=>saveN1Prerequisite(btn.dataset.diverId,btn.dataset.saveN1Prereq,btn,body)));
  }catch(err){body.innerHTML=`<div class="empty">Impossible de charger la fiche : ${esc(err.message||"Erreur Supabase")}</div>`}
 }
