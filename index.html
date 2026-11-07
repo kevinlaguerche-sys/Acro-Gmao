@@ -2340,7 +2340,19 @@ function renderClubFolderContents(category){
  const host=document.getElementById("clubFolderDialogContent");if(!host)return;
  const docs=clubDocuments.filter(d=>d.category===category);
  document.getElementById("clubFolderDialogTitle").textContent="📂 "+category;
- host.innerHTML=docs.length?'<div style="display:grid;gap:10px">'+docs.map(d=>'<article class="section" style="margin:0;padding:13px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="module-icon" style="font-size:23px">📄</span><div style="flex:1;min-width:150px"><strong>'+esc(d.title)+'</strong><div class="muted" style="font-size:12px">'+esc(d.description||d.original_name||"Document du club")+' · '+formatClubDocSize(d.size_bytes)+'</div></div><button type="button" class="btn primary small" data-download-club-doc="'+esc(d.id)+'">⬇ Télécharger</button>' +(isMaster()?'<button type="button" class="btn danger small" data-delete-club-doc="'+esc(d.id)+'">Supprimer</button>':'')+'</article>').join("")+'</div>':'<div class="empty">Ce dossier ne contient pas encore de fichier.</div>';
+ host.innerHTML=docs.length?'<div style="display:grid;gap:10px">'+docs.map(d=>{const pdf=(d.content_type||"").toLowerCase()==="application/pdf"||/\\.pdf$/i.test(d.original_name||"");return '<article class="section" style="margin:0;padding:13px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="module-icon" style="font-size:23px">📄</span><div style="flex:1;min-width:150px"><strong>'+esc(d.title)+'</strong><div class="muted" style="font-size:12px">'+esc(d.description||d.original_name||"Document du club")+' · '+formatClubDocSize(d.size_bytes)+'</div></div>' +(pdf?'<button type="button" class="btn soft small" data-preview-club-doc="'+esc(d.id)+'">👁 Visualiser</button>':'')+'<button type="button" class="btn primary small" data-download-club-doc="'+esc(d.id)+'">⬇ Télécharger</button>' +(isMaster()?'<button type="button" class="btn danger small" data-delete-club-doc="'+esc(d.id)+'">Supprimer</button>':'')+'</article>'}).join("")+'</div>':'<div class="empty">Ce dossier ne contient pas encore de fichier.</div>';
+}
+async function previewClubDocument(id){
+ const doc=clubDocuments.find(d=>d.id===id);if(!doc)throw new Error("Document introuvable.");
+ const isPdf=(doc.content_type||"").toLowerCase()==="application/pdf"||/\\.pdf$/i.test(doc.original_name||"");
+ if(!isPdf)throw new Error("La visualisation directe est disponible pour les PDF.");
+ const popup=window.open("about:blank","_blank");
+ const {data,error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).download(doc.storage_path);
+ if(error){if(popup)popup.close();throw error}
+ const blob=data.type==="application/pdf"?data:new Blob([data],{type:"application/pdf"});
+ const url=URL.createObjectURL(blob);
+ if(popup){popup.location.href=url;}else{const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.click();}
+ setTimeout(()=>URL.revokeObjectURL(url),300000);
 }
 async function downloadClubDocument(id){
  const doc=clubDocuments.find(d=>d.id===id);if(!doc)throw new Error("Document introuvable.");
@@ -2381,6 +2393,8 @@ async function wireClubDocuments(skipLoad=false){
  document.getElementById("closeClubFolderDialog")?.addEventListener("click",()=>document.getElementById("clubFolderDialog")?.close());
  document.getElementById("clubFolderDialog")?.addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
  document.getElementById("clubFolderDialogContent")?.addEventListener("click",async e=>{
+  const preview=e.target.closest("[data-preview-club-doc]");
+  if(preview){preview.disabled=true;try{await previewClubDocument(preview.dataset.previewClubDoc)}catch(err){notify("Visualisation impossible : "+(err.message||"erreur inconnue"))}finally{preview.disabled=false}return}
   const down=e.target.closest("[data-download-club-doc]");
   if(down){down.disabled=true;try{await downloadClubDocument(down.dataset.downloadClubDoc)}catch(err){notify("Téléchargement impossible : "+(err.message||"erreur inconnue"))}finally{down.disabled=false}return}
   const del=e.target.closest("[data-delete-club-doc]");
