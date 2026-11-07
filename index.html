@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V140</title>
+<title>ACRO Plongée — V142</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -1331,10 +1331,12 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
-const APP_VERSION="V141";
-const APP_BUILD="20261107.01";
+const APP_VERSION="V142";
+const APP_BUILD="20261107.02";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
+const YOUNG_BUBBLE_LEVELS=["1re étoile de mer","2e étoile de mer","3e étoile de mer"];
+const YOUNG_SCUBA_LEVELS=["Plongeur de bronze","Plongeur d’argent","Plongeur d’or"];
 const ENCADREMENT_LEVELS=["E1","E2","E3","E4","TSI"];
 function isEncadrantDiver(d){return !!d && (!!String(d.encadrement||"").trim() || ["E1","E2","E3","E4","TSI"].includes(String(d.currentLevel||"").trim().toUpperCase()));}
 function normalizeAccessName(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("fr").replace(/[^a-z0-9]+/g," ").trim();}
@@ -3519,6 +3521,7 @@ function wireMasterMaterial(){
 function diversHTML(){
  const rows=state.divers||[];
  const options=(selected)=>DIVER_LEVELS.map(level=>`<option value="${level}" ${selected===level?"selected":""}>${level}</option>`).join("");
+ const progressOptions=`<optgroup label="Jeunes bulles">${YOUNG_BUBBLE_LEVELS.map(level=>`<option value="${level}">${level}</option>`).join("")}</optgroup><optgroup label="Jeunes plongeurs">${YOUNG_SCUBA_LEVELS.map(level=>`<option value="${level}">${level}</option>`).join("")}</optgroup><optgroup label="Parcours adultes">${DIVER_LEVELS.map(level=>`<option value="${level}">${level}</option>`).join("")}</optgroup>`;
  const encOptions=(selected)=>ENCADREMENT_LEVELS.map(level=>`<option value="${level}" ${selected===level?"selected":""}>${level}</option>`).join("");
  return `<div class="section">
    <div class="section-head"><div><h2>🤿 Fiche plongeur</h2><p class="muted">Le Master peut créer et mettre à jour les niveaux et qualifications de chaque plongeur.</p></div><span class="badge">${rows.length} plongeur(s)</span></div>
@@ -3529,7 +3532,7 @@ function diversHTML(){
      <div class="field"><label for="diverFirstName">Prénom</label><input id="diverFirstName" required placeholder="Prénom"></div>
      <div class="field"><label for="diverCurrentLevel">Niveau actuel (brevet)</label><select id="diverCurrentLevel" required><option value="">Choisir…</option>${options("")}</select></div>
      <div class="field"><label for="diverAptitudeLevel">Deuxième niveau / aptitude actuelle</label><select id="diverAptitudeLevel"><option value="">Aucune aptitude supplémentaire</option>${options("")}</select><small class="muted">Exemple : brevet Niveau 1 et aptitude PE40.</small></div>
-     <div class="field"><label for="diverInProgress">Niveau en cours</label><select id="diverInProgress"><option value="">Aucun / non renseigné</option>${options("")}<option value="Formation initiateur">Formation initiateur</option></select></div>
+     <div class="field"><label for="diverInProgress">Niveau en cours</label><select id="diverInProgress"><option value="">Aucun / non renseigné</option>${progressOptions}<option value="Formation initiateur">Formation initiateur</option></select></div>
      <div class="field"><label for="diverEncadrement">Encadrement</label><select id="diverEncadrement"><option value="">Aucun</option>${encOptions("")}</select></div>
      <div class="form-actions"><button class="btn primary" id="saveDiverBtn" type="submit">Enregistrer le plongeur</button><button class="btn soft" id="cancelDiverBtn" type="button">Effacer</button></div>
     </div><div class="message" id="diverMessage"></div>
