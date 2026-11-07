@@ -41,14 +41,16 @@ Deno.serve(async(req)=>{
   if(masterError||!masterProfile||masterProfile.role!=="master"||masterProfile.is_active!==true)return json({error:"Seul un Master actif peut gérer les comptes."},403);
  }
  if(action==="list_logs"){
-  const {data:logs,error:logsError}=await admin.from("acro_login_audit").select("id,attempted_name,success,reason,user_id,ip_address,user_agent,app_version,app_build,created_at").order("created_at",{ascending:false}).limit(250);
+  const {data:logs,error:logsError}=await admin.from("acro_login_audit").select("id,attempted_name,success,reason,user_id,ip_address,user_agent,app_version,app_build,created_at").order("created_at",{ascending:false}).limit(10000);
   if(logsError)return json({error:"Lecture de l’historique impossible : "+logsError.message},500);
-  return json({ok:true,logs:logs||[]});
+  const {data:profiles,error:profilesError}=await admin.from("acro_profiles").select("user_id,display_name,role,base_role,is_active,permissions").order("display_name",{ascending:true});
+  if(profilesError)return json({error:"Lecture des profils pour les statistiques impossible : "+profilesError.message},500);
+  return json({ok:true,logs:logs||[],profiles:(profiles||[]).map((p:{user_id:string;display_name:string|null;role:string;base_role:string|null;is_active:boolean;permissions:string[]})=>({user_id:p.user_id,display_name:p.display_name||"Nom inconnu",role:p.role,base_role:p.base_role,is_active:p.is_active,permissions:Array.isArray(p.permissions)?p.permissions:[]})),history_limit:10000});
  }
  if(action==="list_users"){
-  const {data:profiles,error:profilesError}=await admin.from("acro_profiles").select("user_id,display_name,role,is_active,diver_id,permissions").order("display_name",{ascending:true});
+  const {data:profiles,error:profilesError}=await admin.from("acro_profiles").select("user_id,display_name,role,is_active,diver_id,permissions,base_role").order("display_name",{ascending:true});
   if(profilesError)return json({error:"Lecture des comptes impossible : "+profilesError.message},500);
-  return json({ok:true,users:(profiles||[]).map((p:{user_id:string;display_name:string|null;role:string;is_active:boolean;diver_id:string|null;permissions:string[]})=>({user_id:p.user_id,display_name:p.display_name||"",role:p.role,is_active:p.is_active,diver_id:p.diver_id,permissions:Array.isArray(p.permissions)?p.permissions:[]}))});
+  return json({ok:true,users:(profiles||[]).map((p:{user_id:string;display_name:string|null;role:string;is_active:boolean;diver_id:string|null;permissions:string[];base_role:string|null})=>({user_id:p.user_id,display_name:p.display_name||"",role:p.role,is_active:p.is_active,diver_id:p.diver_id,permissions:Array.isArray(p.permissions)?p.permissions:[],base_role:p.base_role}))});
  }
  // Compatibilité V124 : les fiches sont encore enregistrées dans acro_app_state.state->divers.
  // On les synchronise ici vers acro_divers avant de créer/modifier le compte.
@@ -98,10 +100,10 @@ Deno.serve(async(req)=>{
   if(listError)return json({error:"Impossible de vérifier les profils existants."},500);
   if((profiles||[]).some((p:{display_name:string|null})=>normalize(p.display_name||"")===normalize(fullName)))return json({error:"Un compte porte déjà ce nom et prénom. Vérifie les doublons."},409);
   if((profiles||[]).some((p:{diver_id:string|null})=>p.diver_id===diverId))return json({error:"Cette fiche plongeur possède déjà un compte d'accès."},409);
-  const role=validRoles.includes(String(body.role))?String(body.role):"plongeur",permissions=cleanPermissions(body.permissions,role),syntheticEmail=`${crypto.randomUUID()}@members.acro.invalid`;
+  const role=validRoles.includes(String(body.role))?String(body.role):"plongeur",baseRole=role==="master"?(["encadrant","plongeur"].includes(String(body.base_role))?String(body.base_role):"encadrant"):role,permissions=cleanPermissions(body.permissions,role),syntheticEmail=`${crypto.randomUUID()}@members.acro.invalid`;
   const {data:newUser,error:createError}=await admin.auth.admin.createUser({email:syntheticEmail,password,email_confirm:true,user_metadata:{display_name:fullName,first_name:firstName,last_name:lastName}});
   if(createError||!newUser.user)return json({error:createError?.message||"Création du compte impossible."},400);
-  const {error:profileInsertError}=await admin.from("acro_profiles").insert({user_id:newUser.user.id,display_name:fullName,role,is_active:true,diver_id:diverId,permissions});
+  const {error:profileInsertError}=await admin.from("acro_profiles").insert({user_id:newUser.user.id,display_name:fullName,role,base_role:baseRole,is_active:true,diver_id:diverId,permissions});
   if(profileInsertError){console.error("member-access create: insertion profil échouée",profileInsertError.message);await admin.auth.admin.deleteUser(newUser.user.id);return json({error:"Création du profil impossible. Le compte temporaire a été annulé."},500)}
   return json({ok:true,user_id:newUser.user.id,display_name:fullName,role,is_active:true,diver_id:diverId,permissions});
  }
@@ -109,11 +111,11 @@ Deno.serve(async(req)=>{
   const targetId=String(body.user_id||"").trim();
   if(!targetId)return json({error:"Identifiant Supabase du compte manquant."},400);
   if(targetId===masterUserId)return json({error:"La modification de son propre compte Master n'est pas autorisée ici."},400);
-  const {data:target,error:targetError}=await admin.from("acro_profiles").select("user_id,display_name,role,is_active,diver_id,permissions").eq("user_id",targetId).maybeSingle();
+  const {data:target,error:targetError}=await admin.from("acro_profiles").select("user_id,display_name,role,is_active,diver_id,permissions,base_role").eq("user_id",targetId).maybeSingle();
   if(targetError||!target)return json({error:"Compte existant introuvable."},404);
   if(target.role==="master")return json({error:"Un compte Master est protégé contre la modification depuis cette interface."},403);
   const requestedRole=validRoles.includes(String(body.role))?String(body.role):"plongeur";
-  if(requestedRole==="master")return json({error:"La promotion au rôle Master n'est pas autorisée ici."},403);
+  const requestedBaseRole=requestedRole==="master"?(["encadrant","plongeur"].includes(String(body.base_role))?String(body.base_role):(target.base_role||"encadrant")):requestedRole;
   const {data:profiles,error:listError}=await admin.from("acro_profiles").select("user_id,display_name,diver_id");
   if(listError)return json({error:"Vérification des profils impossible."},500);
   if((profiles||[]).some((p:{user_id:string;display_name:string|null})=>p.user_id!==targetId&&normalize(p.display_name||"")===normalize(fullName)))return json({error:"Un autre compte utilise déjà ce nom et prénom."},409);
@@ -121,7 +123,7 @@ Deno.serve(async(req)=>{
   const {data:authTarget,error:authTargetError}=await admin.auth.admin.getUserById(targetId);
   if(authTargetError||!authTarget.user)return json({error:"Compte d'authentification introuvable."},404);
   const permissions=cleanPermissions(body.permissions,requestedRole);
-  const profileUpdates:{display_name:string;role:string;is_active?:boolean;diver_id:string;permissions:string[]}={display_name:fullName,role:requestedRole,diver_id:diverId,permissions};
+  const profileUpdates:{display_name:string;role:string;base_role:string;is_active?:boolean;diver_id:string;permissions:string[]}={display_name:fullName,role:requestedRole,base_role:requestedBaseRole,diver_id:diverId,permissions};
   if(typeof body.active==="boolean")profileUpdates.is_active=body.active;
   const {data:updatedProfile,error:profileUpdateError}=await admin.from("acro_profiles").update(profileUpdates).eq("user_id",targetId).select("user_id,display_name,role,is_active,diver_id,permissions").maybeSingle();
   if(profileUpdateError||!updatedProfile)return json({error:profileUpdateError?.message||"Le profil n'a pas pu être mis à jour."},500);
@@ -132,12 +134,12 @@ Deno.serve(async(req)=>{
   if(password.length>0){
    const {error:authUpdateError}=await admin.auth.admin.updateUserById(targetId,{password});
    if(authUpdateError){
-    const {error:rollbackError}=await admin.from("acro_profiles").update({display_name:target.display_name,role:target.role,is_active:target.is_active,diver_id:target.diver_id,permissions:target.permissions}).eq("user_id",targetId);
+    const {error:rollbackError}=await admin.from("acro_profiles").update({display_name:target.display_name,role:target.role,base_role:target.base_role,is_active:target.is_active,diver_id:target.diver_id,permissions:target.permissions}).eq("user_id",targetId);
     if(rollbackError){console.error("member-access update: rollback profil échoué",rollbackError.message);return json({error:"Le changement de mot de passe a échoué et le retour arrière du profil a également échoué. Le profil doit être contrôlé dans Supabase avant toute nouvelle tentative."},500)}
     return json({error:"Le changement de mot de passe a été refusé par Supabase Auth : "+authUpdateError.message+". Le profil a été restauré."},400);
    }
   }
-  return json({ok:true,user_id:targetId,display_name:fullName,role:updatedProfile.role,is_active:updatedProfile.is_active,diver_id:updatedProfile.diver_id,permissions:updatedProfile.permissions});
+  return json({ok:true,user_id:targetId,display_name:fullName,role:updatedProfile.role,base_role:updatedProfile.base_role,is_active:updatedProfile.is_active,diver_id:updatedProfile.diver_id,permissions:updatedProfile.permissions});
  }
  if(action==="set_active"){
   const targetId=String(body.user_id||"").trim();
