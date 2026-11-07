@@ -3545,18 +3545,108 @@ function wireDivers(){
  }));
 }
 
+let securityAnalyticsData={logs:[],profiles:[]};
+let securityPeriod="week",securityGroup="all";
 function securityHTML(){
  return `<div class="cards">
-  <div class="stat"><span class="stat-ico">🟢</span><small>Connexions réussies (historique chargé)</small><strong id="securitySuccess">—</strong></div>
-  <div class="stat"><span class="stat-ico">⚠️</span><small>Tentatives échouées (historique chargé)</small><strong id="securityFailed">—</strong></div>
-  <div class="stat"><span class="stat-ico">📋</span><small>Événements affichés</small><strong id="securityTotal">—</strong></div>
+  <div class="stat"><span class="stat-ico">🟢</span><small>Connexions réussies · période</small><strong id="securitySuccess">—</strong></div>
+  <div class="stat"><span class="stat-ico">👥</span><small>Utilisateurs actifs · période</small><strong id="securityActive">—</strong></div>
+  <div class="stat"><span class="stat-ico">⚠️</span><small>Tentatives échouées · période</small><strong id="securityFailed">—</strong></div>
  </div>
  <div class="section">
-  <div class="section-head"><div><h2>Historique des connexions</h2><p class="muted">Les 250 dernières tentatives enregistrées à partir de la mise en service.</p><p class="muted" style="font-size:12px">Version de référence sur cette page : <strong>${APP_VERSION}</strong> · Build <strong>${APP_BUILD}</strong></p></div><button class="btn soft small" id="refreshSecurity">↻ Actualiser</button></div>
+  <div class="section-head"><div><h2>Fréquentation du club</h2><p class="muted">Analyse des connexions réussies, en heure française (Europe/Paris).</p></div>
+   <div class="header-actions"><select id="securityPeriod" aria-label="Période des statistiques"><option value="week">Cette semaine</option><option value="month">Ce mois</option><option value="year">Cette année</option><option value="total">Depuis le début</option></select>
+   <select id="securityGroup" aria-label="Catégorie d’utilisateurs"><option value="all">Tous les comptes</option><option value="encadrants">Encadrants</option><option value="materiel">Accès matériel</option></select></div>
+  </div>
+  <div class="cards">
+   <div class="stat"><small>Connexions sur la période</small><strong id="securityPeriodCount">—</strong></div>
+   <div class="stat"><small>Moyenne par jour</small><strong id="securityDailyAverage">—</strong></div>
+   <div class="stat"><small>Dernière connexion réussie</small><strong id="securityLastLogin" style="font-size:15px">—</strong></div>
+  </div>
+  <div class="section" style="margin-top:14px"><h3>À quels moments les membres se connectent ?</h3><p class="muted">Répartition des connexions par tranche horaire, selon la période sélectionnée.</p><div id="securityTraffic" class="security-traffic"></div></div>
+  <div class="grid-2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px">
+   <div class="section"><h3>🏆 Les plus actifs</h3><p class="muted">Classement par nombre de connexions réussies.</p><div id="securityMostActive"></div></div>
+   <div class="section"><h3>📉 Les moins actifs</h3><p class="muted">Comptes actifs ayant le moins de connexions.</p><div id="securityLeastActive"></div></div>
+  </div>
+  <p class="muted" id="securityStatsNote" style="font-size:12px;margin-top:12px">Les statistiques commencent à la mise en service de l’historique des connexions.</p>
+ </div>
+ <div class="section">
+  <div class="section-head"><div><h2>Historique des connexions</h2><p class="muted">Les 250 dernières tentatives enregistrées.</p><p class="muted" style="font-size:12px">Version de référence : <strong>${APP_VERSION}</strong> · Build <strong>${APP_BUILD}</strong></p></div><button class="btn soft small" id="refreshSecurity">↻ Actualiser</button></div>
   <div id="securityMessage" class="muted">Chargement de l’historique…</div>
   <div class="table-wrap"><table><thead><tr><th>Identifiant saisi</th><th>Date / heure</th><th>Résultat</th><th>Détail</th><th>Adresse IP</th><th>Appareil / navigateur</th><th>Version / Build</th></tr></thead><tbody id="securityRows"><tr><td colspan="7" class="empty">Chargement…</td></tr></tbody></table></div>
  </div>
- <div class="section" style="background:#eaf5ff"><strong>Protection des données</strong><p class="muted">Les mots de passe ne sont jamais enregistrés. L’historique conserve uniquement l’identifiant saisi, le résultat, l’heure, l’adresse IP lorsqu’elle est transmise et le navigateur.</p></div>`;
+ <div class="section" style="background:#eaf5ff"><strong>Protection des données</strong><p class="muted">Les mots de passe ne sont jamais enregistrés. L’historique conserve uniquement l’identifiant saisi, le résultat, l’heure, l’adresse IP lorsqu’elle est transmise et le navigateur. Les statistiques portent sur les connexions réussies.</p></div>
+ <style>
+ .security-traffic{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+ .security-time-card{background:#f2f7fb;border:1px solid #dce9f2;border-radius:12px;padding:12px}
+ .security-time-card strong{display:block;color:#123b60;font-size:20px;margin:4px 0}
+ .security-time-track{height:9px;border-radius:10px;background:#dce8f0;overflow:hidden;margin-top:8px}
+ .security-time-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#0879cb,#0b9da8)}
+ .security-rank{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #e5edf3}
+ .security-rank:last-child{border-bottom:0}
+ .security-rank strong{color:#123b60}.security-rank small{display:block;color:#71869a}
+ @media(max-width:600px){.security-traffic{grid-template-columns:repeat(2,minmax(0,1fr))}.section-head{align-items:flex-start;flex-wrap:wrap}}
+ </style>`;
+}
+function securityParisDate(value){
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(value));
+ const get=t=>parts.find(p=>p.type===t)?.value||"00";
+ return get("year")+"-"+get("month")+"-"+get("day");
+}
+function securityParisHour(value){
+ return Number(new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",hour:"2-digit",hourCycle:"h23"}).format(new Date(value)));
+}
+function securitySelectedLogs(){
+ const today=securityParisDate(new Date()),period=securityPeriod;
+ let start=today;
+ if(period==="month")start=today.slice(0,7)+"-01";
+ if(period==="year")start=today.slice(0,4)+"-01-01";
+ if(period==="week"){
+  const d=new Date(today+"T12:00:00Z"),day=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-day);start=d.toISOString().slice(0,10);
+ }
+ return securityAnalyticsData.logs.filter(x=>x.success&&x.created_at&& (period==="total"||securityParisDate(x.created_at)>=start));
+}
+function securityProfileMatches(p){
+ if(!p||p.is_active===false)return false;
+ if(securityGroup==="encadrants")return p.role==="encadrant"||p.base_role==="encadrant";
+ if(securityGroup==="materiel")return p.role==="master"||(Array.isArray(p.permissions)&&p.permissions.includes("materiel"));
+ return true;
+}
+function renderSecurityAnalytics(){
+ const profiles=securityAnalyticsData.profiles.filter(securityProfileMatches);
+ const logs=securitySelectedLogs(),allAttempts=securityAnalyticsData.logs.filter(x=>securityPeriod==="total"||(()=>{
+  if(!x.created_at)return false;const d=securityParisDate(x.created_at),today=securityParisDate(new Date());
+  if(securityPeriod==="year")return d.slice(0,4)===today.slice(0,4);
+  if(securityPeriod==="month")return d.slice(0,7)===today.slice(0,7);
+  const date=new Date(today+"T12:00:00Z");date.setUTCDate(date.getUTCDate()-((date.getUTCDay()+6)%7));return d>=date.toISOString().slice(0,10);
+ })());
+ const ids=new Set(profiles.map(p=>p.user_id));
+ const filteredLogs=logs.filter(x=>ids.has(x.user_id));
+ const failed=allAttempts.filter(x=>!x.success&&(!x.user_id||ids.has(x.user_id)));
+ const counts=new Map(profiles.map(p=>[p.user_id,0]));
+ filteredLogs.forEach(x=>counts.set(x.user_id,(counts.get(x.user_id)||0)+1));
+ const ranked=profiles.map(p=>({name:p.display_name||"Nom inconnu",count:counts.get(p.user_id)||0})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,"fr"));
+ const active=ranked.filter(x=>x.count>0),least=[...ranked].sort((a,b)=>a.count-b.count||a.name.localeCompare(b.name,"fr")).slice(0,5);
+ const today=securityParisDate(new Date());let days=1;
+ if(securityPeriod==="week")days=Math.max(1,Math.floor((new Date(today+"T12:00:00Z")-(()=>{const d=new Date(today+"T12:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d})())/86400000)+1);
+ if(securityPeriod==="month")days=Number(today.slice(8,10));
+ if(securityPeriod==="year"){const d=new Date(today+"T12:00:00Z");days=Math.floor((d-new Date(today.slice(0,4)+"-01-01T12:00:00Z"))/86400000)+1}
+ const hours=[{label:"Nuit",range:"00 h – 06 h",test:h=>h<6},{label:"Matin",range:"06 h – 12 h",test:h=>h>=6&&h<12},{label:"Après-midi",range:"12 h – 18 h",test:h=>h>=12&&h<18},{label:"Soir",range:"18 h – 00 h",test:h=>h>=18}];
+ const max=Math.max(1,...hours.map(h=>filteredLogs.filter(x=>h.test(securityParisHour(x.created_at))).length));
+ const successEl=document.getElementById("securitySuccess"),activeEl=document.getElementById("securityActive"),failedEl=document.getElementById("securityFailed");
+ if(successEl)successEl.textContent=filteredLogs.length.toLocaleString("fr-FR");
+ if(activeEl)activeEl.textContent=active.length.toLocaleString("fr-FR")+" / "+profiles.length;
+ if(failedEl)failedEl.textContent=failed.length.toLocaleString("fr-FR");
+ const countEl=document.getElementById("securityPeriodCount"),avgEl=document.getElementById("securityDailyAverage"),lastEl=document.getElementById("securityLastLogin");
+ if(countEl)countEl.textContent=filteredLogs.length.toLocaleString("fr-FR");
+ if(avgEl)avgEl.textContent=(filteredLogs.length/days).toLocaleString("fr-FR",{maximumFractionDigits:1});
+ if(lastEl){const last=[...filteredLogs].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];lastEl.textContent=last?new Date(last.created_at).toLocaleString("fr-FR",{timeZone:"Europe/Paris"}):"Aucune";}
+ const traffic=document.getElementById("securityTraffic");
+ if(traffic)traffic.innerHTML=hours.map(h=>{const n=filteredLogs.filter(x=>h.test(securityParisHour(x.created_at))).length;return `<div class="security-time-card"><span>${h.label}</span><strong>${n}</strong><small class="muted">${h.range}</small><div class="security-time-track"><div class="security-time-fill" style="width:${Math.round(n/max*100)}%"></div></div></div>`}).join("");
+ const most=document.getElementById("securityMostActive"),leastEl=document.getElementById("securityLeastActive");
+ if(most)most.innerHTML=active.length?active.slice(0,5).map((p,i)=>`<div class="security-rank"><div><strong>${i+1}. ${esc(p.name)}</strong><small>Connexions réussies</small></div><strong>${p.count}</strong></div>`).join(""):'<p class="muted">Aucune connexion réussie sur cette période.</p>';
+ if(leastEl)leastEl.innerHTML=least.length?least.map(p=>`<div class="security-rank"><div><strong>${esc(p.name)}</strong><small>${p.count===0?"Aucune connexion":"Connexions réussies"}</small></div><strong>${p.count}</strong></div>`).join(""):'<p class="muted">Aucun compte dans cette catégorie.</p>';
+ const note=document.getElementById("securityStatsNote");if(note)note.textContent="Statistiques calculées sur "+filteredLogs.length+" connexion(s) réussie(s), en heure française. Les données historiques commencent à la mise en service de l’audit.";
 }
 async function loadSecurityLogs(){
  const rows=document.getElementById("securityRows"),message=document.getElementById("securityMessage");
@@ -3566,19 +3656,21 @@ async function loadSecurityLogs(){
   const client=initSupabase();if(!client)throw new Error("Connexion Supabase indisponible.");
   const {data,error}=await client.functions.invoke("member-access",{body:{action:"list_logs"}});
   if(error||!data?.ok)throw new Error(data?.error||error?.message||"Lecture impossible.");
-  const logs=Array.isArray(data.logs)?data.logs:[];
-  document.getElementById("securitySuccess").textContent=logs.filter(x=>x.success).length;
-  document.getElementById("securityFailed").textContent=logs.filter(x=>!x.success).length;
-  document.getElementById("securityTotal").textContent=logs.length;
-  rows.innerHTML=logs.length?logs.map(x=>{
-   const date=x.created_at?new Date(x.created_at).toLocaleString("fr-FR"):"—";
+  const logs=Array.isArray(data.logs)?data.logs:[],profiles=Array.isArray(data.profiles)?data.profiles:[];
+  securityAnalyticsData={logs,profiles};
+  const period=document.getElementById("securityPeriod"),group=document.getElementById("securityGroup");
+  if(period){period.value=securityPeriod;period.onchange=()=>{securityPeriod=period.value;renderSecurityAnalytics()};}
+  if(group){group.value=securityGroup;group.onchange=()=>{securityGroup=group.value;renderSecurityAnalytics()};}
+  renderSecurityAnalytics();
+  rows.innerHTML=logs.slice(0,250).map(x=>{
+   const date=x.created_at?new Date(x.created_at).toLocaleString("fr-FR",{timeZone:"Europe/Paris"}):"—";
    const version=x.app_version||"Non renseignée",build=x.app_build||"—";
    const versionState=!x.app_version?"Non connue":x.app_version!==APP_VERSION?"Version différente":x.app_build===APP_BUILD?"À jour":"Build différent";
    const versionClass=versionState==="À jour"?"green":versionState==="Non connue"?"":"orange";
    return `<tr><td><strong>${esc(x.attempted_name||"Identifiant non renseigné")}</strong></td><td>${esc(date)}</td><td><span class="badge ${x.success?"green":"orange"}">${x.success?"Réussie":"Échec"}</span></td><td>${esc(x.reason||"—")}</td><td>${esc(x.ip_address||"Non disponible")}</td><td>${esc(x.user_agent||"Non disponible")}</td><td><span class="badge ${versionClass}">${esc(versionState)}</span><br><strong>${esc(version)}</strong><br><small>${esc(build)}</small></td></tr>`;
-  }).join(""):'<tr><td colspan="7" class="empty">Aucune tentative enregistrée pour le moment.</td></tr>';
-  message.textContent="Historique actualisé · "+logs.length+" événement(s).";
- }catch(err){message.textContent="Impossible de charger l’historique : "+(err.message||err);rows.innerHTML='<tr><td colspan="6" class="empty">Vérifie la connexion et les droits Master.</td></tr>';}
+  }).join("")||'<tr><td colspan="7" class="empty">Aucune tentative enregistrée pour le moment.</td></tr>';
+  message.textContent="Historique actualisé · "+logs.length+" événement(s) disponibles pour les statistiques (250 affichés ci-dessous).";
+ }catch(err){message.textContent="Impossible de charger l’historique : "+(err.message||err);rows.innerHTML='<tr><td colspan="7" class="empty">Vérifie la connexion et les droits Master.</td></tr>';}
  finally{if(button)button.disabled=false;}
 }
 
