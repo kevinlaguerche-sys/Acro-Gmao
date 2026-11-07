@@ -2275,17 +2275,25 @@ function diveStatusIcon(choice){return choice==="yes"?"<span class='dive-status 
 function diveEventLabel(ev){const typ=EVENT_TYPES[ev.type]||EVENT_TYPES.event;return typ.icon+" "+(ev.title||typ.label)}
 function diveSitePlansHTML(){
  const plans=state.diveSitePlans||[],admin=isMaster();
- const cards=plans.map((p,i)=>`<article class="section" style="padding:12px;margin:0;overflow:hidden">
-  <button type="button" data-open-dive-plan="${i}" style="display:block;width:100%;padding:0;border:0;background:transparent;text-align:left;cursor:zoom-in">
-   <img src="${p.image}" alt="Plan de ${esc(p.site)}" loading="lazy" style="width:100%;max-height:260px;object-fit:contain;background:#f4f7fa;border-radius:10px">
-   <div style="padding:10px 2px 2px"><strong>${esc(p.site)}</strong>${p.depth?`<div class="muted">Profondeur : ${esc(p.depth)}</div>`:""}${p.notes?`<p class="muted">${esc(p.notes)}</p>`:""}</div>
-  </button>${admin?`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn danger small" data-delete-dive-plan="${i}">Supprimer</button></div>`:""}
- </article>`).join("");
- return `<section class="section"><div class="section-head"><div><h2>🗺️ Plans des carrières</h2><p class="muted">Plans et repères des sites de plongée.</p></div><span class="badge">${plans.length} plan(s)</span></div>
+ const cards=plans.map((p,i)=>{
+  const isPdf=p.kind==="pdf"||!!p.storagePath;
+  if(isPdf)return `<article class="section" style="padding:16px;margin:0;display:flex;flex-direction:column;gap:12px">
+   <div style="display:flex;align-items:center;gap:12px"><div style="font-size:38px" aria-hidden="true">📕</div><div style="min-width:0;flex:1"><strong>${esc(p.site)}</strong><div class="muted">Document PDF · ${esc(p.originalName||"Plan de carrière")}</div>${p.depth?`<div class="muted">Profondeur : ${esc(p.depth)}</div>`:""}${p.notes?`<p class="muted">${esc(p.notes)}</p>`:""}</div></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary small" data-open-dive-plan-pdf="${i}">↗ Voir le PDF</button><button type="button" class="btn soft small" data-download-dive-plan-pdf="${i}">⬇ Télécharger</button></div>
+   ${admin?`<div style="display:flex;justify-content:flex-end"><button type="button" class="btn danger small" data-delete-dive-plan="${i}">Supprimer</button></div>`:""}
+  </article>`;
+  return `<article class="section" style="padding:12px;margin:0;overflow:hidden">
+   <button type="button" data-open-dive-plan="${i}" style="display:block;width:100%;padding:0;border:0;background:transparent;text-align:left;cursor:zoom-in">
+    <img src="${p.image}" alt="Plan de ${esc(p.site)}" loading="lazy" style="width:100%;max-height:260px;object-fit:contain;background:#f4f7fa;border-radius:10px">
+    <div style="padding:10px 2px 2px"><strong>${esc(p.site)}</strong>${p.depth?`<div class="muted">Profondeur : ${esc(p.depth)}</div>`:""}${p.notes?`<p class="muted">${esc(p.notes)}</p>`:""}</div>
+   </button>${admin?`<div style="display:flex;justify-content:flex-end;margin-top:8px"><button type="button" class="btn danger small" data-delete-dive-plan="${i}">Supprimer</button></div>`:""}
+  </article>`;
+ }).join("");
+ return `<section class="section"><div class="section-head"><div><h2>🗺️ Plans des carrières</h2><p class="muted">Plans, documents PDF et repères des sites de plongée.</p></div><span class="badge">${plans.length} plan(s)</span></div>
  ${admin?`<details class="master-locations-details" style="margin-bottom:14px"><summary class="master-locations-summary">＋ Ajouter un plan de carrière <span class="badge">Master uniquement</span></summary><div class="master-locations-content"><form id="diveSitePlanForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px">
  <div class="field"><label>Nom du site *</label><input name="site" required maxlength="80" placeholder="Ex. Vodelée"></div><div class="field"><label>Profondeur principale</label><input name="depth" maxlength="40" placeholder="Ex. 40 m"></div>
- <div class="field"><label>Image du plan *</label><input name="image" type="file" accept="image/jpeg,image/png,image/webp" required></div><div class="field" style="grid-column:1/-1"><label>Informations complémentaires</label><textarea name="notes" rows="2" maxlength="500" placeholder="Repères, consignes, particularités…"></textarea></div>
- <div style="grid-column:1/-1"><button class="btn primary" type="submit">Enregistrer le plan</button><p class="planning-hint">JPG, PNG ou WEBP. Image optimisée avant enregistrement.</p></div></form></div></details>`:""}
+ <div class="field"><label>Plan (image ou PDF) *</label><input name="image" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" required></div><div class="field" style="grid-column:1/-1"><label>Informations complémentaires</label><textarea name="notes" rows="2" maxlength="500" placeholder="Repères, consignes, particularités…"></textarea></div>
+ <div style="grid-column:1/-1"><button class="btn primary" type="submit">Enregistrer le plan</button><p class="planning-hint">Images JPG, PNG ou WEBP, ou PDF (25 Mo maximum). Les PDF sont stockés en ligne dans Supabase.</p></div></form></div></details>`:""}
  ${cards?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px">${cards}</div>`:'<div class="empty">Aucun plan enregistré pour le moment.</div>'}
  <dialog id="divePlanPreviewDialog" style="border:0;border-radius:16px;padding:12px;width:min(1100px,96vw);max-width:1100px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong id="divePlanPreviewTitle">Plan</strong><button type="button" class="btn soft small" id="closeDivePlanPreview">Fermer</button></div><img id="divePlanPreviewImage" alt="Plan agrandi" style="display:block;width:100%;max-height:80vh;object-fit:contain"></dialog></section>`;
 }
@@ -2494,14 +2502,43 @@ function wireDiveSitePlans(){
  document.getElementById("diveSitePlanForm")?.addEventListener("submit",async e=>{
   e.preventDefault();if(!isMaster()){notify("Ajout réservé au Master.");return}
   const form=e.currentTarget,b=form.querySelector('button[type="submit"]'),file=form.elements.image.files?.[0];if(!file)return;
+  const site=form.elements.site.value.trim();if(!site){notify("Indique le nom du site.");return}
+  if(file.size>25*1024*1024){notify("Le fichier dépasse la limite de 25 Mo.");return}
   b.disabled=true;b.textContent="Enregistrement…";
-  try{const image=await compressDivePlanImage(file),site=form.elements.site.value.trim();if(!site)throw new Error("Indique le nom du site.");
-   state.diveSitePlans||=[];state.diveSitePlans.push({id:"plan-"+Date.now(),site,depth:form.elements.depth.value.trim(),notes:form.elements.notes.value.trim(),image,createdAt:new Date().toISOString(),createdBy:current?.id||""});
-   saveState();render("plongee");notify("Plan ajouté");
-  }catch(err){notify(err.message||"Erreur d’enregistrement");b.disabled=false;b.textContent="Enregistrer le plan"}
+  let uploadedPath="";
+  try{
+   const isPdf=file.type==="application/pdf"||/\.pdf$/i.test(file.name);
+   const record={id:"plan-"+Date.now(),site,depth:form.elements.depth.value.trim(),notes:form.elements.notes.value.trim(),createdAt:new Date().toISOString(),createdBy:current?.id||""};
+   if(isPdf){
+    if(!supabaseClient||!remoteReady)throw new Error("Connexion Supabase indisponible. Reconnecte-toi puis réessaie.");
+    uploadedPath="plans-carrieres/"+crypto.randomUUID()+"-"+clubDocSlug(site)+".pdf";
+    const {error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).upload(uploadedPath,file,{contentType:"application/pdf",upsert:false,cacheControl:"3600"});
+    if(error)throw error;
+    record.kind="pdf";record.storagePath=uploadedPath;record.originalName=file.name;record.sizeBytes=file.size;
+   }else{
+    record.kind="image";record.image=await compressDivePlanImage(file);
+   }
+   state.diveSitePlans||=[];state.diveSitePlans.push(record);saveState();render("plongee");notify(isPdf?"PDF ajouté aux plans des carrières":"Plan ajouté");
+  }catch(err){
+   if(uploadedPath){try{await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([uploadedPath])}catch(cleanupError){console.warn("Nettoyage du PDF impossible",cleanupError)}}
+   console.error("Ajout du plan de carrière impossible",err);notify(err.message||"Erreur d’enregistrement");b.disabled=false;b.textContent="Enregistrer le plan";
+  }
  });
- document.querySelectorAll("[data-delete-dive-plan]").forEach(b=>b.addEventListener("click",()=>{if(!isMaster())return;const i=Number(b.dataset.deleteDivePlan),p=state.diveSitePlans?.[i];if(!p||!confirm("Supprimer le plan de "+p.site+" ?"))return;state.diveSitePlans.splice(i,1);saveState();render("plongee");notify("Plan supprimé")}));
- document.querySelectorAll("[data-open-dive-plan]").forEach(b=>b.addEventListener("click",()=>{const p=state.diveSitePlans?.[Number(b.dataset.openDivePlan)];if(!p)return;document.getElementById("divePlanPreviewTitle").textContent="Plan — "+p.site;document.getElementById("divePlanPreviewImage").src=p.image;document.getElementById("divePlanPreviewDialog").showModal()}));
+ document.querySelectorAll("[data-delete-dive-plan]").forEach(b=>b.addEventListener("click",async()=>{
+  if(!isMaster())return;const i=Number(b.dataset.deleteDivePlan),p=state.diveSitePlans?.[i];if(!p||!confirm("Supprimer le plan de "+p.site+" ?"))return;
+  b.disabled=true;
+  try{if(p.storagePath){const {error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).remove([p.storagePath]);if(error)throw error;}state.diveSitePlans.splice(i,1);saveState();render("plongee");notify("Plan supprimé")}
+  catch(err){notify("Suppression impossible : "+(err.message||"erreur Supabase"));b.disabled=false}
+ }));
+ document.querySelectorAll("[data-open-dive-plan]").forEach(b=>b.addEventListener("click",()=>{const p=state.diveSitePlans?.[Number(b.dataset.openDivePlan)];if(!p||!p.image)return;document.getElementById("divePlanPreviewTitle").textContent="Plan — "+p.site;document.getElementById("divePlanPreviewImage").src=p.image;document.getElementById("divePlanPreviewDialog").showModal()}));
+ const openPdf=async(index,download)=>{
+  const p=state.diveSitePlans?.[index];if(!p?.storagePath||!supabaseClient)throw new Error("Fichier PDF introuvable.");
+  const {data,error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).download(p.storagePath);if(error)throw error;
+  const url=URL.createObjectURL(data),a=document.createElement("a");a.href=url;a.download=p.originalName||("Plan-"+clubDocSlug(p.site)+".pdf");
+  if(!download)a.target="_blank";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+ };
+ document.querySelectorAll("[data-open-dive-plan-pdf]").forEach(b=>b.addEventListener("click",async()=>{b.disabled=true;try{await openPdf(Number(b.dataset.openDivePlanPdf),false)}catch(err){notify("Ouverture du PDF impossible : "+(err.message||"erreur inconnue"))}finally{b.disabled=false}}));
+ document.querySelectorAll("[data-download-dive-plan-pdf]").forEach(b=>b.addEventListener("click",async()=>{b.disabled=true;try{await openPdf(Number(b.dataset.downloadDivePlanPdf),true)}catch(err){notify("Téléchargement du PDF impossible : "+(err.message||"erreur inconnue"))}finally{b.disabled=false}}));
  document.getElementById("closeDivePlanPreview")?.addEventListener("click",()=>document.getElementById("divePlanPreviewDialog").close());
 }
 function wireDiveForecast(){
