@@ -1719,7 +1719,7 @@ function analysisEncadrantsHTML(){
 
 
 
-const YOUNG_PATHWAYS=[{value:"bulles-1",label:"Étoile de mer 1",group:"Jeunes bulles"},{value:"bulles-2",label:"Étoile de mer 2",group:"Jeunes bulles"},{value:"bulles-3",label:"Étoile de mer 3",group:"Jeunes bulles"},{value:"bronze",label:"Plongeur de Bronze",group:"Jeunes plongeurs"},{value:"argent",label:"Plongeur d’Argent",group:"Jeunes plongeurs"},{value:"or",label:"Plongeur d’Or",group:"Jeunes plongeurs"},{value:"pe12",label:"PE12",group:"Adolescents"},{value:"n1",label:"Niveau 1 / PE20",group:"Adolescents"},{value:"pe40",label:"PE40",group:"Adolescents"},{value:"pa20",label:"PA20",group:"Adolescents"},{value:"pa40",label:"PA40",group:"Adolescents"},{value:"bord",label:"Qualification Plongeur du bord",group:"Qualifications complémentaires"},{value:"bateau1",label:"Qualification Bateau 1",group:"Qualifications complémentaires"},{value:"bateau2",label:"Qualification Bateau 2",group:"Qualifications complémentaires"},{value:"profondeur2030",label:"Profondeur accompagnée 20–30 m",group:"Qualifications accompagnées"},{value:"profondeur3040",label:"Profondeur accompagnée 30–40 m",group:"Qualifications accompagnées"},{value:"autonomie020",label:"Autonomie accompagnée 0–20 m",group:"Qualifications accompagnées"},{value:"autonomie2040",label:"Autonomie accompagnée 20–40 m",group:"Qualifications accompagnées"},{value:"aide-moniteur",label:"Aide-moniteur",group:"Engagement"},{value:"assistant-moniteur",label:"Assistant-moniteur",group:"Engagement"},{value:"ado",label:"Parcours adolescent (à préciser)",group:"Adolescents"}];
+const YOUNG_PATHWAYS=[{value:"bulles-1",label:"Étoile de mer 1",group:"Jeunes bulles"},{value:"bulles-2",label:"Étoile de mer 2",group:"Jeunes bulles"},{value:"bulles-3",label:"Étoile de mer 3",group:"Jeunes bulles"},{value:"bronze",label:"Plongeur de Bronze",group:"Jeunes plongeurs"},{value:"argent",label:"Plongeur d’Argent",group:"Jeunes plongeurs"},{value:"or",label:"Plongeur d’Or",group:"Jeunes plongeurs"},{value:"pe12",label:"PE12",group:"Adolescents"},{value:"n1",label:"Niveau 1 / PE20",group:"Adolescents"},{value:"pe40",label:"PE40",group:"Adolescents"},{value:"pa12",label:"PA12",group:"Adolescents"},{value:"pa20",label:"PA20",group:"Adolescents"},{value:"pa40",label:"PA40",group:"Adolescents"},{value:"bord",label:"Qualification Plongeur du bord",group:"Qualifications complémentaires"},{value:"bateau1",label:"Qualification Bateau 1",group:"Qualifications complémentaires"},{value:"bateau2",label:"Qualification Bateau 2",group:"Qualifications complémentaires"},{value:"profondeur2030",label:"Profondeur accompagnée 20–30 m",group:"Qualifications accompagnées"},{value:"profondeur3040",label:"Profondeur accompagnée 30–40 m",group:"Qualifications accompagnées"},{value:"autonomie020",label:"Autonomie accompagnée 0–20 m",group:"Qualifications accompagnées"},{value:"autonomie2040",label:"Autonomie accompagnée 20–40 m",group:"Qualifications accompagnées"},{value:"aide-moniteur",label:"Aide-moniteur",group:"Engagement"},{value:"assistant-moniteur",label:"Assistant-moniteur",group:"Engagement"},{value:"ado",label:"Parcours adolescent (à préciser)",group:"Adolescents"}];
 function youngDiverName(id){const d=(state.divers||[]).find(x=>String(x.id)===String(id));return d?((d.firstName||"")+" "+(d.lastName||"")).trim():"Plongeur introuvable"}
 function youngDiverLevel(id){const d=(state.divers||[]).find(x=>String(x.id)===String(id));return d?.currentLevel||"Niveau non renseigné"}
 function youngTrackFor(id){return (state.youthTracks||[]).find(x=>String(x.diverId)===String(id))}
@@ -1800,7 +1800,22 @@ function youthCurriculumFor(pathway){
  if(stars[pathway])return make(stars[pathway],"JP-"+pathway.toUpperCase());
  if(["bronze","argent"].includes(pathway))return make(scuba,"JP-"+pathway.toUpperCase());
  if(pathway==="or"||pathway==="n1")return N1_COMPETENCIES.map(x=>({code:"JP-"+pathway.toUpperCase()+"-"+x.code,label:x.label,description:x.type==="theory"?"Connaissances théoriques adaptées à l’âge : prévention, compréhension du milieu et sécurité.":"Compétence du référentiel N1, évaluée en contrôle continu et adaptée au jeune plongeur." ,type:x.type}));
- if(pathway==="pe12")return make(scuba.slice(0,9),"JP-PE12");
+ if(pathway==="pe12")return make([
+  ["Utiliser son équipement","Maîtriser l’utilisation de son équipement personnel, notamment le scaphandre avec gilet stabilisateur."],
+  ["Se mettre à l’eau et sortir de l’eau","Réaliser une mise à l’eau et une sortie adaptées, en respectant les consignes du guide."],
+  ["S’immerger et retourner en surface","Maîtriser l’immersion et le retour en surface à vitesse contrôlée."],
+  ["Ventiler","Maîtriser sa ventilation au détendeur et réagir sereinement."],
+  ["S’équilibrer","Maintenir son équilibre pendant l’immersion."],
+  ["Communiquer","Connaître et utiliser les signes usuels."],
+  ["S’intégrer dans une palanquée guidée","Suivre les consignes du guide et rester intégré au groupe."],
+  ["Respecter l’environnement et la sécurité","Respecter le milieu et appliquer les règles de sécurité."]
+ ],"JP-PE12");
+ if(pathway==="pa12")return [
+  {code:"JP-PA12-01",label:"Organiser et gérer la plongée selon les consignes du DP",description:"Comprendre les directives du DP, organiser la plongée avec ses équipiers, gérer les paramètres et le matériel."},
+  {code:"JP-PA12-02",label:"Respecter le milieu et l’environnement",description:"Évoluer sans appui, stabiliser son palmage, observer le milieu et limiter son impact."},
+  {code:"JP-PA12-03",label:"Intervenir et porter assistance à un plongeur en difficulté",description:"Identifier un incident, interpréter les signes, prendre en charge un équipier et réaliser l’assistance adaptée."},
+  {code:"JP-PA12-04",label:"Connaissances théoriques",description:"Prévention des accidents, procédures de désaturation, réglementation, autonomie et environnement.",type:"theory"}
+ ];
  if(pathway==="pe40"){
   return [...N2_GROUPS.find(g=>g.key==="PE40").skills,...N2_GROUPS.find(g=>g.key==="COMMUNES").skills,N2_THEORY.PE40].map(x=>({code:"JP-PE40-"+x.code,label:x.label,description:"Compétence du cursus PE40, à travailler selon le référentiel FFESSM et les prérogatives du jeune.",type:x.type}));
  }
