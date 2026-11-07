@@ -2526,13 +2526,15 @@ function openPrerequisiteDialog(diverId,code,prerequisites,refresh){
 }
 function wirePrerequisiteIcons(body,diverId,prerequisites,refresh){
  if(!body)return;
+ body._acroPrerequisiteContext={diverId,prerequisites,refresh};
  if(body.dataset.prerequisiteClickBound==="1")return;
  body.dataset.prerequisiteClickBound="1";
  body.addEventListener("click",e=>{
   const button=e.target.closest("[data-open-prereq]");
   if(!button||!body.contains(button))return;
   e.preventDefault();e.stopPropagation();
-  openPrerequisiteDialog(diverId,button.dataset.openPrereq,prerequisites,refresh);
+  const context=body._acroPrerequisiteContext;
+  if(context)openPrerequisiteDialog(context.diverId,button.dataset.openPrereq,context.prerequisites,context.refresh);
  });
 }
 
