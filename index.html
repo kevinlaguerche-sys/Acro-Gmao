@@ -3421,7 +3421,7 @@ async function syncAccessUsersFromServer(){
  const {data,error}=await client.functions.invoke("member-access",{body:{action:"list_users"}});
  if(error)throw error;
  if(!data?.ok||!Array.isArray(data.users))throw new Error(data?.error||"Réponse serveur invalide.");
- state.users=data.users.map(p=>({id:p.user_id,authUserId:p.user_id,diverId:p.diver_id||"",name:p.display_name||"",role:p.role==="plongeur"?"diver":p.role,permissions:Array.isArray(p.permissions)?p.permissions:[],active:p.is_active!==false}));
+ state.users=data.users.map(p=>({id:p.user_id,authUserId:p.user_id,diverId:p.diver_id||"",name:p.display_name||"",role:p.role==="plongeur"?"diver":p.role,baseRole:p.base_role||(p.role==="master"?"member":p.role),permissions:Array.isArray(p.permissions)?p.permissions:[],active:p.is_active!==false}));
  try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){console.warn("Cache local des comptes non actualisé",e)}
  return state.users;
 }
@@ -3525,7 +3525,7 @@ document.getElementById("userForm").addEventListener("submit",async e=>{
    const client=initSupabase();if(!client)throw new Error("Configure d’abord la clé publique Supabase sur cet appareil.");
    const serverRole=role==="master"?"master":role==="encadrant"?"encadrant":"plongeur";
    const action=existing?"update":"create";
-   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole,diver_id:diverId,permissions};
+   const body={action,firstName:diver.firstName||"",lastName:diver.lastName||"",role:serverRole,base_role:profileRole,diver_id:diverId,permissions};
    if(code)body.password=code;
    if(existing){
      if(!existing.authUserId){
