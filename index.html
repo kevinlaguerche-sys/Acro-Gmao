@@ -2533,9 +2533,13 @@ function wireDiveSitePlans(){
  document.querySelectorAll("[data-open-dive-plan]").forEach(b=>b.addEventListener("click",()=>{const p=state.diveSitePlans?.[Number(b.dataset.openDivePlan)];if(!p||!p.image)return;document.getElementById("divePlanPreviewTitle").textContent="Plan — "+p.site;document.getElementById("divePlanPreviewImage").src=p.image;document.getElementById("divePlanPreviewDialog").showModal()}));
  const openPdf=async(index,download)=>{
   const p=state.diveSitePlans?.[index];if(!p?.storagePath||!supabaseClient)throw new Error("Fichier PDF introuvable.");
-  const {data,error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).download(p.storagePath);if(error)throw error;
-  const url=URL.createObjectURL(data),a=document.createElement("a");a.href=url;a.download=p.originalName||("Plan-"+clubDocSlug(p.site)+".pdf");
-  if(!download)a.target="_blank";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const popup=download?null:window.open("about:blank","_blank");
+  const {data,error}=await supabaseClient.storage.from(CLUB_DOCS_BUCKET).download(p.storagePath);if(error){if(popup)popup.close();throw error}
+  const url=URL.createObjectURL(data),a=document.createElement("a");a.href=url;
+  if(download){a.download=p.originalName||("Plan-"+clubDocSlug(p.site)+".pdf");document.body.appendChild(a);a.click();a.remove();}
+  else if(popup){popup.location.href=url;}
+  else{a.download=p.originalName||("Plan-"+clubDocSlug(p.site)+".pdf");document.body.appendChild(a);a.click();a.remove();}
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
  };
  document.querySelectorAll("[data-open-dive-plan-pdf]").forEach(b=>b.addEventListener("click",async()=>{b.disabled=true;try{await openPdf(Number(b.dataset.openDivePlanPdf),false)}catch(err){notify("Ouverture du PDF impossible : "+(err.message||"erreur inconnue"))}finally{b.disabled=false}}));
  document.querySelectorAll("[data-download-dive-plan-pdf]").forEach(b=>b.addEventListener("click",async()=>{b.disabled=true;try{await openPdf(Number(b.dataset.downloadDivePlanPdf),true)}catch(err){notify("Téléchargement du PDF impossible : "+(err.message||"erreur inconnue"))}finally{b.disabled=false}}));
