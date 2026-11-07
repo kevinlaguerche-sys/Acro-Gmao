@@ -3809,7 +3809,9 @@ function securityParisDate(value){
  return get("year")+"-"+get("month")+"-"+get("day");
 }
 function securityParisHour(value){
- return Number(new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",hour:"2-digit",hourCycle:"h23"}).format(new Date(value)));
+ const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Paris",hour:"2-digit",hourCycle:"h23"}).formatToParts(new Date(value));
+ const hour=parts.find(p=>p.type==="hour")?.value;
+ return hour===undefined?NaN:Number(hour);
 }
 function securitySelectedLogs(){
  const today=securityParisDate(new Date()),period=securityPeriod;
