@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V148</title>
+<title>ACRO Plongée — V149</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -1323,6 +1323,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
     <button class="nav-btn" data-view="planning"><span class="ico">🗓️</span>Planning</button>
     <button class="nav-btn" data-view="plongee"><span class="ico">🤿</span>Plongée</button>
     <button class="nav-btn" data-view="plansCarrieres"><span class="ico">🗺️</span>Plans des carrières</button>
+    <button class="nav-btn" data-view="feuillesPalanquee"><span class="ico">📋</span>Feuilles de palanquée</button>
     <button class="nav-btn" data-view="documentsClub"><span class="ico">📁</span>Dossiers du club</button>
     <div class="side-label">Préférences</div>
     <button class="nav-btn" data-view="settings"><span class="ico">⚙️</span>Paramètres application</button>
@@ -1446,6 +1447,7 @@ const views={
  planning:{title:"Planning",subtitle:"Retrouve les séances et les prochains rendez-vous du club.",icon:"🗓️"},
  plongee:{title:"Plongée",subtitle:"Espace dédié à l'organisation des sorties et activités de plongée.",icon:"🤿"},
  plansCarrieres:{title:"Plans des carrières",subtitle:"Cartes et repères des sites de plongée.",icon:"🗺️"},
+ feuillesPalanquee:{title:"Feuilles de palanquée",subtitle:"Scanner, archiver et consulter les feuilles des directeurs de plongée.",icon:"📋"},
  documentsClub:{title:"Dossiers du club",subtitle:"Les documents utiles à télécharger pour les activités ACRO Plongée.",icon:"📁"},
  settings:{title:"Paramètres application",subtitle:"Personnalise les sons et les vibrations de ton application.",icon:"⚙️"},
  acces:{title:"Gestion des accès",subtitle:"Crée les comptes et choisis les écrans visibles pour chaque membre.",icon:"🛡️"},
@@ -1626,7 +1628,7 @@ function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=do
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
 function canAccessDiveResponses(){return isDiveEncadrant()||(current?.permissions||[]).includes("materiel")}
-function allowed(view){if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return canAccessDiveResponses();if(view==="jeunesPlongeurs")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
+function allowed(view){if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return canAccessDiveResponses();if(view==="jeunesPlongeurs"||view==="feuillesPalanquee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
 function loginLocal(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
@@ -1726,6 +1728,7 @@ function render(view,skipAccessSync=false){
  if(view==="plongee") body=diveForecastHTML();
  if(view==="plansCarrieres") body=diveSitePlansHTML();
  if(view==="documentsClub") body=clubDocumentsHTML();
+ if(view==="feuillesPalanquee") body=palanqueeHTML();
  if(view==="settings") body=appSettingsHTML();
  main.innerHTML=`<div class="page-head"><div><div class="eyebrow">${isMaster()?"ESPACE MASTER":(isMasterSection(view)?"CONSULTATION SEULE":"ESPACE MEMBRE")}</div><h1>${v.icon} ${v.title}${view==="masterMateriel"?` <button type="button" class="title-back-button" id="titleBackToMaterial" aria-label="Retour à la page Matériel" title="Retour à Matériel">←</button>`:""}</h1>${v.subtitle?`<p>${v.subtitle}</p>`:""}</div>${view==="plongeurs"&&isMaster()?'<button class="btn primary" id="createDiverBtn">＋ Ajouter un plongeur</button>':view==="acces"&&isMaster()?'<button class="btn primary" id="createUserBtn">＋ Créer un utilisateur</button>':view==="masterMateriel"&&isMaster()?'<div class="header-actions"><button class="btn primary" id="newEquipmentBtn">＋ Créer un équipement</button></div>':""}</div>${body}`;
  const readOnlyMasterView=!isMaster()&&isMasterSection(view);
@@ -1751,6 +1754,7 @@ function render(view,skipAccessSync=false){
  if(view==="plongee") wireDiveForecast();
  if(view==="plansCarrieres") wireDiveSitePlans();
  if(view==="documentsClub") wireClubDocuments();
+ if(view==="feuillesPalanquee") wirePalanquee();
 }
 function analysisEncadrantsHTML(){
  const year=new Date().getFullYear();
@@ -2728,6 +2732,86 @@ function diveSitePlansHTML(){
 async function compressDivePlanImage(file){
  if(!file||!/^image\/(jpeg|png|webp)$/i.test(file.type))throw new Error("Choisis une image JPG, PNG ou WEBP.");
  const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await new Promise((ok,no)=>{img.onload=ok;img.onerror=()=>no(new Error("Image illisible."))});const scale=Math.min(1,1800/img.naturalWidth,1400/img.naturalHeight),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);c.getContext("2d").drawImage(img,0,0,c.width,c.height);const data=c.toDataURL("image/jpeg",.76);if(data.length>2_000_000)throw new Error("Image trop volumineuse après optimisation.");return data;}finally{URL.revokeObjectURL(url)}
+}
+
+
+const PALANQUEE_BUCKET="acro-palanquee";
+let palanqueeSheets=[];
+function canUploadPalanquee(){
+ if(isMaster())return true;
+ const d=currentLinkedDiver();
+ return ["E3","E4","P5"].includes(String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase());
+}
+function palanqueeHTML(){
+ const canUpload=canUploadPalanquee();
+ return `<section class="section"><div class="section-head"><h2>📋 Archives des feuilles de palanquée</h2><span class="badge">ACRO Plongée</span></div>
+ <p class="muted">Les feuilles numérisées sont conservées dans l'espace sécurisé du club. Tous les encadrants peuvent les consulter.</p>
+ ${canUpload?`<form id="palanqueeForm" style="display:grid;gap:12px;max-width:760px;margin:20px 0;padding:18px;border:1px solid var(--line);border-radius:16px;background:#f7fbfc">
+ <strong>📷 Scanner ou importer une feuille</strong>
+ <div style="display:flex;flex-wrap:wrap;gap:12px"><label class="field" style="flex:1;min-width:170px">Date de plongée<input type="date" name="dive_date" required></label><label class="field" style="flex:1;min-width:170px">Site de plongée<input name="site" placeholder="Ex. Vodelée" maxlength="160" required></label></div>
+ <label class="field">Directeur de plongée<input name="director_name" maxlength="160" required></label>
+ <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" id="palanqueeCameraBtn">📷 Scanner avec l'appareil photo</button><button class="btn soft" type="button" id="palanqueeFileBtn">📁 Choisir un fichier</button></div>
+ <input id="palanqueeCamera" type="file" accept="image/*" capture="environment" style="display:none">
+ <input id="palanqueeFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" style="display:none">
+ <div id="palanqueePreview" class="muted" aria-live="polite">Aucune feuille sélectionnée.</div>
+ <button class="btn primary" type="submit" id="palanqueeSubmit" disabled>✓ Enregistrer la feuille</button></form>`:'<p class="muted">Dépôt réservé aux directeurs de plongée habilités (E3, E4, P5) et au Master.</p>'}
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0"><label class="field" style="flex:1;min-width:150px">Rechercher<input id="palanqueeSearch" placeholder="Site ou directeur"></label><label class="field">Année<select id="palanqueeYear"><option value="">Toutes les années</option></select></label><button class="btn soft" type="button" id="palanqueeRefresh">↻ Actualiser</button></div>
+ <div id="palanqueeList"><p class="muted">Chargement des feuilles…</p></div></section>`;
+}
+function renderPalanqueeList(){
+ const host=document.getElementById("palanqueeList");if(!host)return;
+ const q=(document.getElementById("palanqueeSearch")?.value||"").trim().toLowerCase(),year=document.getElementById("palanqueeYear")?.value||"";
+ const years=[...new Set(palanqueeSheets.map(d=>String(d.dive_date||"").slice(0,4)))].filter(Boolean).sort().reverse();
+ const sel=document.getElementById("palanqueeYear");
+ if(sel){const prev=sel.value;sel.innerHTML='<option value="">Toutes les années</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join("");sel.value=years.includes(prev)?prev:"";}
+ const shown=palanqueeSheets.filter(d=>(!year||String(d.dive_date).startsWith(year))&&(!q||(d.site+" "+d.director_name).toLowerCase().includes(q)));
+ host.innerHTML=shown.length?'<div style="display:grid;gap:10px">'+shown.map(d=>`<article class="section" style="margin:0;padding:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="module-icon">📄</span><div style="flex:1;min-width:180px"><strong>${esc(d.site)}</strong><div class="muted" style="font-size:13px">${esc(new Date(d.dive_date+"T12:00:00").toLocaleDateString("fr-FR"))} · DP : ${esc(d.director_name)}</div><small class="muted">Déposée le ${esc(new Date(d.created_at).toLocaleDateString("fr-FR"))}</small></div><button class="btn primary small" type="button" data-palanquee-open="${esc(d.id)}">👁 Consulter</button><button class="btn soft small" type="button" data-palanquee-download="${esc(d.id)}">⬇ Télécharger</button></article>`).join("")+'</div>':'<div class="empty">Aucune feuille de palanquée trouvée.</div>';
+}
+async function loadPalanqueeSheets(){
+ if(!supabaseClient||!remoteReady)throw Error("Connexion Supabase indisponible.");
+ const {data,error}=await supabaseClient.from("acro_palanquee_sheets").select("id,dive_date,site,director_name,storage_path,original_name,content_type,created_at").order("dive_date",{ascending:false}).order("created_at",{ascending:false});
+ if(error)throw error;palanqueeSheets=data||[];renderPalanqueeList();
+}
+function wirePalanquee(){
+ const form=document.getElementById("palanqueeForm"),camera=document.getElementById("palanqueeCamera"),picker=document.getElementById("palanqueeFile"),preview=document.getElementById("palanqueePreview"),submit=document.getElementById("palanqueeSubmit");
+ let file=null;
+ if(form){form.elements.dive_date.value=new Date().toLocaleDateString("en-CA");form.elements.director_name.value=current?.name||"";}
+ document.getElementById("palanqueeCameraBtn")?.addEventListener("click",()=>camera.click());
+ document.getElementById("palanqueeFileBtn")?.addEventListener("click",()=>picker.click());
+ function choose(f){if(!f)return;if(!["image/jpeg","image/png","image/webp","application/pdf"].includes(f.type)){notify("Format non accepté : JPEG, PNG, WebP ou PDF.");return}if(f.size>15728640){notify("Fichier trop volumineux (15 Mo maximum).");return}file=f;submit.disabled=false;preview.textContent="✓ "+f.name+" · "+formatClubDocSize(f.size);}
+ camera?.addEventListener("change",()=>choose(camera.files?.[0]));picker?.addEventListener("change",()=>choose(picker.files?.[0]));
+ form?.addEventListener("submit",async e=>{
+  e.preventDefault();if(!file||!canUploadPalanquee())return;
+  submit.disabled=true;submit.textContent="Enregistrement…";
+  let path="";
+  try{
+   const {data:authData,error:authError}=await supabaseClient.auth.getUser();if(authError||!authData?.user?.id)throw Error("Session expirée : reconnectez-vous.");
+   const userId=authData.user.id;
+   const ext={"image/jpeg":"jpg","image/png":"png","image/webp":"webp","application/pdf":"pdf"}[file.type];
+   path=userId+"/"+crypto.randomUUID()+"."+ext;
+   const {error:uploadError}=await supabaseClient.storage.from(PALANQUEE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(uploadError)throw uploadError;
+   const {error:insertError}=await supabaseClient.from("acro_palanquee_sheets").insert({dive_date:form.elements.dive_date.value,site:form.elements.site.value.trim(),director_name:form.elements.director_name.value.trim(),storage_path:path,original_name:file.name,content_type:file.type,created_by:userId});
+   if(insertError)throw insertError;
+   notify("Feuille de palanquée enregistrée.");file=null;form.reset();preview.textContent="Aucune feuille sélectionnée.";await loadPalanqueeSheets();
+  }catch(err){console.error("Dépôt palanquée",err);notify("Enregistrement impossible : "+(err.message||"erreur Supabase"));if(path)try{await supabaseClient.storage.from(PALANQUEE_BUCKET).remove([path])}catch(_){}}
+  finally{submit.disabled=!file;submit.textContent="✓ Enregistrer la feuille";}
+ });
+ document.getElementById("palanqueeSearch")?.addEventListener("input",renderPalanqueeList);
+ document.getElementById("palanqueeYear")?.addEventListener("change",renderPalanqueeList);
+ document.getElementById("palanqueeRefresh")?.addEventListener("click",()=>loadPalanqueeSheets().catch(err=>notify("Actualisation impossible : "+err.message)));
+ document.getElementById("palanqueeList")?.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-palanquee-open],[data-palanquee-download]");if(!b)return;
+  const id=b.dataset.palanqueeOpen||b.dataset.palanqueeDownload,d=palanqueeSheets.find(x=>x.id===id);if(!d)return;
+  b.disabled=true;
+  try{
+   const {data,error}=await supabaseClient.storage.from(PALANQUEE_BUCKET).download(d.storage_path);if(error)throw error;
+   const url=URL.createObjectURL(data);
+   if(b.dataset.palanqueeDownload){const a=document.createElement("a");a.href=url;a.download=d.original_name||"feuille-palanquee";document.body.appendChild(a);a.click();a.remove();}
+   else{const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove();}
+   setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(err){notify("Ouverture impossible : "+err.message)}finally{b.disabled=false}
+ });
+ loadPalanqueeSheets().catch(err=>{const h=document.getElementById("palanqueeList");if(h)h.textContent="Impossible de charger les feuilles : "+err.message;});
 }
 
 function clubDocumentsHTML(){
