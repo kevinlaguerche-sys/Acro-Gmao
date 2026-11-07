@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V153</title>
+<title>ACRO Plongée — V154</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -532,6 +532,17 @@
  body:has(#loginView.hidden) #logoutBtn{padding:8px 7px;font-size:10px}
 }
 
+
+/* Feuilles de palanquée : mise en page mobile sans débordement */
+.backup-palanquee-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:12px 0}
+.backup-palanquee-actions .btn{width:100%;max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere}
+#backupPalanqueeList{width:100%;max-width:100%;min-width:0}
+.backup-palanquee-card{display:flex;align-items:center;gap:12px;padding:11px;margin:0;width:100%;max-width:100%;min-width:0;box-sizing:border-box;cursor:pointer;overflow:hidden}
+.backup-palanquee-card input{width:18px;height:18px;flex:0 0 18px;margin:0}
+.backup-palanquee-details{display:block;flex:1 1 0;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.backup-palanquee-details strong,.backup-palanquee-details small{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.backup-palanquee-card .badge{flex:0 0 auto;max-width:72px;overflow-wrap:anywhere}
+@media(max-width:520px){.backup-palanquee-card{gap:9px;padding:10px}.backup-palanquee-card .badge{font-size:.72rem;padding:5px 7px}}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1428,8 +1439,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
-const APP_VERSION="V153";
-const APP_BUILD="20261107.08";
+const APP_VERSION="V154";
+const APP_BUILD="20261107.09";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
 const YOUNG_BUBBLE_LEVELS=["Étoile de mer 1","Étoile de mer 2","Étoile de mer 3"];
@@ -2056,7 +2067,7 @@ function backupHTML(){
  <article class="section"><h3><span class="export-icon compact">🎓</span>Formations plongeurs</h3><p class="muted">Toutes les fiches de progression : compétences, théorie, ECA, acquis, non acquis, observations, historiques et validations moniteurs.</p><div class="inline-form"><button class="btn soft" type="button" data-export="formations">Exporter JSON</button><button class="btn primary" type="button" data-export-xlsx="formations">Exporter Excel (.xlsx)</button></div></article>
  </div>
  <div class="section" style="border:2px solid var(--primary,#0d9488);background:var(--surface,#fff)"><div class="section-head"><div><h3><span class="export-icon">📦</span>Export total</h3><p class="muted">Sauvegarde exhaustive : données du site, événements, matériel, plongeurs, historique complet des formations, évaluations et validations stockées dans Supabase.</p></div><span class="badge">Recommandé</span></div><div class="inline-form"><button class="btn soft" type="button" data-export="total">Sauvegarde complète JSON</button><button class="btn primary" type="button" data-export-xlsx="total">Sauvegarde complète Excel (.xlsx)</button></div></div>
- <div class="section" style="border:2px solid var(--primary,#0d9488);background:var(--surface,#fff)"><div class="section-head"><div><h3>📋 Feuilles de palanquée</h3><p class="muted">Télécharge toutes les feuilles archivées ou sélectionne uniquement celles dont tu as besoin.</p></div><span class="badge" id="backupPalanqueeCount">Chargement…</span></div><div class="inline-form" style="margin:12px 0"><button class="btn primary" type="button" id="backupPalanqueeAll">⬇ Télécharger toutes les feuilles</button><button class="btn soft" type="button" id="backupPalanqueeSelected">⬇ Télécharger la sélection</button><button class="btn soft" type="button" id="backupPalanqueeRefresh">↻ Actualiser</button></div><div class="inline-form" style="margin:8px 0"><button class="btn soft small" type="button" id="backupPalanqueeSelectAll">Tout sélectionner</button><button class="btn soft small" type="button" id="backupPalanqueeClear">Tout désélectionner</button></div><div id="backupPalanqueeList" style="display:grid;gap:8px"><p class="muted">Chargement des feuilles…</p></div><p class="hint">Chaque feuille est téléchargée dans son format d’origine (PDF ou image). La sélection est conservée tant que cette page reste ouverte.</p><div id="backupPalanqueeMessage" class="message" role="status"></div></div>\n <div class="section" style="border:2px solid #087e87;background:#f3fffe"><div class="section-head"><div><h3><span class="export-icon">▦</span>Extraction QR codes complète</h3><p class="muted">Génère une planche imprimable avec un QR code pour chaque équipement et chaque fiche plongeur enregistrés.</p></div><span class="badge">Équipements + plongeurs</span></div><button class="btn primary full" type="button" id="extractAllQRCodesBtn">▦ Extraire tous les QR codes</button><p class="hint">Une fenêtre s’ouvrira avec tous les QR codes, classés par catégorie. Tu pourras imprimer la planche ou l’enregistrer en PDF. La génération nécessite une connexion Internet.</p></div></div>
+ <div class="section" style="border:2px solid var(--primary,#0d9488);background:var(--surface,#fff)"><div class="section-head"><div><h3>📋 Feuilles de palanquée</h3><p class="muted">Télécharge toutes les feuilles archivées ou sélectionne uniquement celles dont tu as besoin.</p></div><span class="badge" id="backupPalanqueeCount">Chargement…</span></div><div class="backup-palanquee-actions"><button class="btn primary" type="button" id="backupPalanqueeAll">⬇ Télécharger toutes les feuilles</button><button class="btn soft" type="button" id="backupPalanqueeSelected">⬇ Télécharger la sélection</button></div><div id="backupPalanqueeList" style="display:grid;gap:8px"><p class="muted">Chargement des feuilles…</p></div><p class="hint">Chaque feuille est téléchargée dans son format d’origine (PDF ou image). La sélection est conservée tant que cette page reste ouverte.</p><div id="backupPalanqueeMessage" class="message" role="status"></div></div>\n <div class="section" style="border:2px solid #087e87;background:#f3fffe"><div class="section-head"><div><h3><span class="export-icon">▦</span>Extraction QR codes complète</h3><p class="muted">Génère une planche imprimable avec un QR code pour chaque équipement et chaque fiche plongeur enregistrés.</p></div><span class="badge">Équipements + plongeurs</span></div><button class="btn primary full" type="button" id="extractAllQRCodesBtn">▦ Extraire tous les QR codes</button><p class="hint">Une fenêtre s’ouvrira avec tous les QR codes, classés par catégorie. Tu pourras imprimer la planche ou l’enregistrer en PDF. La génération nécessite une connexion Internet.</p></div></div>
  <div class="section"><div class="section-head"><div><h2><span class="export-icon">📥</span>Importer des données</h2><p class="muted">Importe un fichier JSON, CSV ou Excel (.xlsx/.xls) avec les colonnes correspondantes. Les données existantes ne sont pas effacées : les fiches sont ajoutées ou mises à jour.</p></div></div>
  <div class="inline-form"><div class="field"><label for="importDiverFile">Import plongeurs</label><input id="importDiverFile" type="file" accept=".json,.csv,.xlsx,.xls,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"><small class="muted">JSON, CSV ou Excel : première feuille avec Nom, Prénom, Niveau actuel, etc.</small><button class="btn soft" type="button" id="importDiversBtn">Importer les plongeurs</button></div>
  <div class="field"><label for="importEquipmentFile">Import matériel</label><input id="importEquipmentFile" type="file" accept=".json,.csv,.xlsx,.xls,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"><small class="muted">JSON, CSV ou Excel : première feuille avec Catégorie, Numéro, Description, Propriétaire, Pression, État.</small><button class="btn soft" type="button" id="importEquipmentBtn">Importer le matériel</button></div></div>
@@ -2065,7 +2076,7 @@ function backupHTML(){
 function renderBackupPalanqueeList(){
  const host=document.getElementById("backupPalanqueeList");if(!host)return;
  const count=document.getElementById("backupPalanqueeCount");if(count)count.textContent=palanqueeSheets.length+" feuille(s)";
- host.innerHTML=palanqueeSheets.length?palanqueeSheets.map(d=>'<label class="section" style="display:flex;align-items:center;gap:12px;padding:11px;margin:0;cursor:pointer"><input type="checkbox" class="backup-palanquee-check" value="'+esc(d.id)+'" style="width:18px;height:18px;flex:0 0 auto"><span style="flex:1;min-width:0"><strong>'+esc(d.site||"Site non renseigné")+'</strong><small class="muted" style="display:block">'+esc(dateFR(d.dive_date))+' · DP : '+esc(d.director_name||"—")+' · '+esc(d.original_name||"feuille")+'</small></span><span class="badge">'+esc(String(d.content_type||"fichier").replace("application/","").replace("image/",""))+'</span></label>').join(""):'<div class="empty">Aucune feuille de palanquée archivée.</div>';
+ host.innerHTML=palanqueeSheets.length?palanqueeSheets.map(d=>'<label class="section backup-palanquee-card"><input type="checkbox" class="backup-palanquee-check" value="'+esc(d.id)+'"><span class="backup-palanquee-details"><strong>'+esc(d.site||"Site non renseigné")+'</strong><small class="muted">'+esc(dateFR(d.dive_date))+' · DP : '+esc(d.director_name||"—")+' · '+esc(d.original_name||"feuille")+'</small></span><span class="badge">'+esc(String(d.content_type||"fichier").replace("application/","").replace("image/",""))+'</span></label>').join(""):'<div class="empty">Aucune feuille de palanquée archivée.</div>';
 }
 async function downloadBackupPalanquees(ids){
  if(!isMaster())return;
@@ -2289,11 +2300,8 @@ function wireBackup(){
  document.getElementById("importDiversBtn")?.addEventListener("click",()=>{if(isMaster())importDiversFile()});
  document.getElementById("importEquipmentBtn")?.addEventListener("click",()=>{if(isMaster())importEquipmentFile()});
  const refresh=()=>loadPalanqueeSheets().then(renderBackupPalanqueeList).catch(err=>{const h=document.getElementById("backupPalanqueeList");if(h)h.textContent="Impossible de charger les feuilles : "+err.message});
- document.getElementById("backupPalanqueeRefresh")?.addEventListener("click",refresh);
  document.getElementById("backupPalanqueeAll")?.addEventListener("click",()=>downloadBackupPalanquees("all"));
  document.getElementById("backupPalanqueeSelected")?.addEventListener("click",()=>downloadBackupPalanquees([...document.querySelectorAll(".backup-palanquee-check:checked")].map(x=>x.value)));
- document.getElementById("backupPalanqueeSelectAll")?.addEventListener("click",()=>document.querySelectorAll(".backup-palanquee-check").forEach(x=>x.checked=true));
- document.getElementById("backupPalanqueeClear")?.addEventListener("click",()=>document.querySelectorAll(".backup-palanquee-check").forEach(x=>x.checked=false));
  refresh();
 }
 function extractAllQRCodes(){
