@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V143</title>
+<title>ACRO Plongée — V144</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -1331,8 +1331,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
-const APP_VERSION="V143";
-const APP_BUILD="20261107.03";
+const APP_VERSION="V144";
+const APP_BUILD="20261107.04";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
 const YOUNG_BUBBLE_LEVELS=["1re étoile de mer","2e étoile de mer","3e étoile de mer"];
@@ -1719,7 +1719,7 @@ function analysisEncadrantsHTML(){
 
 
 
-const YOUNG_PATHWAYS=[{value:"bulles-1",label:"Jeunes bulles · Étoile de mer 1",group:"Jeunes bulles"},{value:"bulles-2",label:"Jeunes bulles · Étoile de mer 2",group:"Jeunes bulles"},{value:"bulles-3",label:"Jeunes bulles · Étoile de mer 3",group:"Jeunes bulles"},{value:"bronze",label:"Jeune plongeur · Bronze",group:"Jeunes plongeurs"},{value:"argent",label:"Jeune plongeur · Argent",group:"Jeunes plongeurs"},{value:"or",label:"Jeune plongeur · Or",group:"Jeunes plongeurs"},{value:"n1",label:"Jeune plongeur · Niveau 1 (N1)",group:"Jeunes plongeurs / cursus N1"},{value:"ado",label:"Parcours adolescent",group:"Adolescents"}];
+const YOUNG_PATHWAYS=[{value:"bulles-1",label:"Étoile de mer 1",group:"Jeunes bulles"},{value:"bulles-2",label:"Étoile de mer 2",group:"Jeunes bulles"},{value:"bulles-3",label:"Étoile de mer 3",group:"Jeunes bulles"},{value:"bronze",label:"Plongeur de Bronze",group:"Jeunes plongeurs"},{value:"argent",label:"Plongeur d’Argent",group:"Jeunes plongeurs"},{value:"or",label:"Plongeur d’Or",group:"Jeunes plongeurs"},{value:"pe12",label:"PE12",group:"Adolescents"},{value:"n1",label:"Niveau 1 / PE20",group:"Adolescents"},{value:"pe40",label:"PE40",group:"Adolescents"},{value:"pa12",label:"PA12",group:"Adolescents"},{value:"pa20",label:"PA20",group:"Adolescents"},{value:"pa40",label:"PA40",group:"Adolescents"},{value:"bord",label:"Qualification Plongeur du bord",group:"Qualifications complémentaires"},{value:"bateau1",label:"Qualification Bateau 1",group:"Qualifications complémentaires"},{value:"bateau2",label:"Qualification Bateau 2",group:"Qualifications complémentaires"},{value:"profondeur2030",label:"Profondeur accompagnée 20–30 m",group:"Qualifications accompagnées"},{value:"profondeur3040",label:"Profondeur accompagnée 30–40 m",group:"Qualifications accompagnées"},{value:"autonomie020",label:"Autonomie accompagnée 0–20 m",group:"Qualifications accompagnées"},{value:"autonomie2040",label:"Autonomie accompagnée 20–40 m",group:"Qualifications accompagnées"},{value:"aide-moniteur",label:"Aide-moniteur",group:"Engagement"},{value:"assistant-moniteur",label:"Assistant-moniteur",group:"Engagement"},{value:"ado",label:"Parcours adolescent (à préciser)",group:"Adolescents"}];
 function youngDiverName(id){const d=(state.divers||[]).find(x=>String(x.id)===String(id));return d?((d.firstName||"")+" "+(d.lastName||"")).trim():"Plongeur introuvable"}
 function youngDiverLevel(id){const d=(state.divers||[]).find(x=>String(x.id)===String(id));return d?.currentLevel||"Niveau non renseigné"}
 function youngTrackFor(id){return (state.youthTracks||[]).find(x=>String(x.diverId)===String(id))}
@@ -1727,8 +1727,9 @@ function youngEvaluationRows(id){return (state.youthEvaluations||[]).filter(x=>S
 function youngStatusLabel(s){return ({Acquis:"Acquis",ECA:"En cours",NA:"À retravailler"})[s]||"En cours"}
 function youngStatusClass(s){return ({Acquis:"green",ECA:"orange",NA:"red"})[s]||"blue"}
 
-let youngTrainingTab="aquatique";
+let youngTrainingTab="competences";
 let youngTrainingSelectedDiver="";
+let youngTrainingSelectedPathway="";
 const YOUNG_SKILLS=[
  {id:"equipement",label:"S’équiper et se déséquiper",aquatique:"Préparer, ajuster et utiliser son équipement avec l’aide adaptée ; participer au déséquipement et au rinçage.",hors:"Identifier les éléments du matériel, leur rôle et les vérifications simples. Comprendre pourquoi le matériel doit être adapté et contrôlé."},
  {id:"mise-eau",label:"Se mettre à l’eau et en sortir",aquatique:"Réaliser une entrée et une sortie adaptées au site, en sécurité, selon les consignes du moniteur.",hors:"Identifier les risques de chute, de percussion et de désorganisation. Connaître les consignes collectives et les procédures du site."},
@@ -1741,17 +1742,147 @@ const YOUNG_SKILLS=[
  {id:"surface",label:"Retourner en surface",aquatique:"Rejoindre la surface à vitesse lente et contrôlée, puis assurer sa sécurité en surface.",hors:"Comprendre les consignes de remontée, l’interdiction du Valsalva à la remontée et les risques de surpression pulmonaire."},
  {id:"securite",label:"Évoluer en sécurité",aquatique:"Réagir calmement aux situations travaillées avec le moniteur : réserve, froid, essoufflement, panne d’air ou perte de contact.",hors:"Connaître les procédures, les signes d’alerte et les réactions attendues ; accepter et appliquer les consignes du moniteur."}
 ];
+function youthCurriculumFor(pathway){
+ const stars={
+  "bulles-1":[
+   ["S’équiper et se déséquiper","Découvrir les palmes, le masque et le tuba ; identifier les éléments et participer à l’équipement avec aide."],
+   ["Se mettre à l’eau et en sortir","Entrer et sortir progressivement de l’eau en PMT, depuis une plage ou une échelle, avec les consignes du moniteur."],
+   ["S’immerger","Mettre la tête sous l’eau avec le masque, repérer et récupérer des objets immergés."],
+   ["Se propulser","Découvrir la propulsion avec les palmes et suivre un petit parcours balisé en surface."],
+   ["Se ventiler","Ventiler au tuba sur plusieurs cycles et apprendre à le vider en surface."],
+   ["Communiquer","Découvrir les signes simples et comprendre les signes communs du moniteur."],
+   ["Respecter le milieu et l’environnement","Observer le milieu, ne pas toucher ni dégrader ; découvrir les bons gestes de protection."]
+  ],
+  "bulles-2":[
+   ["S’équiper et se déséquiper","Préparer et utiliser son PMT avec une aide de plus en plus réduite."],
+   ["Se mettre à l’eau et en sortir","Réaliser une mise à l’eau plus directe en PMT, notamment le saut droit lorsque les conditions le permettent."],
+   ["S’immerger","Réaliser de courtes immersions, commencer l’équilibrage des oreilles et utiliser progressivement le canard ou le phoque."],
+   ["Se propulser","Se déplacer sur de courtes distances sans appui ; utiliser une nage en libre et le palmage ventral en PMT."],
+   ["Se ventiler","Ventiler au tuba, le vider en surface et réaliser de courtes apnées inspiratoires."],
+   ["Communiquer","Comprendre et utiliser les signes OK, direction, montée, descente, stop, regarder et ne pas toucher."],
+   ["Respecter le milieu et l’environnement","Se déplacer sans appui, maîtriser progressivement son palmage et préserver le milieu."]
+  ],
+  "bulles-3":[
+   ["S’équiper et se déséquiper","Préparer son matériel, s’équiper et se déséquiper seul ; participer au rinçage et au rangement."],
+   ["Se mettre à l’eau et en sortir","Se mettre à l’eau en PMT par une technique adaptée et sortir de l’eau en sécurité."],
+   ["S’immerger","Alterner immersion, apnée courte et retour en surface ; maîtriser canard et phoque et équilibrer les oreilles sans forcer."],
+   ["Se propulser","Parcourir 25 m en nage libre et 50 m en PMT sans appui ni essoufflement."],
+   ["Se ventiler","Ventiler au tuba à l’effort, vider un masque partiellement rempli en apnée et respecter la récupération."],
+   ["Communiquer","Maîtriser les signes usuels : problème, froid, essoufflement, souffler et équilibrer les oreilles."],
+   ["Respecter le milieu et l’environnement","Évoluer sans appui avec un palmage maîtrisé et adopter un comportement écoresponsable."]
+  ]
+ };
+ const scuba=[
+  ["S’équiper et se déséquiper","Participer au gréage, dégréage, rinçage et rangement ; progresser vers une mise en œuvre autonome du matériel, avec aide pour les éléments lourds."],
+  ["Se mettre à l’eau et en sortir","Choisir et réaliser une mise à l’eau adaptée (saut droit, bascule arrière, plage ou échelle) et capeler/décapeler en sécurité."],
+  ["S’immerger","S’immerger face au moniteur, équilibrer les oreilles, ajuster le lestage et utiliser les techniques adaptées (phoque, canard, coulée ou mouillage)."],
+  ["Se propulser","Se déplacer en surface et sous l’eau avec un palmage adapté, sans appui et sans essoufflement."],
+  ["Se ventiler","Ventiler calmement et régulièrement au détendeur ; réagir sereinement à une entrée d’eau dans le masque."],
+  ["S’équilibrer","Gérer progressivement sa flottabilité et stabiliser son immersion à la profondeur demandée."],
+  ["Communiquer","Comprendre et réaliser les signes utiles avec le moniteur et les équipiers ; signaler une difficulté."],
+  ["Respecter le milieu et l’environnement","Maîtriser son palmage, ne pas toucher ni dégrader et respecter la faune, la flore et le matériel."],
+  ["Retourner en surface","Remonter selon les consignes, contrôler sa vitesse et assurer sa sécurité en surface."],
+  ["Évoluer en sécurité","Appliquer les consignes, rester proche du moniteur, reconnaître les incidents travaillés et réagir selon les procédures apprises."]
+ ];
+ const extras={
+  "bord":[["Préparer une plongée du bord","Préparer et transporter son matériel pour un départ depuis une plage, des rochers ou un ponton."],["Évoluer depuis le bord","Identifier les particularités du site, les conditions d’accès et les zones de mise à l’eau et de sortie."],["Sécurité et comportement","Respecter les consignes du moniteur, gérer son équipement avant, pendant et après la plongée."]],
+  "bateau1":[["Connaître le pneumatique","Identifier les zones, équipements et consignes propres à un pneumatique."],["Mise à l’eau et sortie","Gérer son matériel et réaliser la mise à l’eau et la sortie selon les consignes."],["Sécurité à bord","Respecter les consignes du pilote et du directeur de plongée ; connaître les gestes simples de matelotage."]],
+  "bateau2":[["Connaître la vedette","Identifier les zones, équipements et consignes propres à une vedette."],["Mise à l’eau et sortie","Gérer son matériel et réaliser la mise à l’eau et la sortie en tenant compte du bateau."],["Sécurité et matelotage","Appliquer les consignes de sécurité, connaître les nœuds élémentaires et quelques termes marins."]],
+  "profondeur2030":[["Stabilisation","S’équilibrer en profondeur et en pleine eau dans la tranche 20–30 m."],["Ventilation","Adapter sa respiration à l’évolution en profondeur et gérer son effort."],["Évolution et communication","Adapter son évolution, comprendre les nouveaux signes et réagir de façon appropriée."],["Connaissances et comportement","Comprendre les phénomènes liés à la profondeur et appliquer les consignes de désaturation."]],
+  "profondeur3040":[["Stabilisation","S’équilibrer en profondeur et en pleine eau dans la tranche 30–40 m."],["Ventilation","Adapter sa respiration à la profondeur et surveiller les signes de fatigue."],["Évolution et communication","Adapter son évolution à la profondeur et réagir aux signes spécifiques."],["Connaissances et comportement","Comprendre les phénomènes de profondeur et respecter les protocoles de désaturation."]],
+  "autonomie020":[["Orientation","Préparer un itinéraire, observer les repères et utiliser progressivement la boussole."],["Paramètres de plongée","Surveiller profondeur, durée et consommation d’air."],["Déroulement et désaturation","Participer à la planification et appliquer les procédures de remontée et de palier."],["Communication et consignes","Utiliser les signes d’autonomie, rester cohérent avec les consignes du DP et du cadre accompagnateur."]],
+  "autonomie2040":[["Orientation","Préparer et suivre une orientation adaptée, avec repères et boussole."],["Paramètres et consommation","Gérer profondeur, temps et consommation d’air dans l’espace concerné."],["Déroulement et désaturation","Planifier la plongée et respecter les protocoles de décompression."],["Communication et sécurité","Communiquer les paramètres et appliquer les consignes du DP sans intervention permanente du cadre."]],
+  "aide-moniteur":[["Préparer une séance","Aider à préparer le matériel et l’espace d’activité sous la responsabilité du moniteur."],["Accompagner les pratiquants","Accueillir, rassurer et aider les jeunes dans le respect des consignes."],["Sécurité et posture","Identifier ses limites, alerter le moniteur et ne jamais se substituer à lui."]],
+  "assistant-moniteur":[["Participer à l’organisation","Contribuer à l’installation, au rangement et à l’organisation d’une séance."],["Aider à l’encadrement","Accompagner un groupe sous la responsabilité directe du moniteur et selon les tâches confiées."],["Communication et sécurité","Transmettre les informations utiles, repérer une difficulté et alerter immédiatement le responsable."]
+  ]
+ };
+ const make=(arr,prefix)=>arr.map((x,i)=>({code:prefix+"-"+String(i+1).padStart(2,"0"),label:x[0],description:x[1]}));
+ if(stars[pathway])return make(stars[pathway],"JP-"+pathway.toUpperCase());
+ if(["bronze","argent"].includes(pathway))return make(scuba,"JP-"+pathway.toUpperCase());
+ if(pathway==="or"||pathway==="n1")return N1_COMPETENCIES.map(x=>({code:"JP-"+pathway.toUpperCase()+"-"+x.code,label:x.label,description:x.type==="theory"?"Connaissances théoriques adaptées à l’âge : prévention, compréhension du milieu et sécurité.":"Compétence du référentiel N1, évaluée en contrôle continu et adaptée au jeune plongeur." ,type:x.type}));
+ if(pathway==="pe12")return make([
+  ["Utiliser son équipement","Maîtriser l’utilisation de son équipement personnel, notamment le scaphandre avec gilet stabilisateur."],
+  ["Se mettre à l’eau et sortir de l’eau","Réaliser une mise à l’eau et une sortie adaptées, en respectant les consignes du guide."],
+  ["S’immerger et retourner en surface","Maîtriser l’immersion et le retour en surface à vitesse contrôlée."],
+  ["Ventiler","Maîtriser sa ventilation au détendeur et réagir sereinement."],
+  ["S’équilibrer","Maintenir son équilibre pendant l’immersion."],
+  ["Communiquer","Connaître et utiliser les signes usuels."],
+  ["S’intégrer dans une palanquée guidée","Suivre les consignes du guide et rester intégré au groupe."],
+  ["Respecter l’environnement et la sécurité","Respecter le milieu et appliquer les règles de sécurité."]
+ ],"JP-PE12");
+ if(pathway==="pa12")return [
+  {code:"JP-PA12-01",label:"Organiser et gérer la plongée selon les consignes du DP",description:"Comprendre les directives du DP, organiser la plongée avec ses équipiers, gérer les paramètres et le matériel."},
+  {code:"JP-PA12-02",label:"Respecter le milieu et l’environnement",description:"Évoluer sans appui, stabiliser son palmage, observer le milieu et limiter son impact."},
+  {code:"JP-PA12-03",label:"Intervenir et porter assistance à un plongeur en difficulté",description:"Identifier un incident, interpréter les signes, prendre en charge un équipier et réaliser l’assistance adaptée."},
+  {code:"JP-PA12-04",label:"Connaissances théoriques",description:"Prévention des accidents, procédures de désaturation, réglementation, autonomie et environnement.",type:"theory"}
+ ];
+ if(pathway==="pe40"){
+  return [...N2_GROUPS.find(g=>g.key==="PE40").skills,...N2_GROUPS.find(g=>g.key==="COMMUNES").skills,N2_THEORY.PE40].map(x=>({code:"JP-PE40-"+x.code,label:x.label,description:"Compétence du cursus PE40, à travailler selon le référentiel FFESSM et les prérogatives du jeune.",type:x.type}));
+ }
+ if(pathway==="pa20"){
+  return [...N2_GROUPS.find(g=>g.key==="COMMUNES").skills,...N2_GROUPS.find(g=>g.key==="PA20").skills,N2_THEORY.PA20].map(x=>({code:"JP-PA20-"+x.code,label:x.label,description:"Compétence du cursus PA20, à travailler sous contrôle de l’encadrement et selon l’âge du jeune.",type:x.type}));
+ }
+ if(pathway==="pa40"){
+  return [...N3_GROUPS.find(g=>g.key==="PA40").skills,N3_THEORY.PA40].map(x=>({code:"JP-PA40-"+x.code,label:x.label,description:"Compétence du cursus PA40, selon le référentiel FFESSM et les conditions d’accès des jeunes.",type:x.type}));
+ }
+ if(extras[pathway])return make(extras[pathway],"JP-"+pathway.toUpperCase());
+ return make(scuba,"JP-ADO");
+}
+function youthPathwayLabel(pathway){return YOUNG_PATHWAYS.find(p=>p.value===pathway)?.label||pathway}
 function youngTrainingHTML(tracks){
  const validTracks=tracks||[];
  const selected=validTracks.some(t=>String(t.diverId)===String(youngTrainingSelectedDiver))?youngTrainingSelectedDiver:(validTracks[0]?.diverId||"");
  youngTrainingSelectedDiver=selected;
  const selectedTrack=validTracks.find(t=>String(t.diverId)===String(selected));
- const selectedDiver=(state.divers||[]).find(d=>String(d.id)===String(selected));
- const n1Text=[selectedDiver?.inProgress,selectedDiver?.currentLevel,selectedDiver?.level].filter(Boolean).join(" ").toUpperCase();
- const youngN1=selectedTrack?.pathway==="n1"||/NIVEAU\s*1|\bN1\b/.test(n1Text);
+ if(!youngTrainingSelectedPathway)youngTrainingSelectedPathway=selectedTrack?.pathway||"bulles-1";
  const diverOptions=validTracks.map(t=>'<option value="'+esc(t.diverId)+'" '+(String(t.diverId)===String(selected)?"selected":"")+'>'+esc(youngDiverName(t.diverId))+'</option>').join("");
- const panel=(category,title,description,key)=>'<div class="young-competency-panel '+(youngTrainingTab===key?"":"hidden")+'" data-youth-panel="'+key+'"><div class="young-competency-intro"><strong>'+title+'</strong><p>'+description+'</p></div><div class="young-competency-grid">'+YOUNG_SKILLS.map(skill=>{const latest=(state.youthEvaluations||[]).filter(x=>String(x.diverId)===String(selected)&&x.skillId===skill.id&&x.category===key).slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")))[0];const status=latest?.status||"ECA";return '<form class="young-competency-card" data-young-competency-form data-skill="'+skill.id+'" data-category="'+key+'" data-diver="'+esc(selected)+'"><div class="young-competency-card-head"><span class="young-competency-number">'+String(YOUNG_SKILLS.indexOf(skill)+1).padStart(2,"0")+'</span><h3>'+esc(skill.label)+'</h3><span class="badge '+youngStatusClass(status)+'">'+youngStatusLabel(status)+'</span></div><p>'+esc(skill[key==="aquatique"?"aquatique":"hors"])+'</p><div class="young-competency-controls"><label>Évaluation<select name="status"><option value="ECA" '+(status==="ECA"?"selected":"")+'>ECA · En cours</option><option value="Acquis" '+(status==="Acquis"?"selected":"")+'>Acquis</option><option value="NA" '+(status==="NA"?"selected":"")+'>Non acquis</option></select></label><label>Observation<textarea name="comment" rows="2" maxlength="500" placeholder="Commentaire de l’encadrant…">'+esc(latest?.comment||"")+'</textarea></label></div><div class="young-competency-footer"><small>'+(latest?esc(latest.evaluatorName||"Encadrant")+" · "+(latest.createdAt?new Date(latest.createdAt).toLocaleDateString("fr-FR"):""):"Pas encore évalué")+'</small><button class="btn primary small" type="submit">Enregistrer</button></div></form>'}).join("")+'</div></div>';
- return '<section class="section young-training-section"><div class="section-head"><div><h2>🎓 Formation des jeunes plongeurs</h2><p class="muted">Évaluation continue des compétences, avec un suivi séparé dans l’eau et hors de l’eau.</p></div><span class="badge">Référentiel FFESSM · juin 2026</span></div>'+(validTracks.length?'<div class="field young-training-diver"><label for="youngTrainingDiver">Jeune plongeur</label><select id="youngTrainingDiver">'+diverOptions+'</select></div><div class="young-training-tabs"><button type="button" data-youth-tab="aquatique" class="'+(youngTrainingTab==="aquatique"?"active":"")+'">🌊 Aquatique</button><button type="button" data-youth-tab="nonAquatique" class="'+(youngTrainingTab==="nonAquatique"?"active":"")+'">📘 Non aquatique</button><button type="button" data-youth-tab="mft" class="'+(youngTrainingTab==="mft"?"active":"")+'">📚 MFT Jeunes Plongeurs</button></div>'+panel("aquatique","Compétences en milieu aquatique","Gestes techniques et mises en situation dans l’eau. Chaque compétence est évaluée individuellement.", "aquatique")+panel("nonAquatique","Comportement et connaissances hors de l’eau","Compréhension des consignes, prévention, communication, matériel et connaissances associées aux compétences.", "nonAquatique")+'<div class="young-competency-panel '+(youngTrainingTab==="mft"?"":"hidden")+'" data-youth-panel="mft"><div class="young-mft-card"><div class="young-mft-icon">📖</div><div><span class="young-eyebrow">SOURCE OFFICIELLE FFESSM</span><h3>Manuel de Formation Technique – Jeunes Plongeurs</h3><p>Consulter le référentiel officiel et ses mises à jour directement sur le portail MFT de la FFESSM. L’application ne stocke pas de copie locale susceptible de devenir obsolète.</p><a class="btn primary" href="https://mft.ffessm.fr/" target="_blank" rel="noopener noreferrer">Ouvrir le MFT Jeunes plongeurs ↗</a>'+(youngN1?'<div style="margin-top:14px;padding-top:12px;border-top:1px solid #cde5ef"><h3>📘 MFT Niveau 1 – PE20</h3><p>Ce jeune suit également le cursus N1. Le référentiel N1 officiel FFESSM est accessible directement ici.</p><a class="btn primary" href="https://api.ffessm.fr/V1/Commissions/ManuelFormationList/Download/b3a9c9a2-63d1-455b-9ea1-e1f451cd639b" target="_blank" rel="noopener noreferrer">Ouvrir le MFT N1 officiel ↗</a></div>':'')+'</div></div></div>':'<div class="empty">Ajoute d’abord un jeune au suivi pour ouvrir sa grille de compétences.</div>')+'</section><style>.young-training-section{margin-top:18px}.young-training-diver{max-width:420px}.young-training-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}.young-training-tabs button{border:1px solid var(--line);background:#fff;color:#4e6474;padding:10px 15px;border-radius:12px;font-weight:800;font-size:13px}.young-training-tabs button.active{background:#e7f8f7;color:#087e87;border-color:#8adbd6;box-shadow:inset 0 -2px #0b9c9b}.young-competency-intro{padding:13px 15px;border-radius:13px;background:#f0f8fb;margin-bottom:12px}.young-competency-intro strong{color:#123b60}.young-competency-intro p{margin:4px 0 0;color:#698296;font-size:12px}.young-competency-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.young-competency-card{border:1px solid #d5e8f0;border-radius:15px;padding:14px;background:linear-gradient(150deg,#fff,#fafdff);min-width:0}.young-competency-card-head{display:flex;align-items:center;gap:8px}.young-competency-card-head h3{font-size:14px;color:#123b60;flex:1}.young-competency-number{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:#e7f8f7;color:#087e87;font-weight:900;font-size:11px}.young-competency-card>p{font-size:12px;line-height:1.5;color:#58748a;min-height:54px;margin:10px 0}.young-competency-controls{display:grid;gap:8px}.young-competency-controls label{display:grid;gap:5px;font-size:11px;font-weight:800;color:#58748a}.young-competency-controls select,.young-competency-controls textarea{width:100%;border:1px solid #cddce4;border-radius:9px;padding:8px;background:#fff;color:#123b60;font:inherit;font-size:12px}.young-competency-controls textarea{resize:vertical}.young-competency-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}.young-competency-footer small{font-size:10px;color:#8194a2}.young-mft-card{display:flex;gap:16px;align-items:flex-start;padding:20px;border:1px solid #cde5ef;border-radius:17px;background:linear-gradient(120deg,#e8f7fb,#f5fbff 65%,#e8f8f6)}.young-mft-card h3{color:#123b60;margin:5px 0 8px}.young-mft-card p{color:#58748a;line-height:1.55;font-size:13px;max-width:720px}.young-mft-icon{font-size:38px}@media(max-width:760px){.young-competency-grid{grid-template-columns:1fr}.young-mft-card{padding:15px}.young-competency-card>p{min-height:0}}</style>';
+ const pathwayOptions=YOUNG_PATHWAYS.map(p=>'<option value="'+esc(p.value)+'" '+(p.value===youngTrainingSelectedPathway?"selected":"")+'>'+esc(p.group+" · "+p.label)+'</option>').join("");
+ return '<section class="section young-training-section"><div class="section-head"><div><h2>🎓 Formation jeunes plongeurs</h2><p class="muted">Même suivi individuel que les formations adultes : compétences, observations, validations moniteurs et progression.</p></div><span class="badge">Référentiel FFESSM</span></div>'+(validTracks.length?'<div class="young-training-selectors"><div class="field"><label for="youngTrainingDiver">Jeune plongeur</label><select id="youngTrainingDiver">'+diverOptions+'</select></div><div class="field"><label for="youngTrainingPathway">Niveau / formation à suivre</label><select id="youngTrainingPathway">'+pathwayOptions+'</select></div><button type="button" class="mft-open-btn" id="youngOpenMft">📘 MFT officiel ↗</button></div><div id="youngProgressInline" class="n1-inline-progress"><div class="empty">Chargement de la fiche de suivi…</div></div><dialog id="youngEvaluationDialog" class="n1-evaluation-dialog"><div class="n1-dialog-head"><div><h2 id="youngEvaluationTitle">Évaluer une compétence</h2><p id="youngEvaluationSubtitle">Observation de séance</p></div><button type="button" class="n1-dialog-close" id="youngEvaluationClose">×</button></div><div class="n1-dialog-body"><form id="youngEvaluationForm"><input type="hidden" name="competency"><div class="field"><label>Évaluation</label><select name="status" required><option value="ECA">En cours d’acquisition (ECA)</option><option value="Acquis">Acquis</option><option value="NA">Non acquis</option></select></div><div class="field"><label>Commentaire de l’encadrant</label><textarea name="comment" rows="4" placeholder="Observations, points réussis, axes de travail…"></textarea></div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><small>Encadrant : '+esc(current?.name||"")+'</small><button class="n1-save-btn" type="submit">Enregistrer</button></div><p id="youngEvaluationMessage" class="message"></p></form></div></dialog>':'<div class="empty">Ajoute d’abord un jeune au suivi pour ouvrir sa grille de compétences.</div>')+'</section><style>.young-training-section{margin-top:18px}.young-training-selectors{display:grid;grid-template-columns:minmax(180px,1fr) minmax(220px,1.2fr) auto;gap:12px;align-items:end;margin:12px 0}.young-training-selectors .field{margin:0}.young-training-selectors select{width:100%}.young-training-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.young-training-grid .n1-skill-card{min-width:0}@media(max-width:760px){.young-training-selectors{grid-template-columns:1fr}.young-training-grid{grid-template-columns:1fr}}</style>';
+}
+function youthProgressCardHTML(skill,evaluations,validations){
+ const ev=evaluations.filter(e=>e.competency_code===skill.code).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+ const val=validations.filter(v=>v.competency_code===skill.code),acquired=val.length>=3;
+ const counts={Acquis:ev.filter(e=>e.status==="Acquis").length,ECA:ev.filter(e=>e.status==="ECA").length,NA:ev.filter(e=>e.status==="NA").length};
+ return '<article class="n1-skill-card n1-skill-clickable '+(skill.type==="theory"?"n1-theory-card":"")+'" role="button" tabindex="0" data-open-youth-skill="'+esc(skill.code)+'"><div class="n1-skill-title"><span class="n1-status-icon" style="color:'+(acquired?'#168b4b':ev.length?'#c27a12':'#9aafc2')+'">'+n1StatusIcon(acquired,ev.length)+'</span>'+(skill.type==="theory"?'<span class="n1-theory-icon">📘</span>':'')+'<span>'+esc(skill.label)+'</span></div><p class="n1-skill-description">'+esc(skill.description||"")+'</p><div class="n1-skill-meta"><span>'+ev.length+' fois travaillée</span><span>'+(acquired?'Compétence acquise':"À travailler")+'</span></div><div class="n1-skill-badges"><span class="n1-pill green">'+counts.Acquis+' acquis</span><span class="n1-pill orange">'+counts.ECA+' ECA</span><span class="n1-pill red">'+counts.NA+' NA</span></div><div class="n1-skill-meta"><strong>Validations moniteurs</strong><strong>'+val.length+'/3</strong></div><div class="n1-validation-row">'+[0,1,2].map(i=>'<span class="n1-validation-dot '+(val[i]?'done':'')+'" title="'+(val[i]?esc(val[i].evaluator_name):"Validation disponible")+'">'+(val[i]?'✓':i+1)+'</span>').join("")+'</div>'+(ev.length?'<details class="n1-history"><summary>Historique <span>('+ev.length+' observation'+(ev.length>1?"s":"")+')</span></summary><div class="n1-history-list">'+ev.map(e=>'<div class="n1-history-item"><strong>'+esc(e.status)+'</strong> · '+new Date(e.created_at).toLocaleDateString("fr-FR")+' · '+esc(e.evaluator_name||"Encadrant")+(e.comment?'<br>'+esc(e.comment):"")+'</div>').join("")+'</div></details>':'')+(isMaster()&&val.length?'<button type="button" class="n1-master-remove-acquired" data-youth-remove-acquired="'+esc(skill.code)+'">Retirer les validations</button>':'')+'<div class="n1-skill-action-hint">＋ Cliquer pour ajouter une observation</div></article>';
+}
+async function openYouthProgress(diverId,pathway){
+ const body=document.getElementById("youngProgressInline");if(!body)return;
+ const diver=(state.divers||[]).find(d=>String(d.id)===String(diverId));if(!diver)return;
+ const skills=youthCurriculumFor(pathway);
+ if(!skills.length){body.innerHTML='<div class="empty">Aucune compétence définie pour ce parcours.</div>';return}
+ if(!supabaseClient){body.innerHTML='<div class="empty">Connexion serveur indisponible. Connecte-toi pour consulter et enregistrer les validations.</div>';return}
+ body.innerHTML='<div class="empty">Chargement des compétences et des validations…</div>';
+ try{
+  const [evRes,valRes]=await Promise.all([supabaseClient.from("acro_youth_evaluations").select("*").eq("diver_id",diverId).eq("pathway",pathway).order("created_at",{ascending:false}),supabaseClient.from("acro_youth_validations").select("*").eq("diver_id",diverId).eq("pathway",pathway).order("validated_at",{ascending:true})]);
+  if(evRes.error)throw evRes.error;if(valRes.error)throw valRes.error;
+  const evaluations=evRes.data||[],validations=valRes.data||[];
+  const acquired=skills.filter(c=>validations.filter(v=>v.competency_code===c.code).length>=3).length;
+  const total=skills.length,percent=Math.round(acquired/total*100);
+  body.innerHTML='<div class="n1-progress-heading"><div><h2>📘 '+esc(youthPathwayLabel(pathway))+' — compétences</h2><p>Clique sur une compétence pour ajouter une observation, comme dans les formations adultes.</p></div><span class="badge">'+esc(youngDiverName(diverId))+'</span></div><div class="n1-progress-summary"><div><small>Compétences acquises</small><div><strong>'+acquired+' / '+total+'</strong></div><div class="n1-progress-track"><span style="width:'+percent+'%"></span></div><div class="n1-recent-work"><small>Dernières compétences travaillées</small>'+(()=>{const latest=evaluations.filter(e=>skills.some(c=>c.code===e.competency_code)).filter((e,i,arr)=>arr.findIndex(x=>x.competency_code===e.competency_code)===i).slice(0,3);return latest.length?latest.map(e=>'<div class="n1-recent-work-item"><span>'+esc(e.competency_label||e.competency_code)+'</span><time>'+new Date(e.created_at).toLocaleDateString("fr-FR")+'</time></div>').join(""):'<div class="n1-recent-empty">Aucune compétence travaillée pour le moment</div>'})()+'</div></div><div style="text-align:right"><small>Évaluations</small><div><strong>'+evaluations.length+'</strong></div></div></div><div class="young-training-grid">'+skills.map(c=>youthProgressCardHTML(c,evaluations,validations.filter(v=>v.competency_code===c.code))).join("")+'</div><p class="n1-progress-note">Une compétence est acquise après trois validations par trois encadrants différents. Le suivi conserve chaque observation et son historique.</p>';
+  body.querySelectorAll("[data-open-youth-skill]").forEach(card=>{const open=()=>openYouthEvaluation(diverId,pathway,card.dataset.openYouthSkill,evaluations,validations);card.addEventListener("click",e=>{if(e.target.closest("details")||e.target.closest("[data-youth-remove-acquired]"))return;open()});card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}})});
+  body.querySelectorAll("[data-youth-remove-acquired]").forEach(btn=>btn.addEventListener("click",async e=>{e.preventDefault();e.stopPropagation();if(!isMaster())return;if(!confirm("Retirer les trois validations de cette compétence ? Les observations et commentaires seront conservés."))return;btn.disabled=true;try{const {error}=await supabaseClient.from("acro_youth_validations").delete().eq("diver_id",diverId).eq("pathway",pathway).eq("competency_code",btn.dataset.youthRemoveAcquired);if(error)throw error;notify("Validations retirées. Historique conservé.");await openYouthProgress(diverId,pathway)}catch(err){btn.disabled=false;notify("Suppression impossible : "+(err.message||"erreur Supabase"))}}));
+ }catch(err){body.innerHTML='<div class="empty">Impossible de charger le suivi jeunes : '+esc(err.message||"Erreur Supabase")+'. Vérifie que la migration des tables de suivi jeunes est appliquée.</div>'}
+}
+function openYouthEvaluation(diverId,pathway,code,evaluations,validations){
+ const skill=youthCurriculumFor(pathway).find(c=>c.code===code),dialog=document.getElementById("youngEvaluationDialog");if(!skill||!dialog)return;
+ const form=document.getElementById("youngEvaluationForm");form.reset();form.elements.competency.value=code;
+ document.getElementById("youngEvaluationTitle").textContent=skill.label;
+ document.getElementById("youngEvaluationSubtitle").textContent=youngDiverName(diverId)+" · "+youthPathwayLabel(pathway);
+ document.getElementById("youngEvaluationMessage").textContent="";if(!dialog.open)dialog.showModal();
+ form.onsubmit=async e=>{
+  e.preventDefault();const fd=new FormData(form),status=String(fd.get("status")||"ECA"),comment=String(fd.get("comment")||"").trim(),btn=form.querySelector('button[type="submit"]'),msg=document.getElementById("youngEvaluationMessage");btn.disabled=true;msg.textContent="";
+  try{
+   const {error:insertError}=await supabaseClient.from("acro_youth_evaluations").insert({diver_id:diverId,pathway,competency_code:skill.code,competency_label:skill.label,status,comment,evaluator_id:current.id,evaluator_name:current.name||"Encadrant"});if(insertError)throw insertError;
+   let note="";
+   if(status==="Acquis"){
+    const existing=validations.filter(v=>v.competency_code===skill.code);
+    if(!existing.some(v=>v.evaluator_id===current.id)&&existing.length<3){const {error:validationError}=await supabaseClient.from("acro_youth_validations").insert({diver_id:diverId,pathway,competency_code:skill.code,evaluator_id:current.id,evaluator_name:current.name||"Encadrant"});if(validationError&&validationError.code!=="23505")throw validationError;if(validationError?.code==="23505")note=" (ta validation est déjà comptabilisée)";}
+    else if(existing.some(v=>v.evaluator_id===current.id))note=" (ta validation est déjà comptabilisée)";else note=" (les trois validations sont déjà enregistrées)";
+   }
+   dialog.close();notify("Évaluation enregistrée"+note);await openYouthProgress(diverId,pathway);
+  }catch(err){msg.textContent="Enregistrement impossible : "+(err.message||"erreur Supabase")}
+  finally{btn.disabled=false}
+ };
 }
 
 function youngDiversHTML(){
@@ -1766,16 +1897,18 @@ function youngDiversHTML(){
 }
 function wireYoungDivers(){
  if(!isDiveEncadrant())return;
- document.querySelectorAll("[data-youth-tab]").forEach(b=>b.addEventListener("click",()=>{youngTrainingTab=b.dataset.youthTab||"aquatique";render("jeunesPlongeurs")}));
- document.getElementById("youngTrainingDiver")?.addEventListener("change",e=>{youngTrainingSelectedDiver=e.target.value;render("jeunesPlongeurs")});
- document.querySelectorAll("[data-young-competency-form]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();const diverId=f.dataset.diver,skillId=f.dataset.skill,category=f.dataset.category,data=new FormData(f),status=String(data.get("status")||"ECA"),comment=String(data.get("comment")||"").trim(),skill=YOUNG_SKILLS.find(x=>x.id===skillId);if(!skill||!youngTrackFor(diverId)){notify("Jeune ou compétence introuvable.");return}state.youthEvaluations.push({id:"young-comp-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),diverId,skillId,skill:skill.label,category,status,comment,evaluatorId:current.id,evaluatorName:current.name||"Encadrant",createdAt:new Date().toISOString()});youngTrainingSelectedDiver=diverId;saveState();render("jeunesPlongeurs");notify("Compétence enregistrée pour "+youngDiverName(diverId))}));
-
- document.getElementById("youngTrackForm")?.addEventListener("submit",e=>{e.preventDefault();const diverId=document.getElementById("youngDiverSelect").value,pathway=document.getElementById("youngPathwaySelect").value;if(!diverId||(state.youthTracks||[]).some(t=>String(t.diverId)===String(diverId))){notify("Sélection invalide ou jeune déjà suivi.");return}if(!(state.divers||[]).some(d=>String(d.id)===String(diverId))){notify("Fiche plongeur introuvable.");return}state.youthTracks.push({id:"young-"+Date.now(),diverId,pathway,createdAt:new Date().toISOString(),createdBy:current.id});saveState();render("jeunesPlongeurs");notify("Jeune ajouté au suivi")});
+ const loadYouth=()=>{const diverId=document.getElementById("youngTrainingDiver")?.value||"",pathway=document.getElementById("youngTrainingPathway")?.value||"";youngTrainingSelectedDiver=diverId;youngTrainingSelectedPathway=pathway;if(diverId&&pathway)openYouthProgress(diverId,pathway)};
+ document.getElementById("youngTrainingDiver")?.addEventListener("change",e=>{youngTrainingSelectedDiver=e.target.value;const t=youngTrackFor(e.target.value);if(t)youngTrainingSelectedPathway=t.pathway||"bulles-1";render("jeunesPlongeurs")});
+ document.getElementById("youngTrainingPathway")?.addEventListener("change",e=>{youngTrainingSelectedPathway=e.target.value;loadYouth()});
+ document.getElementById("youngOpenMft")?.addEventListener("click",()=>window.open("https://mft.ffessm.fr/","_blank","noopener,noreferrer"));
+ document.getElementById("youngEvaluationClose")?.addEventListener("click",()=>document.getElementById("youngEvaluationDialog")?.close());
+ document.getElementById("youngEvaluationDialog")?.addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+ document.getElementById("youngTrackForm")?.addEventListener("submit",e=>{e.preventDefault();const diverId=document.getElementById("youngDiverSelect").value,pathway=document.getElementById("youngPathwaySelect").value;if(!diverId||(state.youthTracks||[]).some(t=>String(t.diverId)===String(diverId))){notify("Sélection invalide ou jeune déjà suivi.");return}if(!(state.divers||[]).some(d=>String(d.id)===String(diverId))){notify("Fiche plongeur introuvable.");return}state.youthTracks.push({id:"young-"+Date.now(),diverId,pathway,createdAt:new Date().toISOString(),createdBy:current.id});youngTrainingSelectedDiver=diverId;youngTrainingSelectedPathway=pathway;saveState();render("jeunesPlongeurs");notify("Jeune ajouté au suivi")});
  document.querySelectorAll("[data-young-form]").forEach(f=>f.addEventListener("submit",e=>{e.preventDefault();const diverId=f.dataset.youngForm;if(!youngTrackFor(diverId)){notify("Ce jeune n’est plus inscrit au suivi.");return}const data=new FormData(f),skill=String(data.get("skill")||"").trim(),status=String(data.get("status")||"ECA"),comment=String(data.get("comment")||"").trim();if(!skill)return;state.youthEvaluations.push({id:"young-eval-"+Date.now(),diverId,skill,status,comment,evaluatorId:current.id,evaluatorName:current.name||"Encadrant",createdAt:new Date().toISOString()});saveState();render("jeunesPlongeurs");notify("Observation enregistrée pour "+youngDiverName(diverId))}));
- document.querySelectorAll("[data-young-pathway]").forEach(s=>s.addEventListener("change",()=>{if(!isMaster())return;const t=youngTrackFor(s.dataset.youngPathway);if(!t)return;t.pathway=s.value;saveState();render("jeunesPlongeurs");notify("Parcours mis à jour")}));
+ document.querySelectorAll("[data-young-pathway]").forEach(sel=>sel.addEventListener("change",()=>{if(!isMaster())return;const t=youngTrackFor(sel.dataset.youngPathway);if(!t)return;t.pathway=sel.value;saveState();youngTrainingSelectedPathway=sel.value;render("jeunesPlongeurs");notify("Parcours mis à jour")}));
  document.querySelectorAll("[data-young-remove]").forEach(b=>b.addEventListener("click",()=>{if(!isMaster())return;const id=b.dataset.youngRemove;if(!confirm("Retirer "+youngDiverName(id)+" du suivi jeunes ? Les observations seront conservées."))return;state.youthTracks=(state.youthTracks||[]).filter(t=>String(t.diverId)!==String(id));saveState();render("jeunesPlongeurs");notify("Jeune retiré du suivi. Historique conservé.")}));
+ loadYouth();
 }
-
 function analysisMaterialHTML(){
  const year=new Date().getFullYear();
  const equipment=(state.equipment||[]).slice();
