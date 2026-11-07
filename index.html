@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V146</title>
+<title>ACRO Plongée — V147</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -2365,7 +2365,7 @@ dialog::backdrop,#planningDialog::backdrop,#planningDayDialog::backdrop,#n1Progr
 function dashboardHTML(){
  const divers=state.divers||[],events=(state.events||[]).filter(e=>e&&e.date),equipment=(state.equipment||[]).filter(e=>e&&e.active!==false);
  return `<div class="v125-dashboard-shortcuts">
- ${["plongeurs","formation","materiel","planning","plongee","acces"].filter(k=>allowed(k)).map(k=>`<button class="module-card" data-open-view="${k}"><span class="module-icon">${views[k].icon}</span><span><h3>${views[k].title}</h3><p>${views[k].subtitle}</p></span><b class="v125-card-arrow">›</b></button>`).join("")||'<p class="empty">Aucun module attribué. Contacte le Master.</p>'}
+ ${["plongeurs","formation","jeunesPlongeurs","materiel","planning","plongee","acces"].filter(k=>allowed(k)).map(k=>`<button class="module-card" data-open-view="${k}"><span class="module-icon">${views[k].icon}</span><span><h3>${views[k].title}</h3><p>${views[k].subtitle}</p></span><b class="v125-card-arrow">›</b></button>`).join("")||'<p class="empty">Aucun module attribué. Contacte le Master.</p>'}
  </div>`;
 }
 function isInitiatorTrainingAllowed(){if(isMaster())return true;const linked=currentLinkedDiver();const profile=String(linked?.encadrement||linked?.currentLevel||"").trim().toUpperCase();return ["E3","E4"].includes(profile)}
