@@ -3546,7 +3546,7 @@ function wireDivers(){
 }
 
 let securityAnalyticsData={logs:[],profiles:[]};
-let securityPeriod="week",securityGroup="all";
+let securityPeriod="week",securityGroup="all",securityPerson="all";
 function securityHTML(){
  return `<div class="cards">
   <div class="stat"><span class="stat-ico">🟢</span><small>Connexions réussies · période</small><strong id="securitySuccess">—</strong></div>
@@ -3556,7 +3556,8 @@ function securityHTML(){
  <div class="section">
   <div class="section-head"><div><h2>Fréquentation du club</h2><p class="muted">Analyse des connexions réussies, en heure française (Europe/Paris).</p></div>
    <div class="header-actions"><select id="securityPeriod" aria-label="Période des statistiques"><option value="week">Cette semaine</option><option value="month">Ce mois</option><option value="year">Cette année</option><option value="total">Depuis le début</option></select>
-   <select id="securityGroup" aria-label="Catégorie d’utilisateurs"><option value="all">Tous les comptes</option><option value="encadrants">Encadrants</option><option value="materiel">Accès matériel</option></select></div>
+   <select id="securityGroup" aria-label="Catégorie d’utilisateurs"><option value="all">Toutes les catégories</option><option value="encadrants">Encadrants</option><option value="materiel">Accès matériel</option></select>
+   <select id="securityPerson" aria-label="Personne"><option value="all">Toutes les personnes</option></select></div>
   </div>
   <div class="cards">
    <div class="stat"><small>Connexions sur la période</small><strong id="securityPeriodCount">—</strong></div>
@@ -3612,8 +3613,15 @@ function securityProfileMatches(p){
  if(securityGroup==="materiel")return p.role==="master"||(Array.isArray(p.permissions)&&p.permissions.includes("materiel"));
  return true;
 }
+function renderSecurityPersonOptions(){
+ const select=document.getElementById("securityPerson");if(!select)return;
+ const people=securityAnalyticsData.profiles.filter(securityProfileMatches).slice().sort((a,b)=>(a.display_name||"").localeCompare(b.display_name||"","fr"));
+ if(securityPerson!=="all"&&!people.some(p=>p.user_id===securityPerson))securityPerson="all";
+ select.innerHTML='<option value="all">Toutes les personnes</option>'+people.map(p=>'<option value="'+esc(p.user_id)+'">'+esc(p.display_name||"Nom inconnu")+'</option>').join("");
+ select.value=securityPerson;
+}
 function renderSecurityAnalytics(){
- const profiles=securityAnalyticsData.profiles.filter(securityProfileMatches);
+ const profiles=securityAnalyticsData.profiles.filter(p=>securityProfileMatches(p)&&(securityPerson==="all"||p.user_id===securityPerson));
  const logs=securitySelectedLogs(),allAttempts=securityAnalyticsData.logs.filter(x=>securityPeriod==="total"||(()=>{
   if(!x.created_at)return false;const d=securityParisDate(x.created_at),today=securityParisDate(new Date());
   if(securityPeriod==="year")return d.slice(0,4)===today.slice(0,4);
@@ -3658,9 +3666,10 @@ async function loadSecurityLogs(){
   if(error||!data?.ok)throw new Error(data?.error||error?.message||"Lecture impossible.");
   const logs=Array.isArray(data.logs)?data.logs:[],profiles=Array.isArray(data.profiles)?data.profiles:[];
   securityAnalyticsData={logs,profiles};
-  const period=document.getElementById("securityPeriod"),group=document.getElementById("securityGroup");
+  const period=document.getElementById("securityPeriod"),group=document.getElementById("securityGroup"),person=document.getElementById("securityPerson");
   if(period){period.value=securityPeriod;period.onchange=()=>{securityPeriod=period.value;renderSecurityAnalytics()};}
-  if(group){group.value=securityGroup;group.onchange=()=>{securityGroup=group.value;renderSecurityAnalytics()};}
+  if(group){group.value=securityGroup;group.onchange=()=>{securityGroup=group.value;securityPerson="all";renderSecurityPersonOptions();renderSecurityAnalytics()};}
+  if(person){renderSecurityPersonOptions();person.value=securityPerson;person.onchange=()=>{securityPerson=person.value;renderSecurityAnalytics()};}
   renderSecurityAnalytics();
   rows.innerHTML=logs.slice(0,250).map(x=>{
    const date=x.created_at?new Date(x.created_at).toLocaleString("fr-FR",{timeZone:"Europe/Paris"}):"—";
