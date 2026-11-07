@@ -1185,7 +1185,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 <header class="topbar">
   <div class="top-left"><button id="menuToggle" class="btn menu-toggle" aria-label="Ouvrir ou fermer le menu" aria-expanded="false" type="button">☰</button><div class="brand"><div class="brand-mark">🤿</div><div><b>ACRO PLONGÉE</b><small>GESTION DU CLUB</small></div></div></div>
 
-  <div class="top-right"><span class="status">Espace club</span><span id="userPill" class="user-pill hidden"></span><button id="logoutBtn" class="btn small soft hidden">Déconnexion</button></div>
+  <div class="top-right"><span class="status">Espace club</span><span id="userPill" class="user-pill hidden"></span><span id="syncStatus" class="status hidden" title="État de synchronisation">● Synchronisé</span><button id="refreshAppBtn" class="btn small soft hidden" type="button" title="Actualiser les données du club" aria-label="Actualiser les données">↻ Actualiser</button><button id="logoutBtn" class="btn small soft hidden">Déconnexion</button></div>
 </header>
 <section id="loginView" class="login-layout login-v125">
   <div class="hero login-hero" aria-hidden="true"></div>
@@ -1427,7 +1427,40 @@ function remotePayload(){const copy=JSON.parse(JSON.stringify(state));delete cop
 function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}if(remoteReady&&supabaseClient&&isMaster()){clearTimeout(remoteSaveTimer);remoteSaveTimer=setTimeout(async()=>{try{const {error}=await supabaseClient.from("acro_app_state").upsert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id,updated_at:new Date().toISOString()},{onConflict:"club_id"});if(error)throw error;notify("Sauvegarde serveur effectuée")}catch(e){console.error(e);notify("Erreur de sauvegarde serveur : "+(e.message||"vérifie les politiques Supabase"))}},700)}}
 function initSupabase(){const key=(localStorage.getItem(SUPABASE_KEY_STORAGE)||"").trim();if(!key)return null;if(!window.supabase?.createClient)return null;supabaseClient=window.supabase.createClient(SUPABASE_URL,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return supabaseClient}
 async function loadSharedEvents(){const {data,error}=await supabaseClient.from("acro_events").select("event_data").order("updated_at",{ascending:true});if(error)throw error;state.events=(Array.isArray(data)?data.map(row=>row.event_data).filter(Boolean):[]);localStorage.setItem(STORE_KEY,JSON.stringify(state));return state.events}
-function setupSharedEventsRealtime(){if(!supabaseClient)return;if(window.acroEventsChannel){supabaseClient.removeChannel(window.acroEventsChannel);window.acroEventsChannel=null;}window.acroEventsChannel=supabaseClient.channel("acro-events-live").on("postgres_changes",{event:"*",schema:"public",table:"acro_events"},async()=>{try{await loadSharedEvents();const view=document.getElementById("mainContent")?.dataset.view;if(view==="planning"||view==="plongee")render(view);}catch(e){console.error("Actualisation du planning impossible",e);}}).subscribe();}
+function setSyncStatus(stateLabel){
+ const el=document.getElementById("syncStatus");if(!el)return;
+ el.textContent=stateLabel==="ok"?"● Synchronisé":stateLabel==="busy"?"↻ Synchronisation…":"● Hors ligne";
+ el.title=stateLabel==="ok"?"Données du club synchronisées":stateLabel==="busy"?"Mise à jour des données du club":"Connexion temps réel indisponible";
+ el.style.color=stateLabel==="ok"?"#b9f2d0":stateLabel==="busy"?"#ffe6a3":"#ffd0d0";
+}
+async function refreshSharedAppState(shouldRender=true){
+ if(!supabaseClient||!remoteReady)return false;
+ setSyncStatus("busy");
+ const localUsers=state.users||[];
+ const {data,error}=await supabaseClient.from("acro_app_state").select("state,updated_at,updated_by").eq("club_id",CLUB_STATE_ID).maybeSingle();
+ if(error)throw error;
+ if(data?.state){
+  state=normalizeState({...data.state,users:localUsers});
+  localStorage.setItem(STORE_KEY,JSON.stringify(state));
+ }
+ await loadSharedEvents();
+ setSyncStatus("ok");
+ const view=document.getElementById("mainContent")?.dataset.view||"dashboard";
+ const editing=document.activeElement&&document.getElementById("mainContent")?.contains(document.activeElement)&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+ if(shouldRender&&!editing&&current&&allowed(view))render(view);
+ return true;
+}
+function setupSharedEventsRealtime(){
+ if(!supabaseClient)return;
+ if(window.acroEventsChannel){supabaseClient.removeChannel(window.acroEventsChannel);window.acroEventsChannel=null;}
+ window.acroEventsChannel=supabaseClient.channel("acro-club-live")
+ .on("postgres_changes",{event:"*",schema:"public",table:"acro_events"},async()=>{try{await loadSharedEvents();const view=document.getElementById("mainContent")?.dataset.view;if(view==="planning"||view==="plongee")render(view);}catch(e){console.error("Actualisation du planning impossible",e);setSyncStatus("offline");}})
+ .on("postgres_changes",{event:"*",schema:"public",table:"acro_app_state",filter:"club_id=eq."+CLUB_STATE_ID},async(payload)=>{
+  if(payload?.new?.updated_by===current?.id)return;
+  try{await refreshSharedAppState(true);notify("Les données du club ont été actualisées");}
+  catch(e){console.error("Synchronisation des données du club impossible",e);setSyncStatus("offline");}
+ }).subscribe(status=>{if(status==="SUBSCRIBED")setSyncStatus("ok");else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED")setSyncStatus("offline");});
+}
 async function persistSharedEvent(record){if(!remoteReady||!supabaseClient||!current?.id||!record?.id)throw new Error("Connexion serveur indisponible");const {error}=await supabaseClient.from("acro_events").upsert({event_id:String(record.id),event_data:record,created_by:current.id,updated_at:new Date().toISOString()},{onConflict:"event_id"});if(error)throw error;}
 async function loadRemoteState(){const localUsers=state.users||[];const {data,error}=await supabaseClient.from("acro_app_state").select("state").eq("club_id",CLUB_STATE_ID).maybeSingle();if(error)throw error;if(data?.state){state=normalizeState({...data.state,users:localUsers});}else{state=normalizeState({...defaultState(),users:localUsers});if(isMaster()){const {error:insertError}=await supabaseClient.from("acro_app_state").insert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id});if(insertError)throw insertError;}}await loadSharedEvents();remoteReady=true;setupSharedEventsRealtime()}
 async function loginByName(lastName,firstName,password){
@@ -1567,13 +1600,13 @@ async function markVisibleNotificationsRead(){
 
 function showApp(){
  document.getElementById("loginView").classList.add("hidden");document.getElementById("appView").classList.remove("hidden");const isSmallScreen=window.matchMedia("(max-width: 850px)").matches;document.getElementById("appView").classList.toggle("menu-closed",isSmallScreen);document.getElementById("menuToggle").setAttribute("aria-expanded",String(!isSmallScreen));
- document.getElementById("userPill").textContent=(isMaster()?"👑 ":"")+current.name;document.getElementById("userPill").classList.remove("hidden");document.getElementById("logoutBtn").classList.remove("hidden");
+ document.getElementById("userPill").textContent=(isMaster()?"👑 ":"")+current.name;document.getElementById("userPill").classList.remove("hidden");document.getElementById("logoutBtn").classList.remove("hidden");document.getElementById("refreshAppBtn")?.classList.remove("hidden");document.getElementById("syncStatus")?.classList.remove("hidden");setSyncStatus("ok");
  document.getElementById("accessNav").classList.toggle("hidden",!isMaster());
  document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("hidden",!allowed(b.dataset.view)));
  render("dashboard");
  showPendingNotifications();
 }
-async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
+async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;if(window.acroEventsChannel&&supabaseClient){supabaseClient.removeChannel(window.acroEventsChannel);window.acroEventsChannel=null;}document.getElementById("refreshAppBtn")?.classList.add("hidden");document.getElementById("syncStatus")?.classList.add("hidden");document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
 function stopInflationScannerIfOpen(){try{if(typeof stopQR==="function")stopQR()}catch(e){}}
 function render(view,skipAccessSync=false){
  if(!allowed(view)){notify("Cet écran ne fait pas partie de tes accès.");view="dashboard";if(!allowed(view)){logout();return}}
@@ -3609,6 +3642,7 @@ document.getElementById("loginApiToggle").addEventListener("click",()=>{const bo
 document.getElementById("toggleLoginPassword").addEventListener("click",()=>{const input=document.getElementById("loginPassword"),btn=document.getElementById("toggleLoginPassword"),show=input.type==="password";input.type=show?"text":"password";btn.setAttribute("aria-pressed",String(show));btn.setAttribute("aria-label",show?"Masquer le mot de passe":"Afficher le mot de passe");btn.textContent=show?"◎":"◉"});
 document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;btn.textContent="Connexion…";document.getElementById("loginMessage").textContent="";try{await loginByName(document.getElementById("loginLastName").value,document.getElementById("loginFirstName").value,document.getElementById("loginPassword").value)}catch(err){console.error(err);document.getElementById("loginMessage").textContent="Erreur inattendue : "+(err.message||err)}finally{btn.disabled=false;btn.innerHTML='<span aria-hidden="true">⇥</span>　Se connecter　→'}});
 document.getElementById("logoutBtn").addEventListener("click",logout);
+document.getElementById("refreshAppBtn")?.addEventListener("click",async()=>{const btn=document.getElementById("refreshAppBtn");if(btn)btn.disabled=true;try{await refreshSharedAppState(true);notify("Données actualisées");}catch(e){console.error(e);setSyncStatus("offline");notify("Actualisation impossible : "+(e.message||e));}finally{if(btn)btn.disabled=false;}});
 document.getElementById("menuToggle").addEventListener("click",()=>{const app=document.getElementById("appView");const closed=app.classList.toggle("menu-closed");document.getElementById("menuToggle").setAttribute("aria-expanded",String(!closed));document.getElementById("menuToggle").textContent="☰";});
 
 document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.addEventListener("click",()=>{
