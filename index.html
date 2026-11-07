@@ -411,7 +411,18 @@
 .n1-prereq-icon-item{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid #d5e5ef;border-radius:14px;background:#fff;color:#173f68;font-size:13px;font-weight:850;cursor:pointer;box-shadow:0 3px 10px #0754a60d}
 .n1-prereq-icon-item .n1-prereq-state-icon{width:23px;height:23px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:16px;font-weight:1000;flex:0 0 23px}
 .n1-prereq-state-icon.done{background:#dcfce7;color:#168b4b}.n1-prereq-state-icon.todo{background:#fee2e2;color:#dc2626}
-.n1-prereq-dialog{width:min(92vw,430px);max-width:none;padding:0;border:0;border-radius:20px;background:#fff;color:#173f68;box-shadow:0 22px 70px #001b3566}.n1-prereq-dialog{max-height:92dvh;overflow:hidden}.n1-prereq-dialog .n1-dialog-body{max-height:calc(92dvh - 76px);overflow:auto}.n1-prereq-dialog .n1-dialog-head{padding:15px 18px}.n1-prereq-dialog .n1-dialog-head h2{font-size:18px}.n1-prereq-dialog .n1-dialog-body p{white-space:pre-wrap;color:#526b80;line-height:1.5}.n1-prereq-dialog .n1-prereq-dialog-actions{display:flex;justify-content:flex-end;margin-top:14px}
+.n1-prereq-dialog{width:min(92vw,430px);max-width:none;padding:0;border:0;border-radius:20px;background:#fff;color:#173f68;box-shadow:0 22px 70px #001b3566}
+.n1-prereq-overlay{position:fixed;inset:0;z-index:100500;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(3,20,37,.68);backdrop-filter:blur(4px)}
+.n1-prereq-modal{width:min(92vw,460px);max-height:92dvh;overflow:hidden;border:1px solid #b9d9fa;border-radius:22px;background:#f7fbff;color:#173f68;box-shadow:0 28px 90px #061b3270;animation:acroPrereqAppear .16s ease-out}
+@keyframes acroPrereqAppear{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.n1-prereq-modal .n1-dialog-head{background:linear-gradient(125deg,#061b32,#0754a6 72%,#168ee0);color:#fff;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.n1-prereq-modal .n1-dialog-head h2{font-size:19px;margin:0}.n1-prereq-modal .n1-dialog-head p{margin:5px 0 0;color:#c8e4ff;font-size:12px}
+.n1-prereq-modal .n1-dialog-close{width:38px;height:38px;flex:0 0 38px;border:1px solid #8fc6f5;border-radius:12px;background:#ffffff18;color:#fff;font-size:24px;cursor:pointer}
+.n1-prereq-modal .n1-dialog-body{padding:17px;max-height:calc(92dvh - 76px);overflow:auto;background:linear-gradient(180deg,#f7fbff,#eef6ff)}
+.n1-prereq-modal .n1-prereq-comment-view{margin:7px 0;padding:11px 12px;border:1px solid #d5e5ef;border-radius:12px;background:#fff;color:#526b80;white-space:pre-wrap;min-height:44px}
+.n1-prereq-modal .field{margin:12px 0}.n1-prereq-modal select,.n1-prereq-modal textarea{width:100%;border:1px solid #c6dcf2;background:#fff;border-radius:10px;padding:10px}
+.n1-prereq-modal .n1-prereq-dialog-actions{display:flex;justify-content:flex-end;margin-top:14px}
+.n1-prereq-dialog{max-height:92dvh;overflow:hidden}.n1-prereq-dialog .n1-dialog-body{max-height:calc(92dvh - 76px);overflow:auto}.n1-prereq-dialog .n1-dialog-head{padding:15px 18px}.n1-prereq-dialog .n1-dialog-head h2{font-size:18px}.n1-prereq-dialog .n1-dialog-body p{white-space:pre-wrap;color:#526b80;line-height:1.5}.n1-prereq-dialog .n1-prereq-dialog-actions{display:flex;justify-content:flex-end;margin-top:14px}
 .n1-prereq-dialog::backdrop{background:rgba(3,20,37,.62);backdrop-filter:blur(3px)}
 .n1-prereq-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;background:linear-gradient(120deg,#0877b9,#07518e);color:#fff}
 .n1-prereq-dialog-head strong{font-size:16px}
@@ -2479,32 +2490,50 @@ function n1PrerequisiteIconsHTML(diverId,prerequisites){
  }).join("");
  return '<div class="n1-prereq-icons" aria-label="État des baptêmes">'+rows+'</div>';
 }
+function closePrerequisiteDialog(){
+ const overlay=document.getElementById("acroPrereqOverlay");
+ if(overlay)overlay.remove();
+ document.removeEventListener("keydown",acroPrereqEscapeHandler);
+}
+function acroPrereqEscapeHandler(e){if(e.key==="Escape")closePrerequisiteDialog()}
 function openPrerequisiteDialog(diverId,code,prerequisites,refresh){
- const item=N1_PREREQUISITES.find(x=>x.code===code);if(!item)return;
- const latest=prerequisites.filter(e=>e.prerequisite_code===code).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
- const done=latest?.status==="Acquis",master=isMaster(),d=document.createElement("dialog");
- d.className="n1-prereq-dialog";
- d.setAttribute("aria-label","Détail du baptême");
+ const item=N1_PREREQUISITES.find(x=>x.code===code);
+ if(!item){notify("Baptême introuvable : "+code);return}
+ const latest=(prerequisites||[]).filter(e=>e.prerequisite_code===code).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
+ const done=latest?.status==="Acquis",master=isMaster();
+ closePrerequisiteDialog();
+ const overlay=document.createElement("div");
+ overlay.id="acroPrereqOverlay";
+ overlay.className="n1-prereq-overlay";
+ overlay.setAttribute("role","presentation");
  const meta=latest?new Date(latest.created_at).toLocaleString("fr-FR")+" · "+(latest.evaluator_name||"Encadrant"):"Aucun enregistrement";
- d.innerHTML='<div class="n1-dialog-head"><div><h2>'+item.icon+' '+item.label+'</h2><p>'+esc(meta)+'</p></div><button type="button" class="n1-dialog-close" aria-label="Fermer">×</button></div><div class="n1-dialog-body"><div class="n1-prereq-readonly"><strong>État :</strong> '+(done?"✓ Baptême validé":"× Baptême non réalisé")+'</div><div class="field"><label>Commentaire du moniteur</label><p>'+(latest?.comment?esc(latest.comment):"Aucun commentaire enregistré.")+'</p></div>'+(master?'<div class="field"><label>État du baptême</label><select id="prereqDialogStatus"><option value="ECA" '+(latest?.status==="ECA"?"selected":"")+'>À réaliser</option><option value="Acquis" '+(done?"selected":"")+'>Validé</option><option value="NA" '+(!latest||latest.status==="NA"?"selected":"")+'>Non renseigné</option></select></div><div class="field"><label>Commentaire du moniteur</label><textarea id="prereqDialogComment" rows="3" placeholder="Ajouter une observation…">'+esc(latest?.comment||"")+'</textarea></div><div class="n1-prereq-dialog-actions"><button type="button" class="n1-save-btn" id="prereqDialogSave">Enregistrer</button></div>':'<p class="planning-hint">Consultation uniquement. Seul le Master peut modifier ou retirer une validation.</p>')+'</div>';
- document.body.appendChild(d);
- d.querySelector(".n1-dialog-close").addEventListener("click",()=>d.close());
- d.addEventListener("click",e=>{if(e.target===d)d.close()});
- d.addEventListener("close",()=>d.remove());
- if(master)d.querySelector("#prereqDialogSave").addEventListener("click",async()=>{
-  const btn=d.querySelector("#prereqDialogSave");btn.disabled=true;
+ overlay.innerHTML='<section class="n1-prereq-modal" role="dialog" aria-modal="true" aria-labelledby="acroPrereqTitle"><div class="n1-dialog-head"><div><h2 id="acroPrereqTitle">'+item.icon+' '+item.label+'</h2><p>'+esc(meta)+'</p></div><button type="button" class="n1-dialog-close" data-prereq-close aria-label="Fermer">×</button></div><div class="n1-dialog-body"><div class="n1-prereq-readonly"><strong>État :</strong> '+(done?"✓ Baptême validé":"× Baptême non réalisé")+'</div><div class="field"><label>Commentaire du moniteur</label><p class="n1-prereq-comment-view">'+(latest?.comment?esc(latest.comment):"Aucun commentaire enregistré.")+'</p></div>'+(master?'<div class="field"><label>État du baptême</label><select id="prereqDialogStatus"><option value="ECA" '+(latest?.status==="ECA"?"selected":"")+'>À réaliser</option><option value="Acquis" '+(done?"selected":"")+'>Validé</option><option value="NA" '+(!latest||latest.status==="NA"?"selected":"")+'>Non renseigné</option></select></div><div class="field"><label>Commentaire du moniteur</label><textarea id="prereqDialogComment" rows="3" placeholder="Ajouter une observation…">'+esc(latest?.comment||"")+'</textarea></div><div class="n1-prereq-dialog-actions"><button type="button" class="n1-save-btn" id="prereqDialogSave">Enregistrer</button></div>':'<p class="planning-hint">Consultation uniquement. Seul le Master peut modifier ou retirer une validation.</p>')+'</div></section>';
+ document.body.appendChild(overlay);
+ overlay.querySelector("[data-prereq-close]").addEventListener("click",closePrerequisiteDialog);
+ overlay.addEventListener("click",e=>{if(e.target===overlay)closePrerequisiteDialog()});
+ document.addEventListener("keydown",acroPrereqEscapeHandler);
+ if(master)overlay.querySelector("#prereqDialogSave").addEventListener("click",async()=>{
+  const btn=overlay.querySelector("#prereqDialogSave");btn.disabled=true;
   try{
-   const status=d.querySelector("#prereqDialogStatus").value,comment=d.querySelector("#prereqDialogComment").value.trim();
+   const status=overlay.querySelector("#prereqDialogStatus").value,comment=overlay.querySelector("#prereqDialogComment").value.trim();
    const {error}=await supabaseClient.from("acro_n1_prerequisites").insert({diver_id:diverId,prerequisite_code:code,prerequisite_label:item.label,status,comment,evaluator_id:current.id,evaluator_name:current.name||"Master"});
    if(error)throw error;
    notify(status==="Acquis"?"Baptême validé.":status==="NA"?"Baptême retiré.":"Baptême mis à jour.");
-   d.close();await refresh();
+   closePrerequisiteDialog();await refresh();
   }catch(err){btn.disabled=false;notify("Enregistrement impossible : "+(err.message||"erreur Supabase"))}
  });
- d.showModal();
+ overlay.querySelector("[data-prereq-close]")?.focus();
 }
 function wirePrerequisiteIcons(body,diverId,prerequisites,refresh){
- body.querySelectorAll("[data-open-prereq]").forEach(btn=>btn.addEventListener("click",()=>openPrerequisiteDialog(diverId,btn.dataset.openPrereq,prerequisites,refresh)));
+ if(!body)return;
+ if(body.dataset.prerequisiteClickBound==="1")return;
+ body.dataset.prerequisiteClickBound="1";
+ body.addEventListener("click",e=>{
+  const button=e.target.closest("[data-open-prereq]");
+  if(!button||!body.contains(button))return;
+  e.preventDefault();e.stopPropagation();
+  openPrerequisiteDialog(diverId,button.dataset.openPrereq,prerequisites,refresh);
+ });
 }
 
 async function saveN1Prerequisite(diverId,code,button,body){
