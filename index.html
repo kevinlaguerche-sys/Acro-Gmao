@@ -3843,8 +3843,12 @@ function renderSecurityAnalytics(){
   const date=new Date(today+"T12:00:00Z");date.setUTCDate(date.getUTCDate()-((date.getUTCDay()+6)%7));return d>=date.toISOString().slice(0,10);
  })());
  const ids=new Set(profiles.map(p=>p.user_id));
- const filteredLogs=logs.filter(x=>ids.has(x.user_id));
- const failed=allAttempts.filter(x=>!x.success&&(!x.user_id||ids.has(x.user_id)));
+ // Vue globale : ne pas conditionner les connexions à la liste des profils.
+ // Les journaux d'audit sont la source de vérité ; le rapprochement profil/ID
+ // ne doit intervenir que lorsqu'un filtre catégorie ou personne est activé.
+ const globalView=securityGroup==="all"&&securityPerson==="all";
+ const filteredLogs=globalView?logs:logs.filter(x=>ids.has(x.user_id));
+ const failed=allAttempts.filter(x=>!x.success&&(globalView||ids.has(x.user_id)));
  const counts=new Map(profiles.map(p=>[p.user_id,0]));
  filteredLogs.forEach(x=>counts.set(x.user_id,(counts.get(x.user_id)||0)+1));
  const ranked=profiles.map(p=>({name:p.display_name||"Nom inconnu",count:counts.get(p.user_id)||0})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,"fr"));
