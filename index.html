@@ -436,6 +436,56 @@
 .acro-confirm-overlay[data-kind="pressure"] .acro-confirm-kicker{background:#ffeadf;color:#a33b1c}
 .acro-confirm-overlay[data-kind="pressure"] .acro-confirm-details{border-color:#f2b9a6;background:linear-gradient(135deg,#fff3ec,#ffe4d7);color:#8d321d}
 @media(max-width:480px){.acro-confirm-overlay{padding:12px;align-items:flex-end}.acro-confirm-card{border-radius:23px;padding:22px 18px 18px}.acro-confirm-wave{margin:-22px -18px 18px}.acro-confirm-actions{display:grid;grid-template-columns:1fr 1fr}.acro-confirm-btn{padding:10px 9px;font-size:.9rem}.acro-confirm-actions .acro-confirm-accept,.acro-confirm-actions .acro-confirm-force{grid-column:2}}
+
+/* V146 — en-tête mobile : séparation sur deux lignes pour éviter le chevauchement */
+@media(max-width:620px){
+ body:has(#loginView.hidden) .topbar{
+  height:auto!important;min-height:0;display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 11px!important;overflow:visible;
+ }
+ body:has(#loginView.hidden) .top-left{
+  display:flex;flex:1 1 100%;width:100%;min-width:0;
+  align-items:center;gap:10px;
+ }
+ body:has(#loginView.hidden) .brand{flex:1 1 auto;min-width:0;gap:9px}
+ body:has(#loginView.hidden) .brand>div:last-child{min-width:0}
+ body:has(#loginView.hidden) .brand b{
+  font-size:15px;line-height:1.15;white-space:nowrap;
+ }
+ body:has(#loginView.hidden) .brand small{
+  font-size:8px;letter-spacing:.12em;white-space:nowrap;
+ }
+ body:has(#loginView.hidden) .brand-mark{
+  width:37px;height:37px;flex:0 0 37px;border-radius:12px;
+ }
+ body:has(#loginView.hidden) #menuToggle{
+  flex:0 0 40px;width:40px;height:40px;padding:0;
+  display:grid;place-items:center;
+ }
+ body:has(#loginView.hidden) .top-right{
+  display:flex;flex:1 1 100%;width:100%;min-width:0;
+  align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:7px;
+ }
+ body:has(#loginView.hidden) .top-right .user-pill{
+  display:block!important;flex:0 1 auto;min-width:0;max-width:34%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:11px;padding:8px 9px;
+ }
+ body:has(#loginView.hidden) #refreshAppBtn,
+ body:has(#loginView.hidden) #logoutBtn{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  flex:0 1 auto;min-width:0;white-space:nowrap;
+  padding:9px 10px;font-size:11px;line-height:1.2;
+ }
+}
+@media(max-width:360px){
+ body:has(#loginView.hidden) .top-right{gap:5px}
+ body:has(#loginView.hidden) .top-right .user-pill{max-width:29%;font-size:10px;padding:7px}
+ body:has(#loginView.hidden) #refreshAppBtn,
+ body:has(#loginView.hidden) #logoutBtn{padding:8px 7px;font-size:10px}
+}
+
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
