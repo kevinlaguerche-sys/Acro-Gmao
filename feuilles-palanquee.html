@@ -131,15 +131,37 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px 'DM Sans',sans-ser
 }
 
 
-/* Harmonisation des encadrés : informations, sécurité, période et liste des plongeurs */
+/* Liserés ACRO bien visibles : informations, sécurité, période et liste des plongeurs */
 .top > .panel,
 .roster{
- border:1px solid #d3e5ef;
+ border:2px solid #65cfc8 !important;
  border-radius:16px;
- box-shadow:0 5px 18px rgba(20,67,101,.07);
+ box-shadow:0 4px 16px rgba(8,126,135,.10), inset 0 0 0 1px rgba(64,224,208,.10);
 }
-.top > .panel{background:linear-gradient(155deg,#fff 0%,#fbfdff 100%)}
-.roster{background:#fff}
+.top > .panel{
+ background:linear-gradient(155deg,#fff 0%,#f8fefe 100%);
+}
+.top > .panel:focus-within{
+ border-color:#087e87 !important;
+ box-shadow:0 0 0 3px rgba(8,126,135,.13),0 4px 16px rgba(8,126,135,.10);
+}
+.top .field input,.top .field select{
+ border-bottom:2px solid #a6dcd8;
+}
+.top .field input:focus,.top .field select:focus{
+ border-bottom-color:#087e87;
+ outline:none;
+}
+.top input[type="checkbox"],.top input[type="radio"]{
+ accent-color:#087e87;
+}
+.roster{
+ background:#fff;
+ border-color:#55c7c1 !important;
+}
+.roster-head{
+ border-bottom:2px solid #40e0d0;
+}
 @media(max-width:520px){
  .top > .panel,.roster{border-radius:16px}
 }
