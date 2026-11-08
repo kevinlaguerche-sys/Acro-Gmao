@@ -130,6 +130,20 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px 'DM Sans',sans-ser
  #recordLists .record-card .record-open{font-size:11px}
 }
 
+
+/* Harmonisation des encadrés : informations, sécurité, période et liste des plongeurs */
+.top > .panel,
+.roster{
+ border:1px solid #d3e5ef;
+ border-radius:16px;
+ box-shadow:0 5px 18px rgba(20,67,101,.07);
+}
+.top > .panel{background:linear-gradient(155deg,#fff 0%,#fbfdff 100%)}
+.roster{background:#fff}
+@media(max-width:520px){
+ .top > .panel,.roster{border-radius:16px}
+}
+
 </style></head><body>
 <header class="bar"><div class="brand">🤿 ACRO PLONGÉE<small>ESPACE CLUB · PRÉPARATION DES PALANQUÉES</small></div><div class="actions palanquee-main-actions"><button type="button" id="new">＋ Nouvelle feuille</button><button type="button" id="scanPaper" class="primary">📷 Scanner</button><button type="button" id="print">🖨 PDF</button></div></header>
 <main class="page"><section class="sheet"><div class="title">FEUILLE DE SÉCURITÉ – ORGANISATION DES PALANQUÉES</div>
