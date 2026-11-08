@@ -1652,7 +1652,7 @@ function notify(msg){if(window.ACROAudio)window.ACROAudio.notify(msg);const t=do
 function isMaster(){return current?.role==="master"}
 function isDiveEncadrant(){if(isMaster())return true;const d=currentLinkedDiver();const profile=String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase();return ["E1","E2","E3","E4","TSI"].includes(profile)}
 function canAccessDiveResponses(){return isDiveEncadrant()||(current?.permissions||[]).includes("materiel")}
-function allowed(view){if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return canAccessDiveResponses();if(view==="jeunesPlongeurs"||view==="feuillesPalanquee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
+function allowed(view){if(view==="feuillesPalanquee")return isMaster();if(view==="settings"||view==="plansCarrieres"||view==="documentsClub")return !!current;if(isMasterSection(view))return canConsultMasterSection(view);if(view==="plongee")return canAccessDiveResponses();if(view==="jeunesPlongeurs"||view==="feuillesPalanquee")return isDiveEncadrant();return isMaster() || (current?.permissions||[]).includes(view)}
 function loginLocal(code){
  const u=state.users.find(x=>x.code===code&&x.active!==false);
  if(!u)return false;
@@ -2800,7 +2800,8 @@ function canUploadPalanquee(){
  const d=currentLinkedDiver();
  return ["E3","E4","P5"].includes(String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase());
 }
-function palanqueeHTML(){
+function palanqueeHTML(){return `<section class="section" style="padding:0;overflow:hidden"><iframe title="Gestion des feuilles de palanquée" src="./feuilles-palanquee.html?v=1" style="display:block;width:100%;height:calc(100vh - 150px);min-height:900px;border:0;background:#f3f8fb"></iframe></section>`; /* ancien module conservé ci-dessous pour compatibilité */
+
  const canUpload=canUploadPalanquee();
  return `<section class="section">
  ${canUpload?`<form id="palanqueeForm" style="display:grid;gap:12px;max-width:760px;margin:20px 0;padding:18px;border:1px solid var(--line);border-radius:16px;background:#f7fbfc">
@@ -2829,7 +2830,8 @@ async function loadPalanqueeSheets(){
  const {data,error}=await supabaseClient.from("acro_palanquee_sheets").select("id,dive_date,site,director_name,storage_path,original_name,content_type,created_at").order("dive_date",{ascending:false}).order("created_at",{ascending:false});
  if(error)throw error;palanqueeSheets=data||[];renderPalanqueeList();
 }
-function wirePalanquee(){
+function wirePalanquee(){return; /* nouveau module autonome dans feuilles-palanquee.html */
+
  const form=document.getElementById("palanqueeForm"),camera=document.getElementById("palanqueeCamera"),picker=document.getElementById("palanqueeFile"),preview=document.getElementById("palanqueePreview"),submit=document.getElementById("palanqueeSubmit");
  let file=null;
  if(form){form.elements.dive_date.value=new Date().toLocaleDateString("en-CA");form.elements.director_name.value=current?.name||"";}
