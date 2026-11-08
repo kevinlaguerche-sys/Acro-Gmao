@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ACRO Plongée">
 <meta name="mobile-web-app-capable" content="yes">
-<title>ACRO Plongée — V155</title>
+<title>ACRO Plongée — V156</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 :root{--navy:#061b32;--navy2:#0b2c49;--teal:#40e0d0;--ink:#10283c;--muted:#6b8092;--line:#dce8ee;--bg:#f3f8fb;--orange:#ffb86b;--white:#fff;--shadow:0 16px 42px #0a314512}
@@ -1449,7 +1449,7 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
 </dialog>
 
 <script>
-const APP_VERSION="V155";
+const APP_VERSION="V156";
 const APP_BUILD="20261108.01";
 const STORE_KEY="acroMiniGmao_v1";
 const DIVER_LEVELS=["Niveau 1","Niveau 2","Niveau 3","Niveau 4","P5","PE12","PA12","PE20","PA20","PE40","PA40","PE60","PA60"];
@@ -2800,7 +2800,7 @@ function canUploadPalanquee(){
  const d=currentLinkedDiver();
  return ["E3","E4","P5"].includes(String(d?.encadrement||d?.currentLevel||"").trim().toUpperCase());
 }
-function palanqueeHTML(){return `<section class="section" style="padding:0;overflow:hidden"><iframe title="Gestion des feuilles de palanquée" src="./feuilles-palanquee.html?v=1" style="display:block;width:100%;height:calc(100vh - 150px);min-height:900px;border:0;background:#f3f8fb"></iframe></section>`; /* ancien module conservé ci-dessous pour compatibilité */
+function palanqueeHTML(){return `<section class="section" style="padding:0;overflow:hidden"><iframe title="Gestion des feuilles de palanquée" src="./feuilles-palanquee.html?v=2" style="display:block;width:100%;height:calc(100vh - 150px);min-height:900px;border:0;background:#f3f8fb"></iframe></section>`; /* ancien module conservé ci-dessous pour compatibilité */
 
  const canUpload=canUploadPalanquee();
  return `<section class="section">
