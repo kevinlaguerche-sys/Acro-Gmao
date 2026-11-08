@@ -1424,6 +1424,8 @@ body:has(#loginView:not(.hidden)) .top-right{display:none}
    <option value="director_pool">Directeur de bassin</option>
    <option value="director_dive">Directeur de plongée</option>
    <option value="director_fosse">Directeur de plongée en fosse</option>
+   <option value="dive_exploration">Plongée en exploration</option>
+   <option value="dive_teaching">Plongée en formation</option>
    <option value="material_distribution" id="materialDistributionOption">Distribution de matériel + gonflage</option>
   </select></div>
   <div class="field hidden" id="planningLocationWrap"><label for="planningEventLocation">Lieu</label><select id="planningEventLocation"><option value="">Choisir un lieu…</option></select><div class="planning-hint">Les lieux sont définis par le Master.</div></div>
@@ -3222,7 +3224,7 @@ function planningHTML(){
 }
 function canCreateMaterialEvents(){return isMaster()||(current?.permissions||[]).includes("masterMateriel")}
 function currentLinkedDiver(){if(!current||isMaster())return null;return (state.divers||[]).find(d=>d.id===current.diverId)|| (state.divers||[]).find(d=>((String(d.firstName||"")+" "+String(d.lastName||"")).trim().toLocaleLowerCase("fr")===String(current.name||"").trim().toLocaleLowerCase("fr")))||null}
-function planningAllowedTypes(){if(isMaster())return ["director_pool","director_dive","director_fosse","material_distribution"];const d=currentLinkedDiver();const canDirect=current?.role==="encadrant";const level=String(d?.currentLevel||"").trim().toUpperCase();const enc=String(d?.encadrement||"").trim().toUpperCase();const out=[];if(canDirect&&(["E1","E2","E3","E4"].includes(level)||["E1","E2","E3","E4"].includes(enc)))out.push("director_pool");if(canDirect&&(["E3","E4"].includes(level)||["E3","E4"].includes(enc)))out.push("director_dive","director_fosse");if(canDirect&&(level==="P5"||enc==="P5"))out.push("director_dive");if(canCreateMaterialEvents())out.push("material_distribution");return [...new Set(out)]}
+function planningAllowedTypes(){if(isMaster())return ["director_pool","director_dive","director_fosse","material_distribution"];const d=currentLinkedDiver();const canDirect=current?.role==="encadrant";const level=String(d?.currentLevel||"").trim().toUpperCase();const enc=String(d?.encadrement||"").trim().toUpperCase();const out=[];if(canDirect&&(["E1","E2","E3","E4"].includes(level)||["E1","E2","E3","E4"].includes(enc)))out.push("director_pool");if(canDirect&&(["E3","E4"].includes(level)||["E3","E4"].includes(enc)))out.push("director_dive","director_fosse","dive_exploration","dive_teaching");if(canDirect&&(level==="P5"||enc==="P5"))out.push("director_dive","dive_exploration","dive_teaching");if(canCreateMaterialEvents())out.push("material_distribution");return [...new Set(out)]}
 function canCreatePlanningType(type){return isMaster()||planningAllowedTypes().includes(type)}
 function refreshPlanningTypeOptions(){const select=document.getElementById("planningEventType");if(!select)return;const allowedTypes=planningAllowedTypes();[...select.options].forEach(o=>{o.hidden=!allowedTypes.includes(o.value)});if(!allowedTypes.includes(select.value))select.value=allowedTypes[0]||"";const submit=document.querySelector("#planningEventForm button[type=submit]");if(submit)submit.disabled=!allowedTypes.length;const msg=document.getElementById("planningEventMessage");if(msg)msg.textContent=allowedTypes.length?"":"Ton compte ne dispose d’aucune autorisation pour créer un événement du planning."}
 function wirePlanning(){
@@ -3916,7 +3918,7 @@ function acroInflationConfirm(options={}){
  }
  if(!rows.length){notify("Saisis au moins un numéro de bloc.");return}
  const seen=new Set();for(const row of rows){const key=row.number.toLocaleLowerCase("fr");if(seen.has(key)){notify("Le bloc "+row.number+" est sélectionné plusieurs fois.");return}seen.add(key)}
- const over=rows.filter(r=>Number(r.block.servicePressure)===200&&r.pressure>200);
+ const over=rows.filter(r=>Number(r.block.servicePressure)>0&&Number(r.pressure)>Number(r.block.servicePressure));
  if(over.length){const pressureOk=await acroInflationConfirm({kind:"pressure",kicker:"⚠️ ATTENTION · SÉCURITÉ",title:"Pression de service dépassée",message:"Un ou plusieurs blocs dépassent leur pression de service autorisée.",details:over.map(r=>"Bloc "+r.number+" : "+r.pressure+" bar (service "+(Number(r.block.servicePressure)||200)+" bar)").join("\n"),confirmLabel:"Confirmer les gonflages",cancelLabel:"Annuler"});if(!pressureOk)return;}
  const debitTotals=new Map();
  for(const r of rows){if(!manualFree&&!r.club&&!r.encadrant&&!r.manager){const id=r.diver.id;debitTotals.set(id,(debitTotals.get(id)||0)+price)}if(r.forced&&!r.forceActor){notify("Sortie "+r.n+" : impossible d’identifier le compte ayant autorisé le forçage.");return}}
