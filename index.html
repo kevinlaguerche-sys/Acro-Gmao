@@ -1586,7 +1586,7 @@ function setupSharedEventsRealtime(){
   catch(e){console.error("Synchronisation des données du club impossible",e);setSyncStatus("offline");}
  }).subscribe(status=>{if(status==="SUBSCRIBED")setSyncStatus("ok");else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED")setSyncStatus("offline");});
 }
-async function persistSharedEvent(record){if(!remoteReady||!supabaseClient||!current?.id||!record?.id)throw new Error("Connexion serveur indisponible");const {error}=await supabaseClient.from("acro_events").upsert({event_id:String(record.id),event_data:record,created_by:current.id,updated_at:new Date().toISOString()},{onConflict:"event_id"});if(error)throw error;}
+async function persistSharedEvent(record){if(!remoteReady||!supabaseClient||!current?.id||!record?.id)throw new Error("Connexion serveur indisponible");const eventId=String(record.id);const payload={event_data:record,updated_at:new Date().toISOString()};const {data:existing,error:lookupError}=await supabaseClient.from("acro_events").select("event_id").eq("event_id",eventId).maybeSingle();if(lookupError)throw lookupError;if(existing){const {error}=await supabaseClient.from("acro_events").update(payload).eq("event_id",eventId);if(error)throw error;}else{const {error}=await supabaseClient.from("acro_events").insert({event_id:eventId,...payload,created_by:current.id});if(error)throw error;}}
 async function loadRemoteState(){const localUsers=state.users||[];const {data,error}=await supabaseClient.from("acro_app_state").select("state").eq("club_id",CLUB_STATE_ID).maybeSingle();if(error)throw error;if(data?.state){state=normalizeState({...data.state,users:localUsers});}else{state=normalizeState({...defaultState(),users:localUsers});if(isMaster()){const {error:insertError}=await supabaseClient.from("acro_app_state").insert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id});if(insertError)throw insertError;}}await loadSharedEvents();remoteReady=true;setupSharedEventsRealtime()}
 async function loginByName(lastName,firstName,password){
  const client=initSupabase();
@@ -3083,20 +3083,15 @@ function openDiveEventDialog(eventId){
  html+=entries.length?entries.map(r=>`<div class="day-event-item"><span>${diveStatusIcon(r.choice)}</span><strong style="flex:1">${esc(r.name||"Membre")}</strong><span>${r.choice==="yes"?"Participe":"Ne participe pas"}</span>${isMaster()?`<button type="button" class="btn danger small" data-master-remove-response="${esc(ev.id)}" data-response-user="${esc(r.userId)}">Retirer</button>`:""}</div>`).join(""):'<p class="muted">Aucune réponse pour le moment.</p>';
  body.innerHTML=html;
  body.querySelectorAll("[data-dive-response]").forEach(btn=>btn.addEventListener("click",()=>saveDiveResponse(btn.dataset.diveEvent,btn.dataset.diveResponse)));
- body.querySelectorAll("[data-master-remove-response]").forEach(btn=>btn.addEventListener("click",()=>{if(!isMaster())return;const target=(state.events||[]).find(x=>String(x.id)===String(btn.dataset.masterRemoveResponse));if(!target)return;const uid=btn.dataset.responseUser;target.diveResponses=(target.diveResponses||[]).filter(x=>x.userId!==uid);target.diveParticipants=(target.diveParticipants||[]).filter(x=>x.userId!==uid);saveState();openDiveEventDialog(target.id);notify("Réponse retirée par le Master")}));
+ body.querySelectorAll("[data-master-remove-response]").forEach(btn=>btn.addEventListener("click",async()=>{if(!isMaster())return;const target=(state.events||[]).find(x=>String(x.id)===String(btn.dataset.masterRemoveResponse));if(!target)return;try{const {data,error}=await supabaseClient.rpc("acro_master_remove_event_response",{p_event_id:String(target.id),p_user_id:btn.dataset.responseUser});if(error)throw error;const updated=data?.event_data||data;state.events=state.events.map(ev=>String(ev.id)===String(target.id)?updated:ev);saveState();openDiveEventDialog(target.id);notify("Réponse retirée par le Master");}catch(e){notify("Impossible de retirer la réponse : "+(e.message||"réessaie"));}}));
  if(typeof dialog.showModal==="function"){if(!dialog.open)dialog.showModal();}else dialog.setAttribute("open","");
 }
 async function saveDiveResponse(eventId,choice){
  if(!canAccessDiveResponses())return;
  const ev=(state.events||[]).find(x=>String(x.id)===String(eventId));if(!ev||!["yes","no"].includes(choice))return;
- const userId=current?.id||"",name=current?.name||"Encadrant";if(!userId)return;
- if(diveResponseFor(ev,userId)){notify("Ta réponse est déjà enregistrée. Seul le Master peut la retirer.");return}
- ev.diveResponses=Array.isArray(ev.diveResponses)?ev.diveResponses:[];
- ev.diveResponses.push({userId,name,choice,date:todayISO(),updatedAt:new Date().toISOString()});
- ev.diveParticipants=Array.isArray(ev.diveParticipants)?ev.diveParticipants:[];
- if(choice==="yes")ev.diveParticipants.push({userId,name,date:todayISO(),createdAt:new Date().toISOString()});
- try{await persistSharedEvent(ev);}catch(e){ev.diveResponses=ev.diveResponses.filter(r=>r.userId!==userId);ev.diveParticipants=ev.diveParticipants.filter(p=>p.userId!==userId);notify("Réponse non synchronisée : "+(e.message||"réessaie"));return;}
- saveState();render("plongee");notify(choice==="yes"?"Participation enregistrée et verrouillée.":"Réponse enregistrée et verrouillée.");openDiveEventDialog(eventId);
+ const userId=current?.id||"";if(!userId||!supabaseClient){notify("Connexion serveur indisponible.");return;}
+ if(diveResponseFor(ev,userId)){notify("Ta réponse est déjà enregistrée. Seul le Master peut la retirer.");return;}
+ try{const {data,error}=await supabaseClient.rpc("acro_record_event_response",{p_event_id:String(eventId),p_choice:choice});if(error)throw error;const updated=data?.event_data||data;if(!updated||!updated.id)throw new Error("Le serveur n’a pas retourné l’événement mis à jour.");state.events=state.events.map(item=>String(item.id)===String(eventId)?updated:item);saveState();render("plongee");notify(choice==="yes"?"Participation enregistrée et verrouillée.":"Réponse enregistrée et verrouillée.");openDiveEventDialog(eventId);}catch(e){notify("Réponse non synchronisée : "+(e.message||"réessaie"));}
 }
 function openDiveDateDialog(date){
  const dialog=document.getElementById("diveDateDialog"),host=document.getElementById("diveDateDialogBody");
