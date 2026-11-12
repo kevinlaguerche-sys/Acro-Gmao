@@ -4352,7 +4352,7 @@ document.addEventListener("click",ev=>{
 document.addEventListener("keydown",ev=>{
  if(ev.key==="Escape" && document.getElementById("equipmentRemoveOverlay")?.classList.contains("hidden")===false)closeEquipmentRemoveDialog(false);
 });
-function handleEquipmentRemoveConfirm(){
+async function handleEquipmentRemoveConfirm(){
  const error=document.getElementById("equipmentRemoveError");
  if(!canManageClubEquipment()){error.textContent="Action réservée au Master ou au Master matériel club connecté. Le matériel n’a pas été retiré.";error.classList.remove("hidden");return}
  const e=state.equipment.find(x=>x.id===pendingEquipmentRemovalId);
