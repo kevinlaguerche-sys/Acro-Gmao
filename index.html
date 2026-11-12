@@ -1613,7 +1613,45 @@ function setupSharedEventsRealtime(){
  }).subscribe(status=>{if(status==="SUBSCRIBED")setSyncStatus("ok");else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED")setSyncStatus("offline");});
 }
 async function persistSharedEvent(record){if(!remoteReady||!supabaseClient||!current?.id||!record?.id)throw new Error("Connexion serveur indisponible");const eventId=String(record.id);const payload={event_data:record,updated_at:new Date().toISOString()};const {data:existing,error:lookupError}=await supabaseClient.from("acro_events").select("event_id").eq("event_id",eventId).maybeSingle();if(lookupError)throw lookupError;if(existing){const {error}=await supabaseClient.from("acro_events").update(payload).eq("event_id",eventId);if(error)throw error;}else{const {error}=await supabaseClient.from("acro_events").insert({event_id:eventId,...payload,created_by:current.id});if(error)throw error;}}
-async function loadRemoteState(){const localUsers=state.users||[];const {data,error}=await supabaseClient.from("acro_app_state").select("state").eq("club_id",CLUB_STATE_ID).maybeSingle();if(error)throw error;if(data?.state){state=normalizeState({...data.state,users:localUsers});}else{state=normalizeState({...defaultState(),users:localUsers});if(isMaster()){const {error:insertError}=await supabaseClient.from("acro_app_state").insert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id});if(insertError)throw insertError;}}await loadSharedEvents();remoteReady=true;setupSharedEventsRealtime()}
+
+async function recoverLocalMaterialOperations(localSnapshot){
+ if(!localSnapshot||!current||!remoteReady)return;
+ const actor=normalizeAccessName(current.name);
+ const master=current.role==="master";
+ const belongsToCurrentUser=record=>master||normalizeAccessName(record?.givenBy||record?.by)===actor;
+ const remoteLoans=Array.isArray(state.loans)?state.loans:[];
+ const localLoans=Array.isArray(localSnapshot.loans)?localSnapshot.loans:[];
+ const recoverLoans=localLoans.filter(local=>{
+  if(!belongsToCurrentUser(local))return false;
+  const remote=remoteLoans.find(x=>x.id===local.id);
+  return !remote||(!remote.returnedAt&&!!local.returnedAt);
+ });
+ const remoteTx=Array.isArray(state.walletTransactions)?state.walletTransactions:[];
+ const localTx=Array.isArray(localSnapshot.walletTransactions)?localSnapshot.walletTransactions:[];
+ const recoverTx=localTx.filter(tx=>belongsToCurrentUser(tx)&&!remoteTx.some(x=>x.id===tx.id));
+ const equipmentIds=new Set(recoverLoans.filter(l=>l.returnedAt).map(l=>l.equipmentId));
+ const recoverEquipment=(localSnapshot.equipment||[]).filter(e=>equipmentIds.has(e.id));
+ if(!recoverLoans.length&&!recoverTx.length&&!recoverEquipment.length)return;
+ try{
+  await saveMaterialOperations({loans:recoverLoans,walletTransactions:recoverTx,equipment:recoverEquipment});
+  notify("Opérations matériel locales récupérées et synchronisées");
+ }catch(error){
+  console.error("Récupération des opérations matériel locales impossible",error);
+  notify("Certaines anciennes opérations locales n’ont pas pu être récupérées : "+(error.message||"vérifie les droits"));
+ }
+}
+async function loadRemoteState(){
+ const localUsers=state.users||[];
+ const localSnapshot=normalizeState(JSON.parse(JSON.stringify(state)));
+ const {data,error}=await supabaseClient.from("acro_app_state").select("state").eq("club_id",CLUB_STATE_ID).maybeSingle();
+ if(error)throw error;
+ if(data?.state){state=normalizeState({...data.state,users:localUsers});}
+ else{state=normalizeState({...defaultState(),users:localUsers});if(isMaster()){const {error:insertError}=await supabaseClient.from("acro_app_state").insert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id});if(insertError)throw insertError;}}
+ await loadSharedEvents();
+ remoteReady=true;
+ await recoverLocalMaterialOperations(localSnapshot);
+ setupSharedEventsRealtime();
+}
 async function loginByName(lastName,firstName,password){
  const client=initSupabase();
  if(!client){document.getElementById("loginMessage").textContent="Configuration manquante : ajoute la clé publique dans Configuration initiale.";return false}
