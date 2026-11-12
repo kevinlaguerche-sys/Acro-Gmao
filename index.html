@@ -1616,9 +1616,9 @@ async function persistSharedEvent(record){if(!remoteReady||!supabaseClient||!cur
 
 async function recoverLocalMaterialOperations(localSnapshot){
  if(!localSnapshot||!current||!remoteReady)return;
- const actor=normalizeAccessName(current.name);
+ const actorNames=new Set([current.name,currentMasterPersonName()].map(normalizeAccessName).filter(Boolean));
  const master=current.role==="master";
- const belongsToCurrentUser=record=>master||normalizeAccessName(record?.givenBy||record?.by)===actor;
+ const belongsToCurrentUser=record=>master||actorNames.has(normalizeAccessName(record?.givenBy||record?.by));
  const remoteLoans=Array.isArray(state.loans)?state.loans:[];
  const localLoans=Array.isArray(localSnapshot.loans)?localSnapshot.loans:[];
  const recoverLoans=localLoans.filter(local=>{
