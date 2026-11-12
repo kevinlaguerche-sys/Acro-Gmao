@@ -1563,7 +1563,7 @@ async function saveMaterialOperations({loans=[],walletTransactions=[],divers=[],
  }));
  const {error}=await supabaseClient.rpc("acro_save_material_operations",{
   p_loans:loans,p_wallet_transactions:walletTransactions,
-  p_diver_wallets:(divers||[]).map(d=>({id:d.id,balance:d.balance,bitacrosEarned:d.bitacrosEarned})),
+  p_diver_wallets:[],
   p_equipment_returns:equipmentReturns
  });
  if(error){
@@ -1572,6 +1572,7 @@ async function saveMaterialOperations({loans=[],walletTransactions=[],divers=[],
   throw new Error(error.message||"Erreur Supabase pendant l’enregistrement du prêt.");
  }
  try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}
+ try{await refreshSharedAppState(false)}catch(refreshError){console.error("Actualisation après synchronisation matériel impossible",refreshError)}
  setSyncStatus("ok");
  return true;
 }
