@@ -1732,6 +1732,7 @@ async function markVisibleNotificationsRead(){
 }
 
 function showApp(){
+ acroLoanFreeSession=false;
  document.getElementById("loginView").classList.add("hidden");document.getElementById("appView").classList.remove("hidden");const isSmallScreen=window.matchMedia("(max-width: 850px)").matches;document.getElementById("appView").classList.toggle("menu-closed",isSmallScreen);document.getElementById("menuToggle").setAttribute("aria-expanded",String(!isSmallScreen));
  document.getElementById("userPill").textContent=(isMaster()?"👑 ":"")+current.name;document.getElementById("userPill").classList.remove("hidden");document.getElementById("logoutBtn").classList.remove("hidden");document.getElementById("refreshAppBtn")?.classList.remove("hidden");document.getElementById("syncStatus")?.classList.remove("hidden");setSyncStatus("ok");
  document.getElementById("accessNav").classList.toggle("hidden",!isMaster());
@@ -1739,7 +1740,7 @@ function showApp(){
  render("dashboard");
  showPendingNotifications();
 }
-async function logout(){try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;if(window.acroEventsChannel&&supabaseClient){supabaseClient.removeChannel(window.acroEventsChannel);window.acroEventsChannel=null;}document.getElementById("refreshAppBtn")?.classList.add("hidden");document.getElementById("syncStatus")?.classList.add("hidden");document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
+async function logout(){acroLoanFreeSession=false;closeFreeConfirm();try{if(supabaseClient)await supabaseClient.auth.signOut()}catch(e){}current=null;remoteReady=false;if(window.acroEventsChannel&&supabaseClient){supabaseClient.removeChannel(window.acroEventsChannel);window.acroEventsChannel=null;}document.getElementById("refreshAppBtn")?.classList.add("hidden");document.getElementById("syncStatus")?.classList.add("hidden");document.getElementById("appView").classList.add("hidden");document.getElementById("loginView").classList.remove("hidden");document.getElementById("userPill").classList.add("hidden");document.getElementById("logoutBtn").classList.add("hidden");document.getElementById("loginLastName").value="";document.getElementById("loginFirstName").value="";document.getElementById("loginPassword").value="";document.getElementById("loginMessage").textContent=""}
 function stopInflationScannerIfOpen(){try{if(typeof stopQR==="function")stopQR()}catch(e){}}
 function render(view,skipAccessSync=false){
  if(!allowed(view)){notify("Cet écran ne fait pas partie de tes accès.");view="dashboard";if(!allowed(view)){logout();return}}
@@ -3436,6 +3437,10 @@ Le solde du plongeur pourra devenir négatif.`))return;
  });
 }
 let acroFreePending=null;
+// Mode gratuit des prêts : valable pour la session connectée, partagé entre prêt QR et manuel.
+let acroLoanFreeSession=false;
+function setLoanFreeSession(active){acroLoanFreeSession=!!active;for(const [buttonId,formId,caption] of [["loanFreeToggle","loanForm","Matériel à 0 Bitacro"],["manualFreeToggle","manualLoanForm","Matériel à 0 Bitacro"]]){const button=document.getElementById(buttonId),form=document.getElementById(formId);if(!button||!form)continue;form.dataset.manualFree=String(acroLoanFreeSession);button.setAttribute("aria-pressed",String(acroLoanFreeSession));button.classList.toggle("active",acroLoanFreeSession);button.innerHTML=(acroLoanFreeSession?"✓ GRATUIT ACTIVÉ":"🎁 ACTIVER LA GRATUITÉ")+" <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";form.dispatchEvent(new Event("acro-free-mode-change"));}}
+
 function closeFreeConfirm(){const modal=document.getElementById("acroFreeConfirm");if(modal){modal.hidden=true;modal.setAttribute("aria-hidden","true");}acroFreePending=null;}
 function showFreeConfirmStep(){
  const modal=document.getElementById("acroFreeConfirm");if(!modal)return;
@@ -3455,18 +3460,18 @@ function showFreeConfirmStep(){
  modal.querySelector("[data-free-next]")?.addEventListener("click",()=>{
   const pending=acroFreePending;if(!pending)return;
   const {button,form,caption}=pending;
-  button.setAttribute("aria-pressed","true");button.classList.add("active");
-  form.dataset.manualFree="true";form.dispatchEvent(new Event("acro-free-mode-change"));
-  button.innerHTML="✓ GRATUIT ACTIVÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";
+  if(form.id==="loanForm"||form.id==="manualLoanForm")setLoanFreeSession(true);
+  else{button.setAttribute("aria-pressed","true");button.classList.add("active");form.dataset.manualFree="true";form.dispatchEvent(new Event("acro-free-mode-change"));button.innerHTML="✓ GRATUIT ACTIVÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";}
   closeFreeConfirm();
  });
 }
 function wireFreeModeToggle(buttonId,formId,caption){
  const button=document.getElementById(buttonId),form=document.getElementById(formId);if(!button||!form)return;
- form.dataset.manualFree="false";
+ if(formId==="loanForm"||formId==="manualLoanForm")setLoanFreeSession(acroLoanFreeSession);
+ else form.dataset.manualFree="false";
  button.addEventListener("click",()=>{
   const active=button.getAttribute("aria-pressed")!=="true";
-  if(!active){button.setAttribute("aria-pressed","false");button.classList.remove("active");form.dataset.manualFree="false";form.dispatchEvent(new Event("acro-free-mode-change"));button.innerHTML="🎁 ACTIVER LA GRATUITÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";return;}
+  if(!active){if(formId==="loanForm"||formId==="manualLoanForm")setLoanFreeSession(false);else{button.setAttribute("aria-pressed","false");button.classList.remove("active");form.dataset.manualFree="false";form.dispatchEvent(new Event("acro-free-mode-change"));button.innerHTML="🎁 ACTIVER LA GRATUITÉ <span class=\"free-mode-caption\">"+caption+" · aucun débit</span>";}return;}
   acroFreePending={button,form,caption};showFreeConfirmStep();
  });
 }
