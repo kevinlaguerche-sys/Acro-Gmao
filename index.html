@@ -1767,7 +1767,6 @@ function render(view,skipAccessSync=false){
  main.innerHTML=view==="feuillesPalanquee"?body:`<div class="page-head"><div><div class="eyebrow">${isMaster()?"ESPACE MASTER":(isMasterSection(view)?"CONSULTATION SEULE":"ESPACE MEMBRE")}</div><h1>${v.icon} ${v.title}${view==="masterMateriel"?` <button type="button" class="title-back-button" id="titleBackToMaterial" aria-label="Retour à la page Matériel" title="Retour à Matériel">←</button>`:""}</h1>${v.subtitle?`<p>${v.subtitle}</p>`:""}</div>${view==="plongeurs"&&isMaster()?'<button class="btn primary" id="createDiverBtn">＋ Ajouter un plongeur</button>':view==="acces"&&isMaster()?'<button class="btn primary" id="createUserBtn">＋ Créer un utilisateur</button>':view==="masterMateriel"&&canManageClubEquipment()?'<div class="header-actions"><button class="btn primary" id="newEquipmentBtn">＋ Créer un équipement</button></div>':""}</div>${body}`;
  const readOnlyMasterView=!isMaster()&&isMasterSection(view)&&view!=="masterMateriel";
  if(view==="masterMateriel"&&!isMaster()){
-   main.classList.add("consultation-only-view");
    main.querySelectorAll('button:not([data-mtab]):not([data-master-tab]):not([data-analysis-tab]):not([data-year]):not([data-filter]):not([data-sort]):not(#newEquipmentBtn):not(#titleBackToMaterial):not(.master-equipment-base button)').forEach(b=>b.remove());
    main.querySelectorAll("input,select,textarea").forEach(el=>{if(!el.closest(".master-equipment-base")){el.disabled=true;el.setAttribute("aria-disabled","true")}});
    main.querySelectorAll('form:not(.master-equipment-base form)').forEach(form=>form.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=true));
@@ -4388,13 +4387,13 @@ async function handleEquipmentRemoveConfirm(){
  <div class="equipment-remove-modal">
   <div class="equipment-remove-head">
    <div class="equipment-remove-lock" aria-hidden="true">🔒</div>
-   <div><h2 id="equipmentRemoveTitle">Retirer un matériel</h2><p>Zone sécurisée · Accès réservé au Master</p></div>
+   <div><h2 id="equipmentRemoveTitle">Retirer un matériel</h2><p>Zone sécurisée · Master / Master matériel club</p></div>
   </div>
   <div class="equipment-remove-body">
    <div class="equipment-remove-item"><div class="item-icon" aria-hidden="true">📦</div><div><strong id="equipmentRemoveName">Matériel</strong><small id="equipmentRemoveType">Équipement du club</small></div></div>
    <p class="equipment-remove-question">Voulez-vous retirer ce matériel ?</p>
    <p class="equipment-remove-help">Il ne sera plus disponible pour les prochains prêts. Le retrait nécessite une session Master autorisée.</p>
-   <div class="muted" style="font-size:12px;margin-bottom:12px">Vérification du rôle Master connecté.</div>
+   <div class="muted" style="font-size:12px;margin-bottom:12px">Vérification des droits de gestion du matériel.</div>
    <div id="equipmentRemoveError" class="equipment-remove-error hidden" role="alert"></div>
    <div class="equipment-remove-actions"><button type="button" id="equipmentRemoveNo" class="equipment-remove-cancel">Non, annuler</button><button type="button" id="equipmentRemoveYes" class="equipment-remove-confirm">Oui, retirer</button></div>
   </div>
