@@ -1549,6 +1549,19 @@ function defaultState(){return {users:[],equipment:[],loans:[],inflations:[],div
 function normalizeState(x){x=x&&typeof x==="object"?x:defaultState();x.users=Array.isArray(x.users)?x.users:[];x.equipment ||= [];x.loans ||= [];x.inflations ||= [];x.divers ||= [];x.youthTracks=Array.isArray(x.youthTracks)?x.youthTracks:[];x.youthEvaluations=Array.isArray(x.youthEvaluations)?x.youthEvaluations:[];x.trainingComments ||= [];x.events ||= [];x.diveSitePlans=Array.isArray(x.diveSitePlans)?x.diveSitePlans:[];x.eventLocations ||= {director_dive:["Barrage de la Plate Taille","Vodelée","Vodece"],director_fosse:["TODI","Louvral"],director_pool:["Boussois"]};x.walletTransactions ||= [];x.prices ||= {stab:2,detendeur:2,bloc:1,inflation:1};(x.divers||[]).forEach(d=>{if(!Number.isFinite(Number(d.balance)))d.balance=0;if(!Number.isFinite(Number(d.bitacrosEarned)))d.bitacrosEarned=0});return x}
 function loadState(){try{const x=JSON.parse(localStorage.getItem(STORE_KEY)||"null");if(x)return normalizeState(x)}catch(e){}return defaultState()}
 function remotePayload(){const copy=JSON.parse(JSON.stringify(state));delete copy.users;return copy}
+async function syncNormalizedDiverRecords(divers=state.divers||[]){
+ if(!supabaseClient||!isMaster())return false;
+ const rows=(divers||[]).filter(d=>d&&d.id&&String(d.firstName||"").trim()&&String(d.lastName||"").trim()).map(d=>({
+  id:String(d.id),first_name:String(d.firstName).trim(),last_name:String(d.lastName).trim(),
+  current_level:String(d.currentLevel||"Aucun niveau"),aptitude_level:String(d.aptitudeLevel||""),
+  in_progress:String(d.inProgress||""),encadrement:String(d.encadrement||""),
+  balance:Number(d.balance)||0,bitacros_earned:Number(d.bitacrosEarned)||0
+ }));
+ if(!rows.length)return true;
+ const {error}=await supabaseClient.from("acro_divers").upsert(rows,{onConflict:"id"});
+ if(error)throw error;
+ return true;
+}
 function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(state))}catch(e){}if(remoteReady&&supabaseClient&&isMaster()){clearTimeout(remoteSaveTimer);remoteSaveTimer=setTimeout(async()=>{try{const {error}=await supabaseClient.from("acro_app_state").upsert({club_id:CLUB_STATE_ID,state:remotePayload(),updated_by:current.id,updated_at:new Date().toISOString()},{onConflict:"club_id"});if(error)throw error;notify("Sauvegarde serveur effectuée")}catch(e){console.error(e);notify("Erreur de sauvegarde serveur : "+(e.message||"vérifie les politiques Supabase"))}},700)}}
 
 async function saveMaterialOperations({loans=[],walletTransactions=[],divers=[],equipment=[]}={}){
@@ -1594,6 +1607,8 @@ async function refreshSharedAppState(shouldRender=true){
   state=normalizeState({...data.state,users:localUsers});
   localStorage.setItem(STORE_KEY,JSON.stringify(state));
  }
+ // Le Master maintient la table relationnelle utilisée par les clés étrangères du suivi jeunes.
+ if(isMaster())await syncNormalizedDiverRecords();
  await loadSharedEvents();
  setSyncStatus("ok");
  const view=document.getElementById("mainContent")?.dataset.view||"dashboard";
@@ -4074,15 +4089,21 @@ function diversHTML(){
 function wireDivers(){
  const form=document.getElementById("diverForm");
  const reset=()=>{form.reset();document.getElementById("diverId").value="";document.getElementById("diverMessage").textContent="";document.getElementById("saveDiverBtn").textContent="Enregistrer le plongeur";};
- form.addEventListener("submit",e=>{
+ form.addEventListener("submit",async e=>{
   e.preventDefault();if(!isMaster())return;
   const id=document.getElementById("diverId").value;
-  const oldRecord=(state.divers||[]).find(d=>d.id===id);const record={id:id||"diver-"+Date.now(),lastName:document.getElementById("diverLastName").value.trim(),firstName:document.getElementById("diverFirstName").value.trim(),currentLevel:document.getElementById("diverCurrentLevel").value||"Aucun niveau",aptitudeLevel:document.getElementById("diverAptitudeLevel").value,inProgress:document.getElementById("diverInProgress").value,encadrement:document.getElementById("diverEncadrement").value,balance:Number(oldRecord?.balance)||0};
-  if(!record.lastName||!record.firstName||!record.currentLevel){document.getElementById("diverMessage").textContent="Renseigne au minimum le nom, le prénom et le niveau actuel.";return}
+  const oldRecord=(state.divers||[]).find(d=>d.id===id);const record={id:id||"diver-"+Date.now(),lastName:document.getElementById("diverLastName").value.trim(),firstName:document.getElementById("diverFirstName").value.trim(),currentLevel:document.getElementById("diverCurrentLevel").value||"Aucun niveau",aptitudeLevel:document.getElementById("diverAptitudeLevel").value,inProgress:document.getElementById("diverInProgress").value,encadrement:document.getElementById("diverEncadrement").value,balance:Number(oldRecord?.balance)||0,bitacrosEarned:Number(oldRecord?.bitacrosEarned)||0};
+  const message=document.getElementById("diverMessage"),button=document.getElementById("saveDiverBtn");
+  if(!record.lastName||!record.firstName||!record.currentLevel){message.textContent="Renseigne au minimum le nom, le prénom et le niveau actuel.";return}
   const existing=(state.divers||[]).some(d=>d.id===id);
   state.divers ||= [];
   state.divers=existing?state.divers.map(d=>d.id===id?record:d):[...state.divers,record];
-  saveState();render("plongeurs");notify(existing?"Fiche plongeur modifiée":"Plongeur ajouté");
+  button.disabled=true;
+  try{
+   await syncNormalizedDiverRecords([record]);
+   saveState();render("plongeurs");notify(existing?"Fiche plongeur modifiée":"Plongeur ajouté");
+  }catch(err){message.textContent="Fiche non synchronisée dans la base plongeurs : "+(err.message||"erreur Supabase");}
+  finally{button.disabled=false;}
  });
  document.getElementById("cancelDiverBtn").addEventListener("click",reset);
  document.querySelectorAll("[data-edit-diver]").forEach(b=>b.addEventListener("click",()=>{
